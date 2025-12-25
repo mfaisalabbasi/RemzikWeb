@@ -14,29 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-800">
-        {/* Navbar */}
-        {/* <header className="bg-white shadow-md fixed w-full z-50">
-          <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-green-600">
-              Remzik
-            </Link>
-            <div className="flex gap-4 items-center">
-              <a
-                href="#how-it-works"
-                className="hover:text-green-600 font-semibold"
-              >
-                How It Works
-              </a>
-
-              <GetStartedCTA />
-            </div>
-          </nav>
-        </header> */}
+      <body>
         <Navbar />
 
         {/* Page content */}
-        <main className="pt-24">{children}</main>
+        <main>{children}</main>
 
         {/* Footer */}
         <footer className="bg-white mt-12 shadow-inner">

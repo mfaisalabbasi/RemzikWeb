@@ -1,25 +1,30 @@
 .header {
   position: fixed;
   top: 0;
-  width: 100%;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 100;
+  height: var(--navbar-height);
+  width: 100%;
+  background-color: #16a34a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nav {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding-bottom: 0px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 18px;
+  padding-right: 18px;
 }
 
 .logo {
   font-size: 1.75rem;
   font-weight: bold;
-  color: #16a34a; /* green */
+  color: #ffffff; /* green */
   text-decoration: none;
 }
 
@@ -32,7 +37,7 @@
 .link {
   text-decoration: none;
   font-weight: 600;
-  color: #374151;
+  color: #ffffff;
   transition: color 0.3s;
 }
 
@@ -44,5 +49,14 @@
 @media (max-width: 768px) {
   .menu {
     gap: 12px;
+  }
+  .logo {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ffffff; /* green */
+    text-decoration: none;
+  }
+  .link {
+    display: none;
   }
 }

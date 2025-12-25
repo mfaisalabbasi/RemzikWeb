@@ -1,34 +1,44 @@
-import AssetCard from "./AssetCard";
+import AssetPreviewCard from "@/app/components/AssetPreviewCard";
 import styles from "@/app/styles/AssetsPreview.module.css";
 
-const sampleAssets = [
+const assets = [
   {
-    title: "Ocean View Apartments",
+    title: "Luxury Residential Apartments",
     location: "Dubai, UAE",
-    yieldRange: "5-7% p.a.",
+    yieldRange: "6–8% p.a.",
     status: "Coming Soon",
+    image: "/assets/dubai.jpg",
   },
   {
-    title: "Downtown Office Complex",
+    title: "Grade-A Office Building",
     location: "Riyadh, KSA",
-    yieldRange: "6-8% p.a.",
+    yieldRange: "7–9% p.a.",
     status: "Coming Soon",
+    image: "/assets/riyadh.jpg",
   },
   {
-    title: "Luxury Villas",
+    title: "Commercial Plaza",
     location: "Karachi, Pakistan",
-    yieldRange: "7-9% p.a.",
+    yieldRange: "8–10% p.a.",
     status: "Coming Soon",
+    image: "/assets/karachi.jpg",
   },
 ];
 
 export default function AssetsPreview() {
   return (
     <section className={styles.section}>
-      <h2 className={styles.heading}>Assets Preview</h2>
+      <div className={styles.header}>
+        <h2>Asset Opportunities</h2>
+        <p>
+          Explore a preview of high-quality, Shariah-compliant real-world assets
+          available on Remzik.
+        </p>
+      </div>
+
       <div className={styles.grid}>
-        {sampleAssets.map((asset, idx) => (
-          <AssetCard key={idx} {...asset} />
+        {assets.map((asset, index) => (
+          <AssetPreviewCard key={index} {...asset} />
         ))}
       </div>
     </section>

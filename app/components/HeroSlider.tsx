@@ -1,24 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import GetStartedCTA from "./GetStarted";
 import Image from "next/image";
+import GetStartedCTA from "@/app/components/GetStarted";
 import styles from "@/app/styles/HeroSlider.module.css";
 
 const slides = [
   {
     title: "Invest in Real Estate",
-    subtitle: "Shariah-compliant ownership",
+    subtitle: "Shariah-compliant digital ownership",
     image: "/slider/real-estate.jpg",
   },
   {
-    title: "Global Assets",
-    subtitle: "Tokenized real-world properties",
+    title: "Tokenized Global Assets",
+    subtitle: "Real value. Transparent structure.",
     image: "/slider/global-assets.jpg",
   },
   {
-    title: "Transparent & Secure",
-    subtitle: "Full audit and protection",
+    title: "Secure & Trusted Platform",
+    subtitle: "Built for long-term investors",
     image: "/slider/secure.jpg",
   },
 ];
@@ -36,25 +36,32 @@ export default function HeroSlider() {
 
   return (
     <section className={styles.hero}>
-      <div className={styles.imageContainer}>
+      {/* Slider Image */}
+      <div className={styles.slider}>
         <Image
           src={slides[current].image}
           alt={slides[current].title}
           fill
+          priority
           className={styles.image}
         />
+        <div className={styles.overlay} />
       </div>
 
-      <h1 className={styles.title}>{slides[current].title}</h1>
-      <p className={styles.subtitle}>{slides[current].subtitle}</p>
-      <GetStartedCTA />
+      {/* Content Overlay */}
+      <div className={styles.content}>
+        <h1 className={styles.title}>{slides[current].title}</h1>
+        <p className={styles.subtitle}>{slides[current].subtitle}</p>
+        <GetStartedCTA />
+      </div>
 
+      {/* Dots */}
       <div className={styles.dots}>
         {slides.map((_, idx) => (
           <span
             key={idx}
             className={`${styles.dot} ${current === idx ? styles.active : ""}`}
-          ></span>
+          />
         ))}
       </div>
     </section>
