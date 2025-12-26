@@ -1,4 +1,4 @@
-import AssetPreviewCard from "@/app/components/AssetPreviewCard";
+import AssetPreviewCard from "./AssetPreviewCard";
 import styles from "@/app/styles/AssetsPreview.module.css";
 
 const assets = [

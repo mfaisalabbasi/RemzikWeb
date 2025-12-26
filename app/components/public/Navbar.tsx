@@ -10,9 +10,9 @@ export default function Navbar() {
           Remzik
         </Link>
         <div className={styles.menu}>
-          <a href="#how-it-works" className={styles.link}>
+          <Link href="#how-it-works" className={styles.link}>
             How It Works
-          </a>
+          </Link>
           <GetStartedCTA />
         </div>
       </nav>

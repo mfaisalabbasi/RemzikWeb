@@ -1,7 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
-import GetStartedCTA from "./components/GetStarted";
-import Navbar from "./components/Navbar";
+import GetStartedCTA from "./components/public/GetStarted";
+import Navbar from "./components/public/Navbar";
 export const metadata = {
   title: "Remzik",
   description: "Shariah-compliant real-world asset tokenization platform",

@@ -1,9 +1,13 @@
-import React from "react";
+import KPICards from "@/app/app/components/Dashboard/KPICards";
+import PortfolioSnapshot from "@/app/app/components/Dashboard/PortfolioSnapshot";
+import RecentActivity from "@/app/app/components/Dashboard/RecentActivity";
 
-export default function user() {
+export default function DashboardPage() {
   return (
-    <div>
-      <h1>Welcome to remzik empire</h1>
-    </div>
+    <>
+      <KPICards />
+      <PortfolioSnapshot />
+      <RecentActivity />
+    </>
   );
 }

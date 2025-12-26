@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import GetStartedCTA from "@/app/components/GetStarted";
 import styles from "@/app/styles/HeroSlider.module.css";
+import GetStartedCTA from "./GetStarted";
 
 const slides = [
   {

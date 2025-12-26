@@ -1,0 +1,24 @@
+.section {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+}
+
+.section h2 {
+  margin-bottom: 16px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  color: #374151;
+}
+
+.list li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}

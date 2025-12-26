@@ -1,0 +1,81 @@
+/* Root section */
+.section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  margin: 32px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.section h2 {
+  color: #0f5f3a;
+  margin-bottom: 20px;
+}
+
+/* Form & Security container */
+.form,
+.security {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.fieldInput {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  margin-top: 6px;
+}
+
+.fieldSelect {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  margin-top: 6px;
+}
+
+/* Primary button */
+.primary {
+  background: #0f5f3a;
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+/* KYC Card */
+.kycCard {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .section {
+    margin: 24px;
+    padding: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    margin: 16px;
+    padding: 20px;
+  }
+}

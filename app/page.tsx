@@ -1,17 +1,16 @@
-import Navbar from "@/app/components/Navbar";
-import HeroSlider from "@/app/components/HeroSlider";
-import HowItWorks from "@/app/components/HowItWorks";
-import AssetPreview from "@/app/components/AssetPreview";
-import ShariahSection from "@/app/components/ShariahSection";
-import About from "@/app/components/About";
-import Footer from "@/app/components/Footer";
-
+import Navbar from "./components/public/Navbar";
+import HeroSlider from "./components/public/HeroSlider";
+import HowItWorks from "./components/public/HowItWorks";
+import AssetsPreview from "./components/public/AssetPreview";
+import ShariahSection from "./components/public/ShariahSection";
+import About from "./components/public/About";
+import Footer from "./components/public/Footer";
 export default function Home() {
   return (
     <div className="flex flex-col">
       <HeroSlider />
       <HowItWorks />
-      <AssetPreview />
+      <AssetsPreview />
       <ShariahSection />
       <About />
     </div>

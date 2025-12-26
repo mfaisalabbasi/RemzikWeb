@@ -1,0 +1,23 @@
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.heading {
+  color: #0f5f3a;
+  margin-bottom: 24px;
+  font-size: 2rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}

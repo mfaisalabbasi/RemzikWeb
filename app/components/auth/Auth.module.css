@@ -1,0 +1,64 @@
+.authCard {
+  max-width: 480px;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.fieldInput {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  margin-top: 6px;
+}
+
+.primary {
+  background: #0f5f3a;
+  color: #ffffff;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.note {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.link {
+  color: #0f5f3a;
+  font-weight: 600;
+  margin-left: 6px;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .authCard {
+    margin: 24px 16px;
+    padding: 24px;
+  }
+}

@@ -1,0 +1,36 @@
+.card {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #0f5f3a;
+}
+
+.status {
+  color: #374151;
+  font-weight: 500;
+}
+
+.value {
+  color: #0f5f3a;
+  font-weight: 700;
+}
+
+.link {
+  margin-top: auto;
+  text-decoration: none;
+  color: #c89b54;
+  font-weight: 600;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

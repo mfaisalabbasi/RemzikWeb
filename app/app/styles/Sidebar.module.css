@@ -1,0 +1,36 @@
+.sidebar {
+  width: 260px;
+  background-color: #0b2e1d;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.link:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}
