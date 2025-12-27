@@ -1,8 +1,8 @@
 "use client";
 
-import Sidebar from "@/app/app/components/layout/SideBar";
-import Topbar from "@/app/app/components/layout/TopBar";
-import styles from "@/app/app/styles/InvestorLayout.module.css";
+import Topbar from "./components/layout/TopBar";
+import styles from "@/app/investor/styles/InvestorLayout.module.css";
+import InvestorSidebar from "./components/layout/SideBar";
 
 export default function InvestorLayout({
   children,
@@ -11,7 +11,7 @@ export default function InvestorLayout({
 }) {
   return (
     <div className={styles.container}>
-      <Sidebar />
+      <InvestorSidebar />
       <div className={styles.main}>
         <Topbar />
         <div className={styles.content}>{children}</div>

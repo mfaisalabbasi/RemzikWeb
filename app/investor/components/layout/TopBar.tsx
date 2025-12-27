@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/Topbar.module.css";
+import styles from "@/app/investor/styles/Topbar.module.css";
 
 export default function Topbar() {
   return (

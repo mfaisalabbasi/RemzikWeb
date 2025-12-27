@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/AssetFilters.module.css";
+import styles from "@/app/investor/styles/AssetFilters.module.css";
 
 export default function AssetFilters() {
   return (

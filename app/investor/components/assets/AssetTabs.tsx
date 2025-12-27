@@ -4,7 +4,7 @@ import AssetOverview from "./AssetOverview";
 import AssetFinancial from "./AssetFinancial";
 import AssetShariah from "./AssetShariah";
 import AssetDocuments from "./AssetDocuments";
-import styles from "@/app/app/styles/AssetTabs.module.css";
+import styles from "@/app/investor/styles/AssetTabs.module.css";
 
 export default function AssetTabs() {
   const [tab, setTab] = useState("overview");

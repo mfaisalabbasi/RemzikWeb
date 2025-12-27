@@ -4,25 +4,28 @@
   z-index: 100;
   height: var(--navbar-height);
   width: 100%;
-  background-color: #16a34a;
+  background: rgba(2, 134, 43, 0.916);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
 }
 
 .nav {
-  max-width: 1200px;
-  margin: 0 auto;
+  /* max-width: 1200px; */
+  /* margin: 0 auto; */
   padding-bottom: 0px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 15px;
-  padding-bottom: 15px;
-  padding-left: 18px;
-  padding-right: 18px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  width: 100%;
 }
 
 .logo {
-  font-size: 1.75rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #ffffff; /* green */
   text-decoration: none;

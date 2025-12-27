@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/RecentActivity.module.css";
+import styles from "@/app/investor/styles/RecentActivity.module.css";
 export default function RecentActivity() {
   return (
     <section className={styles.section}>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import styles from "@/app/app/styles/AssetCard.module.css";
+import styles from "@/app/investor/styles/AssetCard.module.css";
 
 export default function AssetCard() {
   return (

@@ -1,5 +1,5 @@
 "use client";
-import styles from "@/app/app/styles/Invest.module.css";
+import styles from "@/app/investor/styles/Invest.module.css";
 
 export default function InvestAmount({
   amount,

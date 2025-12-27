@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/AssetStats.module.css";
+import styles from "@/app/investor/styles/AssetStats.module.css";
 
 export default function AssetStats() {
   return (

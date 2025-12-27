@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/KPICards.module.css";
+import styles from "@/app/investor/styles/KPICards.module.css";
 
 export default function KPICards() {
   return (

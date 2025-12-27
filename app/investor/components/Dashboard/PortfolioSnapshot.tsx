@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/PortfolioSnapshot.module.css";
+import styles from "@/app/investor/styles/PortfolioSnapshot.module.css";
 
 export default function PortfolioSnapshot() {
   return (

@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/AssetGrid.module.css";
+import styles from "@/app/investor/styles/AssetGrid.module.css";
 import AssetCard from "./AssetCard";
 export default function AssetGrid() {
   return (

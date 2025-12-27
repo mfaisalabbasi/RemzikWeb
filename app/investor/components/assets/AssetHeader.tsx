@@ -1,4 +1,4 @@
-import styles from "@/app/app/styles/AssetHeader.module.css";
+import styles from "@/app/investor/styles/AssetHeader.module.css";
 
 export default function AssetHeader() {
   return (
