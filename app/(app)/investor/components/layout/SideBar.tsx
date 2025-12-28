@@ -1,11 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import Logo from "@/public/logo.png";
+
 import styles from "@/app/(app)/investor/styles/Sidebar.module.css";
 import Link from "next/link";
 import Image from "next/image";
-import Logo from "@/public/logo.png";
-
+import clsx from "clsx";
 const navItems = [
   { label: "Dashboard", href: "/investor" },
   { label: "Portfolio", href: "/investor/portfolio" },
@@ -19,41 +19,47 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-export default function InvestorSidebar({
-  isOpen,
-  toggleSidebar,
-}: SidebarProps) {
-  const pathname = usePathname();
-
+export default function Sidebar({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   return (
-    <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
-      <div className={styles.brand}>
-        <button className={styles.close} onClick={toggleSidebar}>
-          ×
-        </button>
-
+    <aside className={clsx(styles.sidebar, open && styles.open)}>
+      <button className={styles.close} onClick={onClose}>
+        ✕
+      </button>
+      <Link href="/investor">
         <Image
           src={Logo}
           alt="Remzik asset investment"
-          width="200"
-          height="50"
+          width={200}
+          height={20}
         />
-      </div>
-
+      </Link>
       <nav className={styles.nav}>
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${styles.link} ${active ? styles.active : ""}`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        <Link href="/investor/" className={styles.link}>
+          Dashboard
+        </Link>
+        <Link href="/investor/portfolio" className={styles.link}>
+          Portfolio
+        </Link>
+        <Link href="/investor/wallet" className={styles.link}>
+          Wallet
+        </Link>
+        <Link href="/investor/assets" className={styles.link}>
+          Assets
+        </Link>
+        <Link href="/investor/profile" className={styles.link}>
+          Profile & Kyc
+        </Link>
       </nav>
+
+      <div className={styles.footer}>
+        <button className={styles.logout}>Logout</button>
+      </div>
     </aside>
   );
 }

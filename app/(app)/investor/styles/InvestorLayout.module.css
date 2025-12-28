@@ -1,24 +1,27 @@
 .container {
   display: flex;
   min-height: 100vh;
-  background: #f7f9f8;
 }
 
+/* Main area */
 .main {
   flex: 1;
+  margin-left: 200px; /* SAME AS SIDEBAR WIDTH */
   display: flex;
   flex-direction: column;
+  min-width: 0; /* 🔥 VERY IMPORTANT */
 }
 
+/* Page content */
 .content {
-  flex: 1;
-  padding: 32px;
-  overflow: auto;
+  padding: 24px;
+  background: #f6f8f7;
+  min-height: calc(100vh - 64px);
 }
 
 /* Mobile */
-@media (max-width: 1024px) {
-  .content {
-    padding: 16px;
+@media (max-width: 900px) {
+  .main {
+    margin-left: 0;
   }
 }

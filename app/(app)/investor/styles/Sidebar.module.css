@@ -1,12 +1,16 @@
 .sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
   width: 200px;
-  height: auto;
+  height: 100vh;
   background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
   color: #e5f2ec;
   display: flex;
   flex-direction: column;
-
+  z-index: 1000;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.3s ease;
 }
 
 /* Logo */
@@ -16,75 +20,47 @@
   font-weight: 700;
 }
 
-.logo span {
-  display: block;
-  font-size: 0.75rem;
-  color: #9fdac1;
-  margin-top: 4px;
-}
-
-/* Navigation */
+/* Nav */
 .nav {
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  padding: 12px;
   gap: 6px;
 }
 
 .link {
-  padding: 12px 16px;
+  padding: 12px 12px;
   border-radius: 10px;
   color: #cfe8dd;
   text-decoration: none;
-  font-size: 0.95rem;
-  transition: background 0.25s, color 0.25s;
 }
 
 .link:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Active */
-.active {
-  background: linear-gradient(
-    90deg,
-    rgba(200, 155, 84, 0.18),
-    rgba(200, 155, 84, 0.05)
-  );
-  color: #f4e6c9;
-  font-weight: 600;
-}
-
 /* Footer */
 .footer {
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.support {
-  color: #9fdac1;
-  text-decoration: none;
-  font-size: 0.9rem;
 }
 
 .logout {
   background: none;
   border: none;
   color: #e8b87a;
-  text-align: left;
-  font-size: 0.9rem;
   cursor: pointer;
 }
 
-/* Desktop close button hidden */
+/* Close button */
+.close {
+  display: none;
+}
 
+/* 📱 Mobile */
 @media (max-width: 900px) {
   .sidebar {
-    display: none;
+    transform: translateX(-100%);
   }
 
   .sidebar.open {
@@ -93,18 +69,11 @@
 
   .close {
     display: block;
+    margin: 10px;
     background: none;
     border: none;
-    font-size: 1.5rem;
     color: #fff;
+    font-size: 1.4rem;
     cursor: pointer;
-    margin-bottom: 24px;
-  }
-}
-
-/* Desktop close button hidden */
-@media (min-width: 901px) {
-  .close {
-    display: none;
   }
 }

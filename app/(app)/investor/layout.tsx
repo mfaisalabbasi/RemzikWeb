@@ -12,17 +12,12 @@ export default function InvestorLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   return (
     <div className={styles.container}>
-      {/* Sidebar with state */}
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className={styles.main}>
-        {/* Topbar passes toggle function */}
-        <Topbar toggleSidebar={toggleSidebar} />
-
+        <Topbar onMenuClick={() => setSidebarOpen(true)} />
         <div className={styles.content}>{children}</div>
       </div>
     </div>
