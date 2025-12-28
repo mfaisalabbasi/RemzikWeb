@@ -1,0 +1,24 @@
+.portfolio {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20;
+}
+
+.portfolio h3 {
+  font-size: 1.1rem;
+  color: #0f5f3a;
+  margin-bottom: 16px;
+}
+
+.chartPlaceholder {
+  height: 220px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.95rem;
+}

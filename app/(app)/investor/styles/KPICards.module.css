@@ -1,0 +1,32 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 5;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.card h3 {
+  font-size: 1rem;
+  color: #0f5f3a;
+  margin-bottom: 6px;
+}
+
+.card p {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #111827;
+}
