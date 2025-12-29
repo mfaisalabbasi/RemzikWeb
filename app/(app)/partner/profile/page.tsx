@@ -1,13 +1,13 @@
-import ProfileInfo from "../components/Profile/ProfileInfo";
-import KYCStatus from "../components/Profile/KYCStatus";
-import ProfileSettings from "../components/Profile/ProfileSettings";
+"use client";
+
+import PartnerProfile from "./PartnerProfile";
+import KYCStatus from "./KYCStatus";
 
 export default function PartnerProfilePage() {
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-      <ProfileInfo />
+    <div>
+      <PartnerProfile />
       <KYCStatus />
-      <ProfileSettings />
-    </section>
+    </div>
   );
 }

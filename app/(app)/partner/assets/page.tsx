@@ -1,4 +1,13 @@
-import AssetList from "../components/Assets/AssetList";
-export default function AssetsPage() {
-  return <AssetList />;
+"use client";
+
+import NewAssetForm from "./NewAssetForm";
+import AssetList from "./AssetList";
+
+export default function PartnerAssetsPage() {
+  return (
+    <>
+      <NewAssetForm />
+      <AssetList />
+    </>
+  );
 }

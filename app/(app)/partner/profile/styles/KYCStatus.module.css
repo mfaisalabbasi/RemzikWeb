@@ -1,0 +1,15 @@
+.kyc {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.label {
+  color: #000000;
+}
+
+.status {
+  font-weight: 700;
+}

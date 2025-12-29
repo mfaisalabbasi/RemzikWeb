@@ -1,5 +1,4 @@
-export default function partner() {
-  <div>
-    <h1>hi</h1>
-  </div>;
+import PartnerDashboard from "./dashboard/page";
+export default function DashboardPage() {
+  return <PartnerDashboard />;
 }

@@ -1,4 +1,15 @@
-import PartnerDashboard from "../components/Dashboard/PartnerDashboard";
-export default function DashboardPage() {
-  return <PartnerDashboard />;
+"use client";
+
+import KPICards from "./KPICards";
+import AssetsOverview from "./AssetsOverview";
+import RecentActivity from "./RecentActivity";
+
+export default function PartnerDashboard() {
+  return (
+    <>
+      <KPICards />
+      <AssetsOverview />
+      <RecentActivity />
+    </>
+  );
 }
