@@ -38,3 +38,9 @@ html {
 section.hero {
   background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

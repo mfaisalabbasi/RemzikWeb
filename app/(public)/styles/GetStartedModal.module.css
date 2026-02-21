@@ -1,0 +1,268 @@
+/* ===============================
+   BACKDROP
+   =============================== */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 18, 14, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ===============================
+   MODAL CONTAINER
+   =============================== */
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfa 100%);
+  border-radius: 20px;
+
+  padding: 46px 44px;
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(15, 95, 58, 0.08);
+
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+
+  animation: modalEnter 220ms ease-out;
+}
+
+/* ===============================
+   CLOSE BUTTON
+   =============================== */
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+
+  border-radius: 10px;
+  border: none;
+
+  font-size: 1.4rem;
+  background: transparent;
+  cursor: pointer;
+
+  color: #6b7280;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* ===============================
+   HEADINGS
+   =============================== */
+
+.heading {
+  font-size: 2.1rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: #0b1f17;
+  margin-bottom: 8px;
+}
+
+.subheading {
+  font-size: 1rem;
+  color: #526372;
+  margin-bottom: 36px;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* ===============================
+   CARD GRID
+   =============================== */
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.cards.single {
+  grid-template-columns: 1fr;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ===============================
+   INDIVIDUAL CARD
+   =============================== */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  padding: 28px 26px;
+
+  border-radius: 18px;
+
+  background: linear-gradient(180deg, #ffffff 0%, #f6faf8 100%);
+
+  border: 1px solid rgba(15, 95, 58, 0.12);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 10px 30px rgba(0, 0, 0, 0.06);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(15, 95, 58, 0.35);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* ===============================
+   CARD TEXT
+   =============================== */
+
+.card h3 {
+  font-size: 1.42rem;
+  font-weight: 650;
+  color: #0f5f3a;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: #425466;
+  margin-bottom: 24px;
+}
+
+/* ===============================
+   ACTION BUTTONS
+   =============================== */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.primary {
+  display: block;
+
+  background: linear-gradient(135deg, #0f5f3a, #0c4b2e);
+  color: #ffffff;
+  text-align: center;
+
+  padding: 13px 14px;
+  border-radius: 10px;
+
+  font-weight: 650;
+  letter-spacing: 0.02em;
+
+  text-decoration: none;
+  margin-bottom: 10px;
+
+  box-shadow: 0 6px 14px rgba(15, 95, 58, 0.25);
+
+  transition: all 0.15s ease;
+}
+
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 95, 58, 0.35);
+}
+
+.secondary {
+  display: block;
+  text-align: center;
+
+  padding: 10px;
+  border-radius: 8px;
+
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  color: #c89b54;
+  text-decoration: none;
+
+  border: 1px solid rgba(200, 155, 84, 0.25);
+
+  transition: all 0.15s ease;
+}
+
+.secondary:hover {
+  background: #f7f3eb;
+  border-color: rgba(200, 155, 84, 0.5);
+  color: #9f763e;
+}
+
+/* ===============================
+   ANIMATION
+   =============================== */
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .modal {
+    max-width: 100%;
+    padding: 26px 22px;
+    height: auto;
+    min-height: 70vh;
+    border-radius: 20px 20px 0 0;
+    justify-content: flex-start;
+  }
+
+  .heading {
+    font-size: 1.55rem;
+  }
+
+  .subheading {
+    font-size: 0.85rem;
+  }
+
+  .card {
+    padding: 20px;
+  }
+}

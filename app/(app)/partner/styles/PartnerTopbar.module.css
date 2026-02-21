@@ -1,58 +1,118 @@
 .topbar {
   height: 64px;
+  width: 100%;
+  background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  /* background: rgba(15, 95, 58, 0.9); */
-  background: #ffffff;
-  border-bottom: 1px solid #e5e5e5;
-
-  backdrop-filter: blur(12px);
-  position: sticky;
+  padding: 0 24px;
+  position: fixed; /* <-- change from sticky to fixed */
   top: 0;
-  z-index: 50;
+  left: 0;
+  z-index: 1001; /* above sidebar */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", sans-serif;
 }
 
+/* Hamburger (Mobile) */
 .menu {
-  font-size: 1.5rem;
+  display: none;
   background: none;
   border: none;
-  color: #e5f2ec;
+  font-size: 1.6rem;
+  color: #ffffff;
   cursor: pointer;
-  display: none;
+  transition: color 0.2s ease;
 }
 
-.right {
+.menu:hover {
+  color: #e8b87a;
+}
+
+/* Brand / Logo */
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+/* Right section */
+.rightSection {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.name {
-  color: #123c29;
-  font-size: 1rem;
+/* Notifications */
+.notification {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+}
+
+.notificationDot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 10px;
+  height: 10px;
+  background: #f8b82b;
+  border-radius: 50%;
+  border: 1px solid #0b2f23;
+  font-size: 0.6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #0b2f23;
   font-weight: 700;
+  padding: 0 2px;
+}
+
+/* User */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.username {
+  color: #f8fffd;
+  font-weight: 600;
 }
 
 .logout {
   background: none;
   border: none;
-  color: #e8b87a;
-  font-size: 0.9rem;
+  color: #c19363;
+  font-weight: 500;
   cursor: pointer;
-  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-/* Mobile */
+.logout:hover {
+  color: #e8b87a;
+}
+
+/* ------------------------------
+   Responsive (Mobile)
+------------------------------ */
 @media (max-width: 900px) {
-  .topbar {
-    background: rgba(15, 95, 58, 0.9);
-  }
   .menu {
     display: block;
   }
-  .name {
-    color: #ffffff;
+
+  .brand {
+    font-size: 1rem;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .rightSection {
+    gap: 8px;
+    font-size: 0.9rem;
   }
 }

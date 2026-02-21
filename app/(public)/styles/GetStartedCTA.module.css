@@ -1,0 +1,31 @@
+.button {
+  background-color: #024519;
+  color: #ffffff;
+  padding: 6px 24px;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 500;
+}
+
+.button:hover {
+  background-color: #13803d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .button {
+    background-color: #006223;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 600;
+    width: 100;
+  }
+}

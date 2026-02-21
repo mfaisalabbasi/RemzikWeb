@@ -1,0 +1,50 @@
+.avatarWrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #16a34a;
+  color: #ffffff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.uploadBtn:hover {
+  background: #22c55e;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .avatarWrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

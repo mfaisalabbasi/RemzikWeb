@@ -1,0 +1,39 @@
+.wrapper {
+  padding-top: calc(var(--navbar-height) + 24px);
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 30px;
+  background: #f1f5f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Funding grid */
+.fundingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* No data */
+.noData {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  grid-column: 1/-1;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .fundingGrid {
+    grid-template-columns: 1fr;
+  }
+}

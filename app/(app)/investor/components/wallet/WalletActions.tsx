@@ -1,3 +1,4 @@
+"use client";
 import styles from "./Wallet.module.css";
 
 export default function WalletActions() {

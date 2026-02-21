@@ -1,0 +1,45 @@
+.card {
+  background-color: #ffffff;
+  padding: 24px 20px;
+  border-radius: 14px;
+  text-align: center;
+  flex: 1 1 220px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #16a34a;
+  margin-bottom: 10px;
+}
+
+.desc {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .card {
+    padding: 20px;
+    flex: 1 1 100%;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .desc {
+    font-size: 0.95rem;
+  }
+}

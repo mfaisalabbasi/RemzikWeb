@@ -1,0 +1,28 @@
+.wrapper {
+  padding: 24px;
+  background: #f1f5f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Grid of distribution cards */
+.distributionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .distributionGrid {
+    grid-template-columns: 1fr;
+  }
+}

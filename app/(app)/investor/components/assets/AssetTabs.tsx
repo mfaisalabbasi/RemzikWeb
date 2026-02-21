@@ -1,12 +1,18 @@
 "use client";
 import { useState } from "react";
-import AssetOverview from "./AssetOverview";
-import AssetFinancial from "./AssetFinancial";
-import AssetShariah from "./AssetShariah";
-import AssetDocuments from "./AssetDocuments";
-import styles from "@/app/app/investor/styles/AssetTabs.module.css";
+import styles from "./Asset.module.css";
 
-export default function AssetTabs() {
+export default function AssetTabs({
+  overview,
+  financials,
+  shariah,
+  documents,
+}: {
+  overview: string;
+  financials: string;
+  shariah: string;
+  documents: string;
+}) {
   const [tab, setTab] = useState("overview");
 
   return (
@@ -39,10 +45,10 @@ export default function AssetTabs() {
       </div>
 
       <div className={styles.content}>
-        {tab === "overview" && <AssetOverview />}
-        {tab === "financials" && <AssetFinancial />}
-        {tab === "shariah" && <AssetShariah />}
-        {tab === "documents" && <AssetDocuments />}
+        {tab === "overview" && <p>{overview}</p>}
+        {tab === "financials" && <p>{financials}</p>}
+        {tab === "shariah" && <p>{shariah}</p>}
+        {tab === "documents" && <p>{documents}</p>}
       </div>
     </section>
   );

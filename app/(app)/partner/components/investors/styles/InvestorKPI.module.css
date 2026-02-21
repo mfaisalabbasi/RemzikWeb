@@ -1,0 +1,64 @@
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+/* KPI Card */
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.25s ease;
+  min-width: 0;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #16a34a;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+}
+
+/* Text */
+.label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.sub {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 14px;
+  }
+  .value {
+    font-size: 1.05rem;
+  }
+}

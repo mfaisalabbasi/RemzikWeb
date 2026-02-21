@@ -1,49 +1,118 @@
 .topbar {
   height: 64px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e5e5;
-  padding: 0 20px;
+  width: 100%;
+  background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 24px;
+  position: fixed; /* <-- change from sticky to fixed */
+  top: 0;
+  left: 0;
+  z-index: 1001; /* above sidebar */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", sans-serif;
 }
 
-/* Hamburger */
+/* Hamburger (Mobile) */
 .menu {
   display: none;
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  color: #ffffff;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.menu:hover {
+  color: #e8b87a;
+}
+
+/* Brand / Logo */
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+/* Right section */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Notifications */
+.notification {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 6px;
+}
+
+.notificationDot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 10px;
+  height: 10px;
+  background: #f8b82b;
+  border-radius: 50%;
+  border: 1px solid #0b2f23;
+  font-size: 0.6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #0b2f23;
+  font-weight: 700;
+  padding: 0 2px;
 }
 
 /* User */
 .user {
   display: flex;
-  gap: 16px;
   align-items: center;
-  color: #0b2f23;
-  font-weight: 700;
+  gap: 8px;
+}
+
+.username {
+  color: #f8fffd;
+  font-weight: 600;
 }
 
 .logout {
   background: none;
   border: none;
+  color: #c19363;
+  font-weight: 500;
   cursor: pointer;
-  color: #b27330;
+  transition: color 0.2s ease;
 }
 
-/* 📱 Mobile */
+.logout:hover {
+  color: #e8b87a;
+}
+
+/* ------------------------------
+   Responsive (Mobile)
+------------------------------ */
 @media (max-width: 900px) {
   .menu {
     display: block;
-    color: #ffffff;
   }
 
-  .topbar {
-    background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
+  .brand {
+    font-size: 1rem;
+    flex: 1;
+    justify-content: center;
   }
-  .user {
-    color: #b27330;
+
+  .rightSection {
+    gap: 8px;
+    font-size: 0.9rem;
   }
 }

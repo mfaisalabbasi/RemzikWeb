@@ -1,27 +1,38 @@
 .container {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  background: #f6f8f7;
 }
 
-/* Main area */
+/* Main area next to sidebar */
 .main {
   flex: 1;
-  margin-left: 200px; /* SAME AS SIDEBAR WIDTH */
   display: flex;
   flex-direction: column;
-  min-width: 0; /* 🔥 VERY IMPORTANT */
+  min-width: 0; /* very important for long content */
+  margin-left: 220px; /* match sidebar width */
 }
 
 /* Page content */
 .content {
   padding: 24px;
-  background: #f6f8f7;
-  min-height: calc(100vh - 64px);
+  padding-top: 88px; /* account for topbar height + some spacing */
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: calc(100vh - 88px); /* full screen minus topbar */
 }
 
-/* Mobile */
+/* ------------------------------
+   Mobile
+   ------------------------------ */
 @media (max-width: 900px) {
   .main {
-    margin-left: 0;
+    margin-left: 0; /* sidebar overlays instead of pushing content */
+  }
+
+  .content {
+    padding-top: 72px; /* slightly smaller for mobile topbar */
   }
 }

@@ -1,0 +1,428 @@
+/* =========================
+   CONTAINER SPACING (sidebar aware)
+   ========================= */
+.kpiCards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-left: 20px; /* adjust according to your sidebar width */
+  padding-right: 24px;
+  margin-bottom: 24px;
+  justify-content: flex-start; /* left align on desktop */
+}
+
+.kpiCard {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 20px;
+  flex: 1 1 200px;
+  min-width: 200px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.kpiCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.icon {
+  font-size: 1.8rem;
+  color: #0f5f3a;
+  margin-right: 14px; /* space between icon and text */
+  flex-shrink: 0;
+}
+
+.kpiText {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpiText h3 {
+  font-size: 1rem;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.kpiText p {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .kpiCards {
+    gap: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .kpiCard {
+    flex: 1 1 100%; /* take full width on tablet/small screens */
+    padding: 14px 16px;
+  }
+
+  .icon {
+    font-size: 1.5rem;
+    margin-right: 10px;
+  }
+
+  .kpiText p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiCard {
+    flex-direction: column; /* stack icon and text */
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .icon {
+    margin-right: 0;
+  }
+
+  .kpiText h3 {
+    font-size: 0.95rem;
+  }
+
+  .kpiText p {
+    font-size: 1rem;
+  }
+}
+/* portfolio snapshot */
+/* ================= PORTFOLIO SNAPSHOT ================= */
+/* Portfolio Snapshot */
+.portfolioCard {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #0f5f3a;
+  margin-bottom: 16px;
+}
+
+/* Chart */
+.chartWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.chartPlaceholder {
+  width: 100%;
+  max-width: 800px;
+  height: 240px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* Metrics */
+.portfolioMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.metricItem {
+  flex: 1 1 180px;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metricLabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metricValue {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metricValueHighlight {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metricIcon {
+  color: #0f5f3a;
+}
+
+.metricIconHighlight {
+  color: #16a34a;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .chartPlaceholder {
+    height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .portfolioMetrics {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .chartPlaceholder {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolioCard {
+    padding: 16px;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .chartPlaceholder {
+    height: 180px;
+  }
+
+  .metricItem {
+    flex: 1 1 100%;
+  }
+
+  .metricValue,
+  .metricValueHighlight {
+    font-size: 1rem;
+  }
+
+  .metricLabel {
+    font-size: 0.75rem;
+  }
+
+  .metricIcon,
+  .metricIconHighlight {
+    font-size: 1rem;
+  }
+}
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .portfolioCard {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .chartPlaceholder {
+    max-width: 100%;
+    height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .portfolioMetrics {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .chartPlaceholder {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolioCard {
+    padding: 16px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .chartPlaceholder {
+    height: 180px;
+  }
+
+  .metricValue,
+  .metricValueHighlight {
+    font-size: 1rem;
+  }
+
+  .metricLabel {
+    font-size: 0.75rem;
+  }
+
+  .metricIcon,
+  .metricIconHighlight {
+    font-size: 1rem;
+  }
+}
+/* ================== RECENT ACTIVITY ================== */
+.recent {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  margin-left: 20px; /* sidebar width */
+  margin-right: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f5f3a;
+  margin-bottom: 16px;
+}
+
+.recentWrapper {
+  overflow-x: auto; /* horizontal scroll if table is wider than viewport */
+}
+
+/* Table Styling */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px; /* row gap for card-like rows */
+  min-width: 480px;
+}
+
+.table th,
+.table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.table th {
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.table td {
+  color: #111827;
+  background: #ffffff;
+  border-bottom: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.table tr td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.table tr td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.table tr:hover td {
+  background-color: #f1f5f9;
+}
+
+.typeCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeIcon {
+  color: #0f5f3a;
+  font-size: 1rem;
+}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 1024px) {
+  .recent {
+    margin-left: 16px;
+    margin-right: 16px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table {
+    min-width: 100%;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .typeIcon {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .recent {
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 16px;
+  }
+
+  /* Stack rows for mobile */
+  .table,
+  .table thead,
+  .table tbody,
+  .table th,
+  .table td,
+  .table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    margin-bottom: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .table th {
+    display: none; /* hide headers on mobile */
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .typeCell {
+    gap: 6px;
+  }
+}

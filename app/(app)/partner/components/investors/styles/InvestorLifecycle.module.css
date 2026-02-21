@@ -1,0 +1,64 @@
+.stripWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.stepContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  z-index: 1;
+}
+
+.completed {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.label {
+  font-size: 0.75rem;
+  margin-left: 6px;
+  color: #6b7280;
+}
+
+.activeLabel {
+  color: #111827;
+  font-weight: 600;
+}
+
+.line {
+  width: 40px;
+  height: 2px;
+  background: #e5e7eb;
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.activeLine {
+  background: #16a34a;
+}
+
+@media (max-width: 480px) {
+  .line {
+    width: 20px;
+  }
+}

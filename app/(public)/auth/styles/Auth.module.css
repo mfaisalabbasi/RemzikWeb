@@ -1,0 +1,331 @@
+/* ================================
+   CARD CONTAINER
+   ================================ */
+.authCard {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 28px 24px;
+
+  background: #ffffff;
+  border-radius: 18px;
+
+  box-shadow:
+    0 24px 50px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+
+  border: 1px solid #eef2f3;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ================================
+   HEADER
+   ================================ */
+.header {
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.header p {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ================================
+   FORM WRAPPER (scrollable on mobile)
+   ================================ */
+.formWrapper {
+  max-height: 75vh; /* limits height on mobile */
+  overflow-y: auto;
+  padding-right: 4px; /* prevent scrollbar overlap */
+}
+
+/* ================================
+   FORM
+   ================================ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ================================
+   FIELD
+   ================================ */
+.field {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+/* ================================
+   INPUT
+   ================================ */
+.fieldInput {
+  margin-top: 4px;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  border: 1px solid #d7dee3;
+
+  font-size: 0.92rem;
+  outline: none;
+
+  transition:
+    border 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.fieldInput:focus {
+  border-color: #0f5f3a;
+  box-shadow: 0 0 0 2px rgba(15, 95, 58, 0.15);
+}
+
+/* ================================
+   PRIMARY BUTTON
+   ================================ */
+.primary {
+  margin-top: 8px;
+
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+
+  background: linear-gradient(135deg, #0f5f3a, #0c4b2e);
+
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.92rem;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 95, 58, 0.25);
+}
+
+/* ================================
+   NOTE / LINK
+   ================================ */
+.note {
+  font-size: 0.88rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.link {
+  margin-left: 6px;
+  color: #0f5f3a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+@media (max-width: 640px) {
+  .authCard {
+    margin: 20px 16px;
+    padding: 22px;
+  }
+
+  .header h1 {
+    font-size: 1.35rem;
+  }
+
+  .header p {
+    font-size: 0.85rem;
+  }
+
+  .formWrapper {
+    max-height: 70vh; /* scroll if form too tall */
+  }
+}
+
+/* profile creation */
+
+/* ===============================
+   PAGE CONTAINER
+   =============================== */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #f9fafb;
+}
+
+/* ===============================
+   CARD
+   =============================== */
+.card {
+  max-width: 500px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px;
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eef2f3;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   HEADINGS
+   =============================== */
+.heading {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+}
+
+.subheading {
+  font-size: 0.95rem;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ===============================
+   ROLE CARDS
+   =============================== */
+.roles {
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+}
+
+.roleCard {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e7ecef;
+  background: #fbfdfc;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.roleCard:hover {
+  transform: translateY(-3px);
+  border-color: #0f5f3a33;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.roleCard h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f5f3a;
+  margin-bottom: 6px;
+}
+
+.roleCard p {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+/* ACTIVE ROLE */
+.roleCard.active {
+  border-color: #0f5f3a;
+  box-shadow: 0 16px 32px rgba(15, 95, 58, 0.15);
+  background: #ffffff;
+}
+
+/* ===============================
+   PRIMARY BUTTON
+   =============================== */
+.primary {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #0f5f3a, #0c4b2e);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 95, 58, 0.25);
+}
+
+.primary:disabled {
+  background: #a0b3a1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ===============================
+   NOTE / LINK
+   =============================== */
+.note {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.link {
+  margin-left: 6px;
+  color: #0f5f3a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+@media (max-width: 600px) {
+  .roles {
+    flex-direction: column;
+  }
+
+  .roleCard {
+    padding: 18px;
+  }
+
+  .card {
+    padding: 28px;
+  }
+
+  .heading {
+    font-size: 1.5rem;
+  }
+
+  .subheading {
+    font-size: 0.85rem;
+  }
+}

@@ -14,10 +14,15 @@ export default function InvestorLayout({
 
   return (
     <div className={styles.container}>
+      {/* Sidebar */}
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+      {/* Main content */}
       <div className={styles.main}>
+        {/* Topbar */}
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* Page content */}
         <div className={styles.content}>{children}</div>
       </div>
     </div>

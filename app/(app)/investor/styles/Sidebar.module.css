@@ -1,79 +1,103 @@
+/* ------------------------------
+   Sidebar Container
+------------------------------ */
 .sidebar {
   position: fixed;
+  top: 64px; /* <-- start below the topbar */
   left: 0;
-  top: 0;
-  width: 200px;
-  height: 100vh;
+  width: 220px;
+  height: calc(100vh - 64px); /* full height minus topbar */
   background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
   color: #e5f2ec;
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  padding: 20px 12px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   transition: transform 0.3s ease;
+  z-index: 1000; /* below topbar */
 }
 
-/* Logo */
-.logo {
-  padding: 24px;
-  font-size: 1.4rem;
-  font-weight: 700;
+/* Open state for mobile */
+.sidebar.open {
+  transform: translateX(0);
 }
 
-/* Nav */
+/* Navigation */
 .nav {
-  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  flex-grow: 1;
 }
 
 .link {
-  padding: 12px 12px;
+  padding: 12px 16px;
   border-radius: 10px;
   color: #cfe8dd;
+  font-weight: 600;
   text-decoration: none;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 .link:hover {
   background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 /* Footer */
 .footer {
   margin-top: auto;
-  padding: 20px;
+  padding-top: 20px;
 }
 
 .logout {
   background: none;
   border: none;
   color: #e8b87a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.logout:hover {
+  color: #f8fffd;
+}
+
+/* Close button (mobile) */
+.close {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #ffffff;
+  margin-bottom: 24px;
   cursor: pointer;
 }
 
-/* Close button */
-.close {
-  display: none;
-}
-
-/* 📱 Mobile */
+/* ------------------------------
+   Mobile Styles
+------------------------------ */
 @media (max-width: 900px) {
   .sidebar {
     transform: translateX(-100%);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
+    width: 80%;
+    max-width: 260px;
+    padding: 20px;
   }
 
   .close {
     display: block;
-    margin: 10px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.4rem;
-    cursor: pointer;
   }
+}
+
+/* Mobile backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
 }

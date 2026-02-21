@@ -1,81 +1,450 @@
-/* Root section */
-.section {
-  background: #ffffff;
+/* ===========================
+   PROFILE PAGE LAYOUT
+=========================== */
+.profilePage {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 90px;
+}
+
+/* ===========================
+   HERO / PROFILE
+=========================== */
+.profileHero {
+  background: #fff;
+  padding: 24px;
   border-radius: 16px;
-  padding: 32px;
-  margin: 32px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  text-align: center;
 }
 
-.section h2 {
-  color: #0f5f3a;
-  margin-bottom: 20px;
+.avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
-/* Form & Security container */
-.form,
-.security {
+.userInfo h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.userInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.statsBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.riskBar {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.riskTrack {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.riskFill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.kycStatus {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.verified {
+  color: #16a34a;
+}
+.pending {
+  color: #f59e0b;
+}
+.rejected {
+  color: #ef4444;
+}
+
+.editBtn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background: #0f5f3a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===========================
+   INVESTMENTS
+=========================== */
+.investmentsSection h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.investmentsList {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* Form fields */
-.field {
+.investmentCard {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease;
+}
+
+.investmentCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.investmentCard img {
+  width: 110px;
+  height: 76px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.details {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  font-size: 0.95rem;
-  color: #374151;
+  gap: 4px;
 }
 
-.fieldInput {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  margin-top: 6px;
-}
-
-.fieldSelect {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  margin-top: 6px;
-}
-
-/* Primary button */
-.primary {
-  background: #0f5f3a;
-  color: white;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
+.details h3 {
+  margin: 0;
+  font-size: 1rem;
   font-weight: 600;
-  cursor: pointer;
-  margin-top: 12px;
 }
 
-/* KYC Card */
-.kycCard {
-  background: #f9fafb;
+.details p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.status {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.status.active {
+  background: #16a34a;
+  color: #fff;
+}
+.status.completed {
+  background: #0f172a;
+  color: #fff;
+}
+.status.pending {
+  background: #f59e0b;
+  color: #fff;
+}
+
+/* ===========================
+   SIDEBAR
+=========================== */
+.sidebarCard {
+  background: #fff;
+  padding: 20px;
   border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebarTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.metricRow,
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.metaRow {
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 10px 0;
+}
+
+.kycBadge {
+  background: #eef2f7;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Buttons */
+.ctaPrimary {
+  background: #0f5f3a;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ctaPrimary:hover {
+  filter: brightness(1.05);
+}
+
+.ctaSecondary {
+  background: #eef2f7;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ctaSecondary:hover {
+  background: #e3e8ef;
+}
+
+.ctaGhost {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ctaGhost:hover {
+  background: #f7f9fc;
+}
+
+/* ===========================
+   MODAL
+=========================== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff;
   padding: 24px;
+  border-radius: 14px;
+  width: 400px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .section {
-    margin: 24px;
-    padding: 28px;
+.modal input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ===========================
+   HERO PRO BLOCKS (keep intact)
+=========================== */
+.heroLeft {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.email {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+.badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #eef2f7;
+}
+.heroStats {
+  display: flex;
+  gap: 24px;
+  margin-top: 18px;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+}
+.metric label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+.metric span {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* ===========================
+   CARD IMPROVED
+=========================== */
+.assetImage {
+  width: 120px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.cardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dataGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 12px;
+}
+.dataGrid label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+.dataGrid span {
+  font-weight: 600;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .profilePage {
+    grid-template-columns: 1fr;
+  }
+  .rightColumn {
+    position: relative;
+    top: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .sidebarCard {
+    flex: 1 1 300px;
+  }
+  .investmentsList {
+    gap: 14px;
   }
 }
 
-@media (max-width: 640px) {
-  .section {
-    margin: 16px;
-    padding: 20px;
+/* Mobile */
+@media (max-width: 600px) {
+  .profilePage {
+    padding: 16px;
+  }
+  .rightColumn {
+    flex-direction: column;
+  }
+  .sidebarCard {
+    width: 100%;
+  }
+  .metricRow,
+  .metaRow {
+    font-size: 0.85rem;
+  }
+  .details h3 {
+    font-size: 0.95rem;
+  }
+  .details p {
+    font-size: 0.8rem;
+  }
+  .ctaPrimary,
+  .ctaSecondary,
+  .ctaGhost {
+    padding: 14px;
+    font-size: 0.9rem;
+  }
+  .investmentCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .investmentCard img {
+    width: 100%;
+    height: 150px;
   }
 }

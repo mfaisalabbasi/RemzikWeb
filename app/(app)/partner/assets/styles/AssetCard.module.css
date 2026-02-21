@@ -1,0 +1,129 @@
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid #eef2f7;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: #16a34a;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.stage {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 14px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+/* Stage Colors */
+.stage.funding {
+  background: #ecfdf5;
+  color: #047857;
+}
+.stage.approved {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.stage.completed {
+  background: #fef9c3;
+  color: #b45309;
+}
+
+.type {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.progressWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progressBar {
+  flex: 1;
+  height: 10px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+.percent {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #16a34a;
+  min-width: 50px;
+  text-align: right;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.statLabel {
+  font-weight: 500;
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+  .name {
+    font-size: 1rem;
+  }
+  .stage {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+  .type {
+    font-size: 0.8rem;
+  }
+  .percent {
+    font-size: 0.7rem;
+    min-width: 45px;
+  }
+  .stats {
+    gap: 8px;
+    font-size: 0.7rem;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
