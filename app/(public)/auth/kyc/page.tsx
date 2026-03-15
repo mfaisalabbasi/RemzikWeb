@@ -1,266 +1,195 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { kycSchema } from "@/app/integrations/validation/kyc.schema";
+import { z } from "zod";
 import styles from "../styles/kyc.module.css";
 
+type KYCFormData = z.infer<typeof kycSchema>;
+
 interface KYCProps {
-  role: "investor" | "partner";
-  onComplete: () => void; // callback when KYC is submitted
+  role: "INVESTOR" | "PARTNER";
+  onComplete?: () => void;
 }
 
 export default function KYCPage({ role, onComplete }: KYCProps) {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    dob: "",
-    idDocument: "",
-    addressProof: "",
-    bankName: "",
-    bankAccount: "",
-    riskProfile: "",
-    investmentExperience: "",
-    companyName: "",
-    companyRegistration: "",
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<KYCFormData>({
+    resolver: zodResolver(kycSchema),
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onSubmit = async (data: KYCFormData) => {
+    setSubmitting(true);
+    setServerError("");
+
+    try {
+      const formData = new FormData();
+
+      formData.append("fullName", data.fullName);
+      formData.append("dob", data.dob);
+      formData.append("idDocument", data.idDocument[0]);
+      formData.append("addressProof", data.addressProof[0]);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kyc/submit`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+
+        let message = "KYC submission failed";
+
+        try {
+          const json = JSON.parse(text);
+          message = json.message || message;
+        } catch {
+          message = text;
+        }
+
+        throw new Error(message);
+      }
+
+      /**
+       * Fetch current user to detect role safely
+       */
+      const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+        credentials: "include",
+      });
+
+      if (!meRes.ok) {
+        router.push("/auth/login");
+        return;
+      }
+
+      const user = await meRes.json();
+
+      onComplete?.();
+
+      /**
+       * Redirect based on role
+       */
+      if (user.role === "INVESTOR") {
+        router.push("/investor");
+      } else if (user.role === "PARTNER") {
+        router.push("/partner");
+      } else {
+        router.push("/dashboard");
+      }
+
+      router.refresh();
+    } catch (err: any) {
+      console.error("KYC submission failed:", err);
+      setServerError(err.message || "Unexpected server error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: integrate backend API call here
-    console.log("KYC Submitted:", { role, ...formData });
-    onComplete();
+  const handleSkip = () => {
+    router.push("/auth/login");
   };
 
   return (
     <main className={styles.container}>
       <section className={styles.card}>
         <h1 className={styles.heading}>KYC Verification</h1>
+
         <p className={styles.subheading}>
-          Complete your verification to access all{" "}
-          {role === "investor" ? "investment features" : "partner features"}.
+          Complete identity verification to access Remzik{" "}
+          {role === "INVESTOR" ? "investment" : "partner"} features.
         </p>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {/* Step 1: Identity */}
-          {step === 1 && (
-            <>
-              <label className={styles.field}>
-                Full Name
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
+        {serverError && <div className={styles.errorBox}>{serverError}</div>}
 
-              <label className={styles.field}>
-                Date of Birth
-                <input
-                  type="date"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleChange}
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
+        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+          {/* Full Name */}
+          <label className={styles.field}>
+            Full Name
+            <input
+              {...register("fullName")}
+              type="text"
+              placeholder="John Doe"
+              className={styles.fieldInput}
+            />
+            {errors.fullName && (
+              <span className={styles.error}>{errors.fullName.message}</span>
+            )}
+          </label>
 
-              <label className={styles.field}>
-                Identity Document
-                <input
-                  type="file"
-                  name="idDocument"
-                  onChange={handleChange}
-                  accept=".jpg,.png,.pdf"
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
+          {/* DOB */}
+          <label className={styles.field}>
+            Date of Birth
+            <input
+              {...register("dob")}
+              type="date"
+              className={styles.fieldInput}
+            />
+            {errors.dob && (
+              <span className={styles.error}>{errors.dob.message}</span>
+            )}
+          </label>
 
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={nextStep}
-                >
-                  Next
-                </button>
-              </div>
-            </>
-          )}
+          {/* ID Document */}
+          <label className={styles.field}>
+            Identity Document
+            <input
+              {...register("idDocument")}
+              type="file"
+              accept=".jpg,.png,.pdf"
+              className={styles.fieldInput}
+            />
+            {errors.idDocument && (
+              <span className={styles.error}>
+                {errors.idDocument.message as string}
+              </span>
+            )}
+          </label>
 
-          {/* Step 2: Address */}
-          {step === 2 && (
-            <>
-              <label className={styles.field}>
-                Address Proof
-                <input
-                  type="file"
-                  name="addressProof"
-                  onChange={handleChange}
-                  accept=".jpg,.png,.pdf"
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
+          {/* Address Proof */}
+          <label className={styles.field}>
+            Address Proof
+            <input
+              {...register("addressProof")}
+              type="file"
+              accept=".jpg,.png,.pdf"
+              className={styles.fieldInput}
+            />
+            {errors.addressProof && (
+              <span className={styles.error}>
+                {errors.addressProof.message as string}
+              </span>
+            )}
+          </label>
 
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={prevStep}
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  className={styles.primary}
-                  onClick={nextStep}
-                >
-                  Next
-                </button>
-              </div>
-            </>
-          )}
+          <div className={styles.actions}>
+            <button
+              type="submit"
+              className={styles.primary}
+              disabled={submitting}
+            >
+              {submitting ? "Submitting..." : "Submit KYC"}
+            </button>
 
-          {/* Step 3: Bank Details */}
-          {step === 3 && (
-            <>
-              <label className={styles.field}>
-                Bank Name
-                <input
-                  type="text"
-                  name="bankName"
-                  value={formData.bankName}
-                  onChange={handleChange}
-                  placeholder="Bank Name"
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
-
-              <label className={styles.field}>
-                Bank Account Number
-                <input
-                  type="text"
-                  name="bankAccount"
-                  value={formData.bankAccount}
-                  onChange={handleChange}
-                  placeholder="1234567890"
-                  required
-                  className={styles.fieldInput}
-                />
-              </label>
-
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={prevStep}
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  className={styles.primary}
-                  onClick={nextStep}
-                >
-                  Next
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Step 4: Role-Specific */}
-          {step === 4 && (
-            <>
-              {role === "investor" && (
-                <>
-                  <label className={styles.field}>
-                    Risk Profile
-                    <select
-                      name="riskProfile"
-                      value={formData.riskProfile}
-                      onChange={handleChange}
-                      required
-                      className={styles.fieldInput}
-                    >
-                      <option value="">Select</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </label>
-
-                  <label className={styles.field}>
-                    Investment Experience
-                    <input
-                      type="text"
-                      name="investmentExperience"
-                      value={formData.investmentExperience}
-                      onChange={handleChange}
-                      placeholder="Years of experience"
-                      className={styles.fieldInput}
-                    />
-                  </label>
-                </>
-              )}
-
-              {role === "partner" && (
-                <>
-                  <label className={styles.field}>
-                    Company Name
-                    <input
-                      type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="Company Name"
-                      required
-                      className={styles.fieldInput}
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    Company Registration Document
-                    <input
-                      type="file"
-                      name="companyRegistration"
-                      onChange={handleChange}
-                      accept=".jpg,.png,.pdf"
-                      required
-                      className={styles.fieldInput}
-                    />
-                  </label>
-                </>
-              )}
-
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={prevStep}
-                >
-                  Back
-                </button>
-                <button type="submit" className={styles.primary}>
-                  Submit KYC
-                </button>
-              </div>
-            </>
-          )}
+            <button
+              type="button"
+              className={styles.secondary}
+              onClick={handleSkip}
+            >
+              Skip for now
+            </button>
+          </div>
         </form>
       </section>
     </main>

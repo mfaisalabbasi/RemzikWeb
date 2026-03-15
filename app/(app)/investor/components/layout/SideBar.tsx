@@ -3,6 +3,9 @@
 import styles from "@/app/(app)/investor/styles/Sidebar.module.css";
 import Link from "next/link";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
+import { logout } from "@/app/integrations/api/auth";
+
 import {
   FiHome,
   FiPieChart,
@@ -31,8 +34,19 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const router = useRouter();
+
   const handleLinkClick = () => {
     if (open) onClose();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   return (
@@ -43,6 +57,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <nav className={styles.nav}>
           {navItems.map((item) => {
             const Icon = item.icon;
+
             return (
               <Link
                 key={item.href}
@@ -58,7 +73,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className={styles.footer}>
-          <button className={styles.logout}>Logout</button>
+          <button className={styles.logout} onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </aside>
     </>

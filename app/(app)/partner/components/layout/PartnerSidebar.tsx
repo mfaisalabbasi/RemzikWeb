@@ -5,12 +5,12 @@ import styles from "@/app/(app)/partner/styles/PartnerSidebar.module.css";
 import Link from "next/link";
 import Image from "next/image";
 import clsx from "clsx";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/app/integrations/api/auth";
+
 import { FiHome, FiLayers, FiUser, FiUsers } from "react-icons/fi";
 import { AiFillFund } from "react-icons/ai";
-import { BsDistributeHorizontal } from "react-icons/bs";
-import { Divide, HandCoins } from "lucide-react";
-import { FcDocument } from "react-icons/fc";
+import { HandCoins } from "lucide-react";
 import { GrDocument } from "react-icons/gr";
 
 const navItems = [
@@ -34,9 +34,19 @@ interface SidebarProps {
 
 export default function PartnerSidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const handleLinkClick = () => {
     if (open) onClose();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   return (
@@ -81,7 +91,9 @@ export default function PartnerSidebar({ open, onClose }: SidebarProps) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <button className={styles.logout}>Logout</button>
+          <button className={styles.logout} onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </aside>
     </>

@@ -329,3 +329,11 @@
     font-size: 0.85rem;
   }
 }
+
+/* error */
+
+.error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+}
