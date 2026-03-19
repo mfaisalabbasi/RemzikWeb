@@ -1,3 +1,4 @@
+/* ---------------- WRAPPER ---------------- */
 .wrapper {
   padding: 24px;
   background: #f1f5f9;
@@ -13,7 +14,7 @@
   color: #111827;
 }
 
-/* Grid of distribution cards */
+/* ---------------- GRID ---------------- */
 .distributionGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -24,5 +25,103 @@
 @media (max-width: 992px) {
   .distributionGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------- CARD ---------------- */
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: #16a34a;
+}
+
+/* ---------------- HEADER ---------------- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ---------------- STAGE ---------------- */
+.stage {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 14px;
+  text-transform: uppercase;
+}
+
+/* ✅ FIXED (IMPORTANT) */
+.funding {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.approved {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.completed {
+  background: #fef9c3;
+  color: #b45309;
+}
+
+.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ---------------- STATS ---------------- */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.label {
+  font-weight: 500;
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+/* ---------------- MOBILE ---------------- */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .name {
+    font-size: 0.95rem;
+  }
+
+  .stage {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+
+  .stats {
+    font-size: 0.7rem;
+    gap: 8px;
   }
 }

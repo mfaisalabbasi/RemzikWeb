@@ -1,6 +1,6 @@
 /* ---------------- MAIN WRAPPER ---------------- */
 .wrapper {
-  padding-top: calc(var(--navbar-height) + 16px);
+  padding-top: 20px;
   margin-top: var(--topbar-height);
   padding-left: 16px;
   padding-right: 16px;
@@ -42,8 +42,9 @@
 .assetGrid,
 .snapshotGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 350px));
   gap: 16px;
+  justify-content: flex-start;
 }
 
 /* ---------------- BOTTOM GRID (TABLE + FEED) ---------------- */

@@ -36,18 +36,25 @@
   text-transform: uppercase;
 }
 
-/* Stage Colors */
-.stage.funding {
+/* FIXED STATUS */
+.funding {
   background: #ecfdf5;
   color: #047857;
 }
-.stage.approved {
+
+.approved {
   background: #e0f2fe;
   color: #0284c7;
 }
-.stage.completed {
+
+.completed {
   background: #fef9c3;
   color: #b45309;
+}
+
+.pending {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .stats {
@@ -62,22 +69,4 @@
   font-weight: 500;
   color: #9ca3af;
   margin-right: 4px;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .card {
-    padding: 16px;
-  }
-  .name {
-    font-size: 0.95rem;
-  }
-  .stage {
-    font-size: 0.65rem;
-    padding: 3px 8px;
-  }
-  .stats {
-    font-size: 0.7rem;
-    gap: 8px;
-  }
 }

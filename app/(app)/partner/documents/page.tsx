@@ -1,42 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./styles/Documents.module.css";
 import DocumentsFilter from "./DocumentsFilter";
 import DocumentCard from "./DocumentCard";
 import DocumentDetailDrawer from "./DocumentDetailDrawer";
-
-const mockDocuments = [
-  {
-    title: "Riyadh Tower Investment Agreement",
-    type: "Agreement",
-    status: "Pending",
-    uploaded: "2026-02-15",
-    description: "Agreement for Riyadh Tower residential asset.",
-  },
-  {
-    title: "Jeddah Hub Financial Report",
-    type: "Report",
-    status: "Approved",
-    uploaded: "2026-02-12",
-    description: "Quarterly financial report for Jeddah Commercial Hub.",
-  },
-  {
-    title: "Dammam Villas Ownership Certificate",
-    type: "Certificate",
-    status: "Pending",
-    uploaded: "2026-02-10",
-    description: "Ownership certificate for Dammam Villas project.",
-  },
-];
-
+import { getPartnerDocuments } from "@/app/integrations/api/asset";
 export default function PartnerDocumentsPage() {
+  const [documents, setDocuments] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const filteredDocs = mockDocuments.filter(
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await getPartnerDocuments();
+        setDocuments(res);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchDocs();
+  }, []);
+
+  const filteredDocs = documents.filter(
     (doc) =>
       doc.title.toLowerCase().includes(search.toLowerCase()) &&
       (typeFilter ? doc.type === typeFilter : true),
@@ -59,9 +49,9 @@ export default function PartnerDocumentsPage() {
       />
 
       <div className={styles.documentsGrid}>
-        {filteredDocs.map((doc, i) => (
+        {filteredDocs.map((doc) => (
           <DocumentCard
-            key={i}
+            key={doc.id}
             document={doc}
             onClick={() => handleCardClick(doc)}
           />

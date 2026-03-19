@@ -26,6 +26,7 @@ export default function InvestorsTable({ investors, onSelect }: Props) {
               <th>Asset</th>
               <th>Invested</th>
               <th>Ownership</th>
+              
               <th>Status</th>
             </tr>
           </thead>

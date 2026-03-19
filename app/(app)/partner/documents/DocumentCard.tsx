@@ -13,6 +13,7 @@ export default function DocumentCard({ document, onClick }: Props) {
     Pending: "#facc15",
     Approved: "#16a34a",
     Rejected: "#ef4444",
+    Submitted: "#2186c1",
   };
 
   return (

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AlertProvider } from "./integrations/Alert/AlertContext";
 
 export const metadata = {
   title: "Remzik",
@@ -12,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AlertProvider>{children}</AlertProvider>
+      </body>
     </html>
   );
 }

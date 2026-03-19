@@ -16,6 +16,7 @@ export default function DistributionCard({
   totalRaised,
   investors,
   nextPayout,
+
 }: Props) {
   return (
     <div className={styles.card}>

@@ -9,7 +9,7 @@
   border-radius: 16px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
-  position: sticky;
+  /* position: sticky; */
   top: calc(var(--navbar-height) + 16px);
   z-index: 50;
 }
