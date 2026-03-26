@@ -1,33 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import InvestmentCard from "./InvestmentCard";
 import styles from "./Portfolio.module.css";
-
-const investments = [
-  {
-    id: 1,
-    name: "Property A",
-    amount: "$10,000",
-    roi: "7.4%",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Property B",
-    amount: "$20,000",
-    roi: "6.8%",
-    status: "Closed",
-  },
-  {
-    id: 3,
-    name: "Property C",
-    amount: "$15,500",
-    roi: "8.0%",
-    status: "Active",
-  },
-];
+import { getPortfolio } from "@/app/integrations/api/investor";
 
 export default function InvestmentList() {
+  const [investments, setInvestments] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getPortfolio();
+        setInvestments(res.portfolio || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <section className={styles.summary}>
       <div className={styles.summaryHeader}>
@@ -36,15 +29,20 @@ export default function InvestmentList() {
       </div>
 
       <div className={styles.grid}>
-        {investments.map((inv) => (
-          <InvestmentCard
-            key={inv.id}
-            name={inv.name}
-            amount={inv.amount}
-            roi={inv.roi}
-            status={inv.status}
-          />
-        ))}
+        {investments.length === 0 ? (
+          <p>No investments found</p>
+        ) : (
+          investments.map((inv) => (
+            <InvestmentCard
+              key={inv.id}
+              name={inv.name}
+              amount={`$${Number(inv.amount).toLocaleString()}`}
+              roi={inv.roi}
+              status={inv.status}
+              image={inv.image}
+            />
+          ))
+        )}
       </div>
     </section>
   );

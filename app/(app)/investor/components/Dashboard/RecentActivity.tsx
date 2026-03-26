@@ -1,33 +1,26 @@
 "use client";
-import {
-  FaExchangeAlt,
-  FaMoneyBillWave,
-  FaArrowCircleUp,
-} from "react-icons/fa";
-import styles from "./Dashboard.module.css";
 
-const transactions = [
-  {
-    date: "2025-12-20",
-    type: "Investment",
-    amount: "$10,000",
-    icon: <FaExchangeAlt />,
-  },
-  {
-    date: "2025-12-22",
-    type: "Profit Payout",
-    amount: "$750",
-    icon: <FaMoneyBillWave />,
-  },
-  {
-    date: "2025-12-25",
-    type: "Withdrawal",
-    amount: "$5,000",
-    icon: <FaArrowCircleUp />,
-  },
-];
+import { useEffect, useState } from "react";
+import styles from "./Dashboard.module.css";
+import { getDashboardStats } from "@/app/integrations/api/investor";
+import { FaExchangeAlt } from "react-icons/fa";
 
 export default function RecentActivity() {
+  const [activity, setActivity] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getDashboardStats();
+        setActivity(res.recentActivity || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className={styles.recent}>
       <h3 className={styles.sectionTitle}>Recent Activity</h3>
@@ -36,22 +29,39 @@ export default function RecentActivity() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Date</th>
               <th>Type</th>
+              <th>Date</th>
               <th>Amount</th>
             </tr>
           </thead>
+
           <tbody>
-            {transactions.map((tx, idx) => (
-              <tr key={idx}>
-                <td>{tx.date}</td>
-                <td className={styles.typeCell}>
-                  <span className={styles.typeIcon}>{tx.icon}</span>
-                  {tx.type}
-                </td>
-                <td>{tx.amount}</td>
+            {activity.length === 0 ? (
+              <tr>
+                <td colSpan={3}>No activity found</td>
               </tr>
-            ))}
+            ) : (
+              activity.map((item, index) => (
+                <tr key={index}>
+                  <td className={styles.typeCell}>
+                    <FaExchangeAlt className={styles.typeIcon} />
+                    {item.title}
+                  </td>
+
+                  <td>{new Date(item.date).toLocaleDateString()}</td>
+
+                  <td
+                    style={{
+                      color: item.amount >= 0 ? "#16a34a" : "#ef4444",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {item.amount >= 0 ? "+" : "-"}$
+                    {Math.abs(item.amount).toLocaleString()}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

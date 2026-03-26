@@ -1,14 +1,51 @@
 "use client";
-import { FaWallet, FaCoins, FaChartLine } from "react-icons/fa";
-import styles from "./Dashboard.module.css";
 
-const cards = [
-  { title: "Total Balance", value: "$120,500", icon: <FaWallet /> },
-  { title: "Active Investments", value: "8", icon: <FaCoins /> },
-  { title: "Estimated ROI", value: "7.4%", icon: <FaChartLine /> },
-];
+import { useEffect, useState } from "react";
+import { FaWallet, FaCoins, FaChartLine, FaChartPie } from "react-icons/fa";
+import styles from "./Dashboard.module.css";
+import { getDashboardStats } from "@/app/integrations/api/investor";
 
 export default function KPICards() {
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getDashboardStats();
+        setData(res);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!data) return <p>Loading...</p>;
+
+  const cards = [
+    {
+      title: "Wallet Balance",
+      value: `$${Number(data.walletBalance).toLocaleString()}`,
+      icon: <FaWallet />,
+    },
+    {
+      title: "Portfolio Value",
+      value: `$${Number(data.portfolioValue).toLocaleString()}`,
+      icon: <FaCoins />,
+    },
+    {
+      title: "Total Profit",
+      value: `$${Number(data.totalProfit).toLocaleString()}`,
+      icon: <FaChartLine />,
+    },
+    {
+      title: "Active Investments",
+      value: data.activeInvestments,
+      icon: <FaChartPie />,
+    },
+  ];
+
   return (
     <div className={styles.kpiCards}>
       {cards.map((card) => (

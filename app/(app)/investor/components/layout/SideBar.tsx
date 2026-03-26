@@ -17,15 +17,16 @@ import {
 
 const navItems = [
   { label: "Dashboard", href: "/investor", icon: FiHome },
-  { label: "Portfolio", href: "/investor/portfolio", icon: FiPieChart },
-  { label: "Wallet", href: "/investor/wallet", icon: FiCreditCard },
   { label: "Assets", href: "/investor/assets", icon: FiLayers },
-  { label: "Profile", href: "/investor/profile", icon: FiUser },
   {
     label: "Market",
     href: "/investor/secondary",
     icon: FiTrendingUp,
   },
+  { label: "Portfolio", href: "/investor/portfolio", icon: FiPieChart },
+
+  { label: "Wallet", href: "/investor/wallet", icon: FiCreditCard },
+  { label: "Profile", href: "/investor/profile", icon: FiUser },
 ];
 
 interface SidebarProps {

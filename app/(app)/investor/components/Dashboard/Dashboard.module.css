@@ -361,6 +361,68 @@
   font-size: 1rem;
 }
 
+/* ========================= */
+/* Recent Activity */
+/* ========================= */
+
+.activityCard {
+  background: #fffefe;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.activityList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activityItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #222;
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+}
+
+.activityTitle {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.activityDate {
+  font-size: 12px;
+  color: #777;
+}
+
+/* Amount colors */
+.amountPositive {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.amountNegative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* ========================= */
+/* Portfolio Snapshot Fixes */
+/* ========================= */
+
+.metricValueNegative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.metricIconNegative {
+  margin-right: 6px;
+}
 /* ================== RESPONSIVE ================== */
 @media (max-width: 1024px) {
   .recent {

@@ -19,7 +19,7 @@ export default function InvestmentCard({
   image,
 }: InvestmentCardProps) {
   const statusClass =
-    status === "Active" ? styles.activeBadge : styles.closedBadge;
+    status === "CONFIRMED" ? styles.activeBadge : styles.closedBadge;
 
   return (
     <div className={styles.card}>
