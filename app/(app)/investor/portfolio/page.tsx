@@ -3,7 +3,7 @@ import InvestmentList from "../components/portfolio/InvestmentList";
 export default function PortfolioPage() {
   return (
     <main>
-      <PortfolioSummary />
+      {/* <PortfolioSummary /> */}
       <InvestmentList />
     </main>
   );

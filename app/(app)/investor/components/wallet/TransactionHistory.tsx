@@ -1,78 +1,133 @@
 "use client";
-import { FaArrowDown, FaArrowUp, FaCoins } from "react-icons/fa";
+import {
+  FaArrowDown,
+  FaArrowUp,
+  FaCoins,
+  FaTools,
+  FaShoppingCart,
+  FaWallet,
+} from "react-icons/fa";
 import styles from "./Wallet.module.css";
 
-const transactions = [
-  {
-    date: "25 Dec 2025",
-    type: "Deposit",
-    amount: "10,000",
-    status: "Completed",
-  },
-  {
-    date: "22 Dec 2025",
-    type: "Withdrawal",
-    amount: "5,000",
-    status: "Pending",
-  },
-  { date: "18 Dec 2025", type: "Profit", amount: "1,200", status: "Credited" },
-];
+interface LedgerEntry {
+  id: string;
+  amount: number;
+  source: string;
+  type: string;
+  createdAt: string;
+  note?: string;
+}
 
-export default function TransactionHistory() {
-  const getIcon = (type: string) => {
-    if (type === "Deposit")
-      return <FaArrowDown className={styles.txIconDeposit} />;
-    if (type === "Withdrawal")
-      return <FaArrowUp className={styles.txIconWithdraw} />;
-    return <FaCoins className={styles.txIconProfit} />;
+export default function TransactionHistory({
+  data = [],
+}: {
+  data: LedgerEntry[];
+}) {
+  // Updated mapping to match our new Backend LedgerSources
+  const getTxDetails = (source: string) => {
+    switch (source) {
+      case "DISTRIBUTION_ENGINE":
+        return {
+          label: "Profit",
+          icon: <FaCoins className={styles.txIconProfit} />,
+          color: "#008435",
+        };
+      case "PAYOUT_REQUEST":
+      case "PAYOUT_COMPLETED":
+      case "WITHDRAWAL":
+        return {
+          label: "Withdrawal",
+          icon: <FaArrowUp className={styles.txIconWithdraw} />,
+          color: "#e74c3c",
+        };
+      case "INVESTMENT_CONFIRMATION":
+      case "WALLET_DEPOSIT": // Our new dummy top-up source
+        return {
+          label: "Deposit",
+          icon: <FaArrowDown className={styles.txIconDeposit} />,
+          color: "#008435",
+        };
+      case "ASSET_INVESTMENT": // Our new purchase source
+        return {
+          label: "Investment",
+          icon: <FaShoppingCart />,
+          color: "#f39c12",
+        };
+      case "ESCROW_LOCK":
+        return { label: "Escrow Lock", icon: <FaTools />, color: "#95a5a6" };
+      default:
+        return { label: "Adjustment", icon: <FaTools />, color: "#95a5a6" };
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
     <div className={styles.transactions}>
-      <h2>Recent Transactions</h2>
+      <h2 className={styles.sectionTitle}>Recent Transactions</h2>
 
-      {/* Desktop Table */}
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
             <tr>
               <th>Date</th>
               <th>Type</th>
+              <th>Note</th>
               <th>Amount (SAR)</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx, idx) => (
-              <tr key={idx}>
-                <td>{tx.date}</td>
-                <td className={styles.typeCell}>
-                  {getIcon(tx.type)} {tx.type}
+            {data.length > 0 ? (
+              data.map((tx) => {
+                const details = getTxDetails(tx.source);
+                const isNegative = Number(tx.amount) < 0;
+                return (
+                  <tr key={tx.id}>
+                    <td>{formatDate(tx.createdAt)}</td>
+                    <td className={styles.typeCell}>
+                      <span
+                        style={{ color: details.color, marginRight: "8px" }}
+                      >
+                        {details.icon}
+                      </span>
+                      {details.label}
+                    </td>
+                    <td className={styles.noteCell}>{tx.note || "-"}</td>
+                    <td
+                      className={isNegative ? styles.negative : styles.positive}
+                    >
+                      {isNegative ? "-" : "+"}{" "}
+                      {Math.abs(Number(tx.amount)).toLocaleString()}
+                    </td>
+                    <td>
+                      <span className={styles.statusBadge}>Completed</span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={5}
+                  style={{
+                    textAlign: "center",
+                    padding: "3rem",
+                    color: "#888",
+                  }}
+                >
+                  No transactions found in your Remzic ledger.
                 </td>
-                <td>{tx.amount}</td>
-                <td>{tx.status}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
-      </div>
-
-      {/* Mobile Card Layout */}
-      <div className={styles.mobileTransactions}>
-        {transactions.map((tx, idx) => (
-          <div key={idx} className={styles.txCard}>
-            <div className={styles.txHeader}>
-              <span>{tx.date}</span>
-              <span className={styles.status}>{tx.status}</span>
-            </div>
-            <div className={styles.txBody}>
-              <div className={styles.txType}>
-                {getIcon(tx.type)} {tx.type}
-              </div>
-              <div className={styles.txAmount}>SAR {tx.amount}</div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

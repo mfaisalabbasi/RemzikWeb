@@ -26,7 +26,11 @@ export default function EditProfileModal({
         <label>Name</label>
         <input value={name} onChange={(e) => setName(e.target.value)} />
         <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          readOnly
+        />
         <div className={styles.modalActions}>
           <button onClick={onClose}>Cancel</button>
           <button

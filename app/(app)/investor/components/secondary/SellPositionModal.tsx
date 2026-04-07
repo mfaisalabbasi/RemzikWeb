@@ -1,4 +1,3 @@
-// secondary-market/SellPositionModal.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -17,26 +16,28 @@ export default function SellPositionModal({
   onSell,
 }: Props) {
   const [quantity, setQuantity] = useState<number>(1);
+  const [price, setPrice] = useState<number>(position.currentPrice);
 
   const handleSubmit = () => {
     if (quantity <= 0 || quantity > position.quantity) {
-      alert(`Enter a valid quantity (1-${position.quantity})`);
+      alert(`Max available units: ${position.quantity}`);
       return;
     }
     onSell({
-      positionId: position.id,
+      assetId: position.assetId,
       type: "sell",
       quantity,
-      price: position.currentPrice,
+      price: price,
     });
   };
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalPanel}>
-        <div className={styles.modalTitle}>Sell {position.assetTitle}</div>
+        <div className={styles.modalTitle}>List {position.assetTitle}</div>
+
         <div className={styles.field}>
-          <label>Quantity</label>
+          <label>Quantity to Sell</label>
           <input
             type="number"
             min={1}
@@ -45,22 +46,27 @@ export default function SellPositionModal({
             onChange={(e) => setQuantity(Number(e.target.value))}
           />
         </div>
+
         <div className={styles.field}>
-          <label>Price per Unit (SAR)</label>
+          <label>Asking Price (SAR)</label>
           <input
-            type="text"
-            value={position.currentPrice.toLocaleString()}
-            readOnly
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
           />
         </div>
+
         <div className={styles.modalActions}>
           <button className={styles.ctaGhost} onClick={onClose}>
             Cancel
           </button>
           <button className={styles.ctaPrimary} onClick={handleSubmit}>
-            Sell
+            Post Listing
           </button>
         </div>
+        <p className={styles.disclaimer}>
+          Funds will be locked in escrow until the trade is completed.
+        </p>
       </div>
     </div>
   );

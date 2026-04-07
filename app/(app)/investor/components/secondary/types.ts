@@ -1,24 +1,26 @@
-// secondary-market/types.ts
-
 export interface MarketPosition {
   id: string;
+  assetId: string;
   assetTitle: string;
   quantity: number;
   avgPrice: number;
   currentPrice: number;
-  pnl: number; // profit/loss
-  image?: string; // optional
+  pnl: number;
+  image?: string;
 }
 
 export interface Order {
-  id: string;
+  id: string; // The ID of the Listing in the DB
   type: "buy" | "sell";
-  price: number;
   quantity: number;
+  price: number;
+  assetTitle: string;
+  assetId: string;
 }
 
 export interface TradeInput {
-  positionId?: string; // optional for buy orders
+  assetId: string;
+  positionId?: string;
   type: "buy" | "sell";
   quantity: number;
   price: number;

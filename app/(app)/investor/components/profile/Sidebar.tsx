@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./Profile.module.css";
+import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   totalInvested: number;
@@ -8,6 +9,9 @@ interface SidebarProps {
   activeInvestments: number;
   riskLevel: string;
   kycStatus: string;
+
+  // ✅ ADD THIS
+  onEditProfile: () => void;
 }
 
 export default function Sidebar({
@@ -16,7 +20,9 @@ export default function Sidebar({
   activeInvestments,
   riskLevel,
   kycStatus,
+  onEditProfile,
 }: SidebarProps) {
+  const router = useRouter();
   const profit = portfolioValue - totalInvested;
 
   return (
@@ -64,11 +70,26 @@ export default function Sidebar({
       <div className={styles.sidebarCard}>
         <h3 className={styles.sidebarTitle}>Actions</h3>
 
-        <button className={styles.ctaPrimary}>+ Add Investment</button>
+        {/* ✅ ADD INVESTMENT */}
+        <button
+          className={styles.ctaPrimary}
+          onClick={() => router.push("/investor/assets")}
+        >
+          + Add Investment
+        </button>
 
-        <button className={styles.ctaSecondary}>Withdraw Funds</button>
+        {/* ✅ WITHDRAW */}
+        <button
+          className={styles.ctaSecondary}
+          onClick={() => router.push("/investor/wallet")}
+        >
+          Withdraw Funds
+        </button>
 
-        <button className={styles.ctaGhost}>Update Profile</button>
+        {/* ✅ EDIT PROFILE */}
+        <button className={styles.ctaGhost} onClick={onEditProfile}>
+          Update Profile
+        </button>
       </div>
     </div>
   );

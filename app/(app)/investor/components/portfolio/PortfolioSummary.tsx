@@ -2,41 +2,52 @@
 
 import { useEffect, useState } from "react";
 import styles from "./Portfolio.module.css";
-import { getPortfolio } from "@/app/integrations/api/investor";
+// We use getDashboardStats here because we know its data structure works for you
+import { getDashboardStats } from "@/app/integrations/api/investor";
 
 export default function PortfolioSummary() {
   const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getPortfolio();
+        // Calling the same working API as the dashboard
+        const res = await getDashboardStats();
         setData(res);
       } catch (err) {
-        console.error(err);
+        console.error("Portfolio Sync Error:", err);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
+  if (loading)
+    return <div className={styles.loading}>Syncing Portfolio...</div>;
   if (!data) return null;
+
+  // --- MATCHING YOUR DASHBOARD MATH ---
+  const currentValue = Number(data.portfolioValue || 0);
+  const profit = Number(data.totalProfit || 0);
+  const totalInvested = currentValue - profit; // This is the key logic!
+  const isPositive = profit >= 0;
 
   const metrics = [
     {
       label: "Total Invested",
-      value: `$${Number(data.totalInvested).toLocaleString()}`,
+      value: `SAR ${totalInvested.toLocaleString()}`,
     },
     {
       label: "Current Value",
-      value: `$${Number(data.currentValue).toLocaleString()}`,
+      value: `SAR ${currentValue.toLocaleString()}`,
     },
     {
       label: "Profit / Loss",
-      value: `${data.profit >= 0 ? "+" : "-"}$${Math.abs(
-        data.profit,
-      ).toLocaleString()}`,
+      value: `${isPositive ? "+" : "-"} SAR ${Math.abs(profit).toLocaleString()}`,
       highlight: true,
+      positive: isPositive,
     },
   ];
 
@@ -53,11 +64,12 @@ export default function PortfolioSummary() {
         {metrics.map((metric, i) => (
           <div key={i} className={styles.summaryCard}>
             <span className={styles.metricLabel}>{metric.label}</span>
-
             <span
               className={
                 metric.highlight
-                  ? styles.metricValueHighlight
+                  ? metric.positive
+                    ? styles.metricValueHighlight
+                    : styles.metricValueNegative
                   : styles.metricValue
               }
             >

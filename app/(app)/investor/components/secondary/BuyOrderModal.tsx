@@ -1,4 +1,3 @@
-// secondary-market/BuyOrderModal.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -6,11 +5,12 @@ import { TradeInput } from "./types";
 import styles from "./secondary.module.css";
 
 interface Props {
+  assetId: string; // ✅ Added: Modal now needs to know WHAT it is buying
   onClose: () => void;
   onBuy: (trade: TradeInput) => void;
 }
 
-export default function BuyOrderModal({ onClose, onBuy }: Props) {
+export default function BuyOrderModal({ assetId, onClose, onBuy }: Props) {
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(1000);
 
@@ -19,13 +19,24 @@ export default function BuyOrderModal({ onClose, onBuy }: Props) {
       alert("Enter valid quantity and price");
       return;
     }
-    onBuy({ type: "buy", quantity, price });
+
+    // ✅ FIXED: Now including the assetId in the payload
+    onBuy({
+      assetId, // Pass the ID received from props
+      type: "buy",
+      quantity,
+      price,
+    });
   };
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalPanel}>
         <div className={styles.modalTitle}>Buy Asset</div>
+
+        {/* Displaying the ID or a label helps the user confirm the asset */}
+        <div className={styles.assetBadge}>Asset ID: {assetId}</div>
+
         <div className={styles.field}>
           <label>Quantity</label>
           <input

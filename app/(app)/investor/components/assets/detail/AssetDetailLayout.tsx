@@ -7,6 +7,7 @@ import AssetTabs from "./AssetTabs";
 export type RiskLevel = "Low" | "Moderate" | "High";
 
 export interface Asset {
+  id: string;
   title: string;
   subtitle?: string;
   badge?: string;
@@ -61,6 +62,7 @@ export default function AssetDetailLayout({ asset }: Props) {
       {/* RIGHT INVEST PANEL */}
       <div className={styles.right}>
         <InvestmentPanel
+          assetId={asset.id}
           min={asset.minInvest}
           roi={asset.roi}
           tenure={asset.tenure}

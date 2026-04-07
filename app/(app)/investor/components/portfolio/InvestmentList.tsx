@@ -3,47 +3,72 @@
 import { useEffect, useState } from "react";
 import InvestmentCard from "./InvestmentCard";
 import styles from "./Portfolio.module.css";
-import { getPortfolio } from "@/app/integrations/api/investor";
 
 export default function InvestmentList() {
-  const [investments, setInvestments] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getPortfolio();
-        setInvestments(res.portfolio || []);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/investors/profile`,
+          { credentials: "include" },
+        );
+        const result = await res.json();
+        setData(result);
       } catch (err) {
-        console.error(err);
+        console.error("Ledger Sync Error:", err);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  return (
-    <section className={styles.summary}>
-      <div className={styles.summaryHeader}>
-        <h3>Investments</h3>
-        <span className={styles.summarySub}>Snapshot of your investments</span>
-      </div>
+  if (loading)
+    return <div className={styles.shimmer}>Loading Remzik Ledger...</div>;
 
-      <div className={styles.grid}>
-        {investments.length === 0 ? (
-          <p>No investments found</p>
-        ) : (
-          investments.map((inv) => (
-            <InvestmentCard
-              key={inv.id}
-              name={inv.name}
-              amount={`$${Number(inv.amount).toLocaleString()}`}
-              roi={inv.roi}
-              status={inv.status}
-              image={inv.image}
-            />
-          ))
-        )}
+  const investments = data?.investments || [];
+
+  return (
+    <div className={styles.portfolioWrapper}>
+      {/* PROFESSIONAL SUMMARY BAR */}
+      <header className={styles.dashboardHeader}>
+        <div className={styles.mainTitle}>
+          <h1>
+            Portfolio <span className={styles.accent}>Overview</span>
+          </h1>
+          <p>Institutional grade asset management</p>
+        </div>
+
+        <div className={styles.summaryRibbon}>
+          <div className={styles.statItem}>
+            <label>Total Invested</label>
+            <div className={styles.statValue}>
+              SAR {Number(data?.totalInvested || 0).toLocaleString()}
+            </div>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statItem}>
+            <label>Portfolio Value</label>
+            <div className={`${styles.statValue} ${styles.growth}`}>
+              SAR {Number(data?.portfolioValue || 0).toLocaleString()}
+            </div>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statItem}>
+            <label>Active Assets</label>
+            <div className={styles.statValue}>{investments.length}</div>
+          </div>
+        </div>
+      </header>
+
+      <div className={styles.assetGrid}>
+        {investments.map((inv: any) => (
+          <InvestmentCard key={inv.id} investment={inv} />
+        ))}
       </div>
-    </section>
+    </div>
   );
 }

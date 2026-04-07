@@ -14,29 +14,32 @@ export default function KPICards() {
         const res = await getDashboardStats();
         setData(res);
       } catch (err) {
-        console.error(err);
+        console.error("KPI Fetch Error:", err);
       }
     };
 
     fetchStats();
   }, []);
 
-  if (!data) return <p>Loading...</p>;
+  if (!data) return <p className={styles.loading}>Loading Market Data...</p>;
 
+  // Mapping Backend Data to Premium Cards
   const cards = [
     {
       title: "Wallet Balance",
-      value: `$${Number(data.walletBalance).toLocaleString()}`,
+      value: `SAR ${Number(data.walletBalance).toLocaleString()}`,
       icon: <FaWallet />,
     },
     {
       title: "Portfolio Value",
-      value: `$${Number(data.portfolioValue).toLocaleString()}`,
+      value: `SAR ${Number(data.portfolioValue).toLocaleString()}`,
       icon: <FaCoins />,
     },
     {
       title: "Total Profit",
-      value: `$${Number(data.totalProfit).toLocaleString()}`,
+      value: `SAR ${Number(data.totalProfit).toLocaleString()}`,
+      // Conditional styling for profit visibility
+      className: data.totalProfit > 0 ? styles.positiveProfit : "",
       icon: <FaChartLine />,
     },
     {
@@ -49,7 +52,10 @@ export default function KPICards() {
   return (
     <div className={styles.kpiCards}>
       {cards.map((card) => (
-        <div key={card.title} className={styles.kpiCard}>
+        <div
+          key={card.title}
+          className={`${styles.kpiCard} ${card.className || ""}`}
+        >
           <div className={styles.icon}>{card.icon}</div>
           <div className={styles.kpiText}>
             <h3>{card.title}</h3>

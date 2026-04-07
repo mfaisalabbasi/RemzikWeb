@@ -1,204 +1,195 @@
-/* ================= INVESTMENT UPGRADE ================= */
-
-/* 🔥 CRITICAL FIX — give layout breathing space */
-.summary,
-.grid,
-.summaryGrid {
-  padding-left: 20px;
-  padding-right: 20px;
+.portfolioWrapper {
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family:
+    "Inter",
+    -apple-system,
+    sans-serif;
 }
 
-/* Header */
-.headerRow {
+/* HEADER & SUMMARY RIBBON */
+.dashboardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 48px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 32px;
 }
 
-.count {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #6b7280;
+.mainTitle h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -1px;
 }
 
-/* Grid improvement */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
+.accent {
+  color: #16a34a;
 }
 
-/* Card redesign */
-.card {
+.summaryRibbon {
+  display: flex;
   background: #ffffff;
-  border-radius: 14px;
-  padding: 20px;
-  border: 1px solid #eef1f4;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.18s ease;
+  border: 1px solid #e5e7eb;
+  padding: 16px 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
-}
-
-/* Top row */
-.cardTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.card h4 {
-  font-size: 1rem;
+.statItem label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #6b7280;
   font-weight: 600;
-  color: #0f172a;
-}
-
-/* Metrics layout */
-.metricRow {
-  display: flex;
-  justify-content: space-between;
-}
-
-.label {
-  font-size: 0.75rem;
-  color: #9ca3af;
   margin-bottom: 4px;
 }
 
-.value {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-/* Status badges */
-.activeBadge {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.closedBadge {
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* ================= PORTFOLIO SUMMARY ================= */
-
-.summaryHeader {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 18px;
-}
-
-.summarySub {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-/* Summary grid */
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
-}
-
-/* Summary cards */
-.summaryCard {
-  background: linear-gradient(180deg, #ffffff, #fbfdfc);
-  border-radius: 12px;
-  padding: 18px;
-  border: 1px solid #e7ecef;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  transition: all 0.18s ease;
-}
-
-.summaryCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-  border-color: #0f5f3a33;
-}
-
-/* Labels & values */
-.metricLabel {
-  font-size: 0.78rem;
-  color: #64748b;
-  margin-bottom: 6px;
-}
-
-.metricValue {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.metricValueHighlight {
+.statValue {
   font-size: 1.2rem;
   font-weight: 700;
+  color: #111;
+}
+
+.growth {
   color: #16a34a;
 }
 
-/* ================= RESPONSIVE ================= */
-
-@media (max-width: 768px) {
-  .metricRow {
-    flex-direction: column;
-    gap: 12px;
-  }
+.statDivider {
+  width: 1px;
+  background: #eee;
+  margin: 0 32px;
 }
 
-@media (max-width: 640px) {
-  .summary,
-  .grid,
-  .summaryGrid {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-  .card {
-    padding: 16px;
-  }
-
-  .summaryGrid {
-    grid-template-columns: 1fr;
-  }
+/* ASSET GRID */
+.assetGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px;
 }
 
-/* Image wrapper */
-.cardImageWrap {
-  position: relative;
-  width: 100%;
-  height: 140px;
-  border-radius: 12px;
+/* THE NEW CARD STYLE */
+.assetCard {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #f0f0f0;
   overflow: hidden;
-  margin-bottom: 14px;
+  transition: all 0.3s ease;
 }
 
-/* Image styling */
-.cardImage {
+.assetCard:hover {
+  border-color: #16a34a;
+  transform: translateY(-5px);
+}
+
+.cardVisual {
+  position: relative;
+  height: 180px;
+}
+
+.cardVisual img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-/* Content spacing */
-.cardContent {
+.roiTag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #111;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.cardDetails {
+  padding: 24px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cardHeader h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.active,
+.confirmed {
+  background: #16a34a;
+  box-shadow: 0 0 10px rgba(22, 163, 74, 0.4);
+}
+
+.capitalRow {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.capLabel {
+  font-size: 0.65rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.capValue {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.cardActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.secondaryBtn {
+  background: #f3f4f6;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.textLink {
+  background: none;
+  border: none;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .dashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .summaryRibbon {
+    width: 100%;
+    justify-content: space-around;
+  }
 }

@@ -1,387 +1,381 @@
-/* =================== PAGE GRID =================== */
+/* secondary.module.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap");
+
 .secondaryMarketPage {
-  max-width: 1280px;
-  margin: auto;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: 2.5rem 4rem;
+  max-width: 1600px;
+  margin: 0 auto;
   font-family: "Inter", sans-serif;
-  color: #111827;
+  background: #f8fafc; /* Light Slate-50 */
+  min-height: 100vh;
+  color: #0f172a; /* Slate-900 */
 }
 
-/* Market grid: left/right columns on desktop */
+.header {
+  margin-bottom: 3rem;
+  border-left: 4px solid #16a34a;
+  padding-left: 1.5rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin: 0;
+  color: #0f172a;
+}
+
+.accent {
+  color: #16a34a;
+  /* Soft glow for light mode */
+  text-shadow: 0 0 20px rgba(22, 163, 74, 0.1);
+}
+
 .marketGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
+  grid-template-columns: 420px 1fr;
+  gap: 3rem;
 }
 
-/* Columns */
-.positionsColumn,
-.orderBookColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Column headings */
-.positionsColumn h2,
-.orderBookColumn h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-/* =================== POSITION CARD =================== */
+/* --- PROFESSIONAL POSITION CARDS --- */
 .positionCard {
-  background: #fff;
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* Slate-200 */
   border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .positionCard:hover {
+  border-color: #16a34a;
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
 }
 
-.positionDetails {
+.cardHeader {
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 0.9rem;
-}
-
-.positive {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.negative {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-.positionActions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-/* =================== ORDER BOOK =================== */
-.orderBookTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.orderBookTable th,
-.orderBookTable td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.orderBookTable tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-.buy {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.sell {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-.orderBookColumn .ctaPrimary {
-  margin-top: 12px;
-  align-self: flex-start;
-}
-
-/* =================== MODALS =================== */
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  justify-content: center;
+  gap: 1.25rem;
   align-items: center;
-  z-index: 999;
-  padding: 16px;
+  margin-bottom: 1.5rem;
 }
 
-.modalPanel {
-  background: #fff;
-  padding: 28px;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 460px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-}
-
-.modalTitle {
-  font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 12px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field input {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  font-size: 0.95rem;
-}
-
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.ctaPrimary {
-  background: linear-gradient(90deg, #0f5f3a, #13a88d);
-  color: #fff;
-  font-weight: 700;
+.imageWrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
   border-radius: 12px;
-  padding: 12px 20px;
-  border: none;
-  cursor: pointer;
-  transition:
-    transform 0.15s,
-    background 0.2s;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 
-.ctaPrimary:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(90deg, #0d4f30, #10a07a);
-}
-
-.ctaGhost {
-  background: transparent;
-  border: 1px solid #d1d5db;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.ctaGhost:hover {
-  background: #f3f4f6;
-}
-
-.disclaimer {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-align: center;
-}
-
-/* =================== SUCCESS MESSAGE =================== */
-.tradeSuccessMessage {
-  font-size: 1rem;
-  color: #0f5f3a;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* =================== RESPONSIVE =================== */
-@media (max-width: 1024px) {
-  .marketGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .positionsColumn,
-  .orderBookColumn {
-    gap: 20px;
-  }
-
-  .positionCard,
-  .modalPanel {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .ctaPrimary,
-  .ctaGhost {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .positionDetails {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .positionsColumn h2,
-  .orderBookColumn h2 {
-    font-size: 1.1rem;
-  }
-
-  .field input {
-    font-size: 0.9rem;
-  }
-
-  .positionActions {
-    flex-direction: column;
-  }
-}
-
-/* order book updates */
-
-.orderBookTableWrapper {
-  background: #fff;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
-}
-
-.orderBookTable {
+.assetThumb {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.orderBookTable th {
-  text-align: left;
-  padding: 12px;
-  background: #f3f4f6;
-  font-weight: 600;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.orderBookTable td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.orderBookTable tr:hover {
-  background: #f9fafb;
-}
-
-.buy {
-  color: #16a34a;
-  font-weight: 600;
-  background: #ecfdf5;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.sell {
-  color: #ef4444;
-  font-weight: 600;
-  background: #fef2f2;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-/* position update */
-
-.positionCard {
-  display: flex;
-  gap: 16px;
-  background: white;
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  align-items: center;
-  flex-wrap: wrap;
-  transition: transform 0.2s;
-}
-
-.positionCard:hover {
-  transform: translateY(-2px);
-}
-
-.positionImage {
-  width: 80px;
-  height: 80px;
-  border-radius: 10px;
+  height: 100%;
   object-fit: cover;
 }
 
-.positionInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
+.statusBadge {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(22, 163, 74, 0.9);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 2px 0;
+  text-transform: uppercase;
 }
 
-.assetTitle {
-  margin: 0;
-  font-size: 1.1rem;
+.titleInfo h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #0f172a;
+}
+
+.assetId {
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.75rem;
+  color: #64748b; /* Slate-500 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.financialStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.statLine {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #94a3b8; /* Slate-400 */
+  letter-spacing: 0.05em;
   font-weight: 600;
 }
 
-.positionDetails {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 0.9rem;
-  color: #333;
+.statValue {
+  font-family: "Roboto Mono", monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-.positionDetails span {
-  min-width: 100px;
-}
-
-.positionActions {
+.pnlBox {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
 }
 
 .positive {
-  color: #0f5f3a;
-  font-weight: 600;
+  background: #f0fdf4;
+  color: #166534;
 }
-
 .negative {
-  color: #c53030;
-  font-weight: 600;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .positionCard {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.pnlFlex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700;
+}
 
-  .positionImage {
-    width: 100%;
-    height: 150px;
-    margin-bottom: 12px;
-  }
+.cardActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
 
-  .positionDetails span {
-    min-width: 0;
-  }
+.btnPrimary,
+.btnSecondary {
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
 
-  .positionActions {
-    width: 100%;
+.btnPrimary {
+  background: #16a34a;
+  color: #fff;
+}
+.btnPrimary:hover {
+  background: #15803d;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.btnSecondary {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+.btnSecondary:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* --- ORDER BOOK TABLE --- */
+.tableContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.orderTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orderTable th {
+  background: #f8fafc;
+  padding: 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.orderTable td {
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.assetCell {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sellPill {
+  background: #fff1f2;
+  color: #e11d48;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.priceText {
+  font-family: "Roboto Mono", monospace;
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.buyBtn {
+  background: #0f172a; /* Dark button for high contrast in light mode */
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.buyBtn:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+/* --- MODALS & OVERLAYS --- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4); /* Softer overlay */
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalPanel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 2.5rem;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #0f172a;
+}
+
+.field {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.field input {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 10px;
+  color: #0f172a;
+  font-family: "Roboto Mono", monospace;
+  font-size: 1.1rem;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #16a34a;
+  background: #ffffff;
+}
+
+.modalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.ctaPrimary {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ctaGhost {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Loading States */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.loader {
+  font-family: "Roboto Mono", monospace;
+  color: #16a34a;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
   }
 }

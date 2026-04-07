@@ -5,7 +5,7 @@
   position: fixed;
   top: 64px; /* <-- start below the topbar */
   left: 0;
-  width: 220px;
+  width: 200px;
   height: calc(100vh - 64px); /* full height minus topbar */
   background: linear-gradient(180deg, #0e3b2b 0%, #0b2f23 100%);
   color: #e5f2ec;

@@ -1,71 +1,113 @@
+/* Container for all alerts */
+.alertContainer {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 0 20px;
+  pointer-events: none;
+}
+
 .alert {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  padding: 12px 14px;
-  border-radius: 12px;
-
-  font-size: 0.85rem;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 0.9rem;
   font-weight: 500;
 
-  border: 1px solid transparent;
+  /* Fintech Glassmorphism */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
 
-  animation: fadeIn 0.2s ease;
+  /* Layered Shadow for depth */
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+
+  border-left: 4px solid transparent;
+  animation: slideInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
 }
 
 .left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  color: #1a1a1a;
 }
 
-/* ERROR */
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+/* TYPES: Strategic use of Emerald, Rose, and Royal Blue */
 
 .error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
+  border-left-color: #e11d48;
 }
-
-/* SUCCESS */
+.error .iconWrapper {
+  background: #fff1f2;
+  color: #e11d48;
+}
 
 .success {
+  border-left-color: #10b981;
+}
+.success .iconWrapper {
   background: #ecfdf5;
-  color: #047857;
-  border-color: #bbf7d0;
+  color: #10b981;
 }
 
-/* INFO */
-
 .info {
+  border-left-color: #3b82f6;
+}
+.info .iconWrapper {
   background: #eff6ff;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
+  color: #3b82f6;
 }
 
 .close {
-  background: none;
+  background: #f4f4f5;
   border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   cursor: pointer;
-  color: inherit;
+  color: #71717a;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-left: 12px;
 }
 
 .close:hover {
-  opacity: 0.7;
+  background: #e4e4e7;
+  color: #18181b;
 }
 
-/* animation */
-
-@keyframes fadeIn {
+@keyframes slideInDown {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-20px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }

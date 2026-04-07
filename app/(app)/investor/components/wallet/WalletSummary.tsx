@@ -1,25 +1,41 @@
 "use client";
-import { FaWallet, FaArrowDown, FaArrowUp } from "react-icons/fa";
+import { FaWallet, FaLock, FaHourglassHalf, FaChartLine } from "react-icons/fa";
 import styles from "./Wallet.module.css";
 
-export default function WalletSummary() {
+interface WalletSummaryProps {
+  data: {
+    availableBalance: number;
+    lockedBalance: number;
+    pendingPayout: number;
+    totalEarned: number;
+    balance: number;
+  };
+}
+
+export default function WalletSummary({ data }: WalletSummaryProps) {
   const summaryCards = [
     {
-      label: "Current Balance",
-      value: "SAR 12,500",
+      label: "Available Balance",
+      value: `SAR ${data.availableBalance.toLocaleString()}`,
       icon: <FaWallet />,
       highlight: true,
     },
     {
-      label: "Total Deposits",
-      value: "SAR 120,000",
-      icon: <FaArrowDown />,
+      label: "Locked (Escrow)",
+      value: `SAR ${data.lockedBalance.toLocaleString()}`,
+      icon: <FaLock />,
       highlight: false,
     },
     {
-      label: "Total Withdrawals",
-      value: "SAR 45,000",
-      icon: <FaArrowUp />,
+      label: "Pending Payouts",
+      value: `SAR ${data.pendingPayout.toLocaleString()}`,
+      icon: <FaHourglassHalf />,
+      highlight: false,
+    },
+    {
+      label: "Total Earned",
+      value: `SAR ${data.totalEarned.toLocaleString()}`,
+      icon: <FaChartLine />,
       highlight: false,
     },
   ];

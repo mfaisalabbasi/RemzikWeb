@@ -1,35 +1,68 @@
-// secondary-market/OrderBookTable.tsx
 "use client";
 
 import React from "react";
 import { Order } from "./types";
 import styles from "./secondary.module.css";
+import { ArrowRightLeft } from "lucide-react";
 
 interface Props {
   orders: Order[];
+  onBuyNow: (id: string) => void;
 }
 
-export default function OrderBookTable({ orders }: Props) {
+export default function OrderBookTable({ orders, onBuyNow }: Props) {
   return (
-    <table className={styles.orderBookTable}>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Quantity</th>
-          <th>Price (SAR)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {orders.map((o) => (
-          <tr key={o.id}>
-            <td className={o.type === "buy" ? styles.buy : styles.sell}>
-              {o.type.toUpperCase()}
-            </td>
-            <td>{o.quantity}</td>
-            <td>{o.price.toLocaleString()}</td>
+    <div className={styles.tableContainer}>
+      <table className={styles.orderTable}>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Intent</th>
+            <th>Volume</th>
+            <th>Execution Price</th>
+            <th style={{ textAlign: "right" }}>Trade</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {orders.length === 0 ? (
+            <tr>
+              <td
+                colSpan={5}
+                style={{
+                  textAlign: "center",
+                  padding: "4rem",
+                  color: "#71717a",
+                }}
+              >
+                Monitoring Market Liquidity... No active sell orders.
+              </td>
+            </tr>
+          ) : (
+            orders.map((o) => (
+              <tr key={o.id}>
+                <td className={styles.assetCell}>{o.assetTitle}</td>
+                <td>
+                  <span className={styles.sellPill}>ASK</span>
+                </td>
+                <td style={{ fontFamily: "Roboto Mono" }}>
+                  {o.quantity.toLocaleString()} <small>UNITS</small>
+                </td>
+                <td className={styles.priceText}>
+                  {o.price.toLocaleString()} <small>SAR</small>
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  <button
+                    className={styles.buyBtn}
+                    onClick={() => onBuyNow(o.id)}
+                  >
+                    Execute
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

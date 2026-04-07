@@ -1,9 +1,25 @@
+/* ================= PAGE LAYOUT ================= */
+.pageWrapper {
+  padding: 2rem 0; /* Vertical padding, horizontal handled by children margins */
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.sectionTitle {
+  margin-left: 20px;
+  margin-bottom: 20px;
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
 /* ================= WALLET SUMMARY ================= */
 .summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  margin-left: 20px; /* sidebar aware */
+  margin-left: 20px;
   margin-right: 20px;
   margin-top: 20px;
   margin-bottom: 32px;
@@ -27,19 +43,16 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
-/* Highlighted card for main balance */
 .highlightCard {
   background: linear-gradient(135deg, #f0fdf4, #d1fae5);
   border: 1px solid #16a34a33;
 }
 
-/* Icon */
 .cardIcon {
   font-size: 2rem;
   color: #0f5f3a;
 }
 
-/* Text */
 .cardText {
   display: flex;
   flex-direction: column;
@@ -57,62 +70,12 @@
   color: #0f172a;
 }
 
-/* ================= RESPONSIVE ================= */
-@media (max-width: 1024px) {
-  .summary {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .summary {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-  }
-
-  .card {
-    padding: 16px 20px;
-    gap: 12px;
-  }
-
-  .cardIcon {
-    font-size: 1.7rem;
-  }
-
-  .value {
-    font-size: 1.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .summary {
-    grid-template-columns: 1fr;
-    margin-left: 10px;
-    margin-right: 10px;
-    gap: 12px;
-  }
-
-  .card {
-    padding: 14px 16px;
-    gap: 10px;
-  }
-
-  .cardIcon {
-    font-size: 1.5rem;
-  }
-
-  .value {
-    font-size: 1.2rem;
-  }
-}
-
 /* ================= WALLET ACTIONS ================= */
 .actions {
   display: flex;
   gap: 16px;
   justify-content: flex-start;
-  margin-left: 20px; /* sidebar aware */
+  margin-left: 20px;
   margin-right: 20px;
   margin-bottom: 32px;
 }
@@ -128,8 +91,14 @@
   transition: all 0.2s;
 }
 
-.primary:hover {
+.primary:hover:not(:disabled) {
   background: #115d33;
+  transform: scale(1.02);
+}
+
+.primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .secondary {
@@ -150,20 +119,13 @@
 
 /* ================= TRANSACTION HISTORY ================= */
 .transactions {
-  margin: 20px 20px 40px 20px; /* sidebar aware */
+  margin: 20px 20px 40px 20px;
   background: #ffffff;
   padding: 24px;
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.transactions h2 {
-  margin-bottom: 20px;
-  color: #0f172a;
-  font-size: 1.25rem;
-}
-
-/* ---------------- DESKTOP TABLE ---------------- */
 .tableWrapper {
   overflow-x: auto;
 }
@@ -171,7 +133,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 480px;
+  min-width: 600px;
 }
 
 .table th,
@@ -188,88 +150,49 @@
   font-weight: 600;
 }
 
-.table tr:hover td {
-  background-color: #f3f4f6;
-}
-
 .typeCell {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-/* Icon colors */
-.txIconDeposit {
-  color: #16a34a;
-}
-
-.txIconWithdraw {
-  color: #dc2626;
-}
-
-.txIconProfit {
-  color: #0f5f3a;
-}
-
-/* ---------------- MOBILE CARDS ---------------- */
-.mobileTransactions {
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.txCard {
-  display: flex;
-  flex-direction: column;
-  padding: 16px 20px;
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  background: #ffffff;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
-}
-
-.txCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-}
-
-.txHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.txBody {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.txType {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #111827;
   font-weight: 500;
 }
 
-.txAmount {
-  font-weight: 600;
-  color: #0f5f3a;
+/* Dynamic Colors for Amounts */
+.positive {
+  color: #16a34a !important;
+  font-weight: 700;
 }
 
-.status {
+.negative {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+
+.noteCell {
   font-size: 0.85rem;
-  font-weight: 600;
   color: #64748b;
+  max-width: 250px;
 }
 
-/* ---------------- RESPONSIVE ---------------- */
+.statusBadge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .summary,
+  .actions,
+  .transactions {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .tableWrapper {
     display: none;
@@ -277,23 +200,41 @@
 
   .mobileTransactions {
     display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
-  .transactions {
-    margin-left: 16px;
-    margin-right: 16px;
-    padding: 18px;
+  .summary {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .value {
+    font-size: 1.3rem;
   }
 }
 
 @media (max-width: 480px) {
+  .summary {
+    grid-template-columns: 1fr;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .actions {
+    flex-direction: column;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
   .transactions {
     margin-left: 10px;
     margin-right: 10px;
     padding: 16px;
-  }
-
-  .txCard {
-    padding: 14px 16px;
   }
 }
