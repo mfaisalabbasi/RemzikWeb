@@ -1,16 +1,39 @@
-// app/(app)/investor/notification/NotificationList.tsx
 "use client";
 
 import styles from "./notification.module.css";
 import clsx from "clsx";
-import { NotificationItem } from "./types";
+import { useRouter } from "next/navigation";
+import { NotificationItem } from "@/app/integrations/types/notification";
 
-interface NotificationProps {
-  notifications?: NotificationItem[];
+// ✅ 1. Explicitly export the interface
+export interface NotificationProps {
+  notifications: NotificationItem[];
+  onMarkRead: (id: string) => void;
 }
 
-export default function NotificationList({ notifications }: NotificationProps) {
-  const list = notifications ?? [];
+// ✅ 2. Apply it to the component
+export default function NotificationList({
+  notifications,
+  onMarkRead,
+}: NotificationProps) {
+  const list = Array.isArray(notifications) ? notifications : [];
+  const router = useRouter();
+
+  const handleNotificationClick = async (n: NotificationItem) => {
+    if (!n.read) {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${n.id}/read`,
+        {
+          method: "PATCH",
+        },
+      );
+      onMarkRead(n.id);
+    }
+
+    if (n.actionUrl) {
+      router.push(n.actionUrl);
+    }
+  };
 
   return (
     <div className={styles.notificationWrapper}>
@@ -21,13 +44,23 @@ export default function NotificationList({ notifications }: NotificationProps) {
       {list.map((n) => (
         <div
           key={n.id}
-          className={clsx(styles.notification, n.type && styles[n.type])}
+          onClick={() => handleNotificationClick(n)}
+          className={clsx(
+            styles.notification,
+            n.type && styles[n.type],
+            !n.read && styles.unread,
+          )}
         >
           <div className={styles.content}>
             <strong>{n.title}</strong>
             {n.message && <p>{n.message}</p>}
           </div>
-          {n.date && <span className={styles.date}>{n.date}</span>}
+
+          <span className={styles.date}>
+            {n.createdAt
+              ? new Date(n.createdAt).toLocaleDateString()
+              : "Just now"}
+          </span>
         </div>
       ))}
     </div>

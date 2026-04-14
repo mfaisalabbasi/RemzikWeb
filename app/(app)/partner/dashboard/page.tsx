@@ -120,21 +120,6 @@ export default function PartnerDashboardPage() {
         </div>
       </div>
 
-      {/* FUNDING SNAPSHOT */}
-      {/* <div className={styles.sectionShell}>
-        <span className={styles.sectionHeader}>Funding Snapshot</span>
-        <div className={styles.snapshotGrid}>
-          <FundingSnapshotCard
-            assetName="Riyadh Tower"
-            fundingPercentage={67}
-          />
-          <FundingSnapshotCard
-            assetName="Jeddah Villas"
-            fundingPercentage={42}
-          />
-        </div>
-      </div> */}
-
       {/* TABLE + ACTIVITY */}
       <div className={styles.sectionShell}>
         <span className={styles.sectionHeader}>Funding Pipeline</span>

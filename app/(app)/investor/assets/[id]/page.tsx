@@ -28,7 +28,7 @@ interface ApiAsset {
   overview?: string;
   financials?: string;
   shariah?: string;
-  documents?: string[];
+  documents?: any[]; // Updated to any array
   funded?: number;
   investors?: number;
 }
@@ -65,8 +65,6 @@ export default function AssetDetailPage() {
     return <div className={styles.page}>Asset not found.</div>;
   }
 
-  // ✅ FIX: Ensure values are treated as numbers before division
-  // If tokenSupply is 0 or missing, default to 1 to avoid "Infinity"
   const totalVal = Number(asset.totalValue) || 0;
   const supply = Number(asset.tokenSupply) || 1;
   const minInvest = totalVal / supply;
@@ -77,7 +75,7 @@ export default function AssetDetailPage() {
     image: asset.galleryImages?.[0] || "/slider/real-estate.jpg",
     roi: asset.expectedYield || 8,
     tenure: asset.tenure || 12,
-    minInvest, // Passed as a clean number
+    minInvest,
     type: asset.type || "Real Estate",
     risk: asset.risk || "Moderate",
     overview: asset.overview || asset.description || "No overview available",
@@ -104,7 +102,6 @@ export default function AssetDetailPage() {
         <AssetStatsBar
           roi={`${uiData.roi}%`}
           tenure={`${uiData.tenure} Months`}
-          // ✅ Standardized SAR formatting
           minInvest={`SAR ${uiData.minInvest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           type={uiData.type}
           risk={uiData.risk}

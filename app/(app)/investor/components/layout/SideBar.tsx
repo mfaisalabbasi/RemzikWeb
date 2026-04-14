@@ -43,10 +43,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
+      // 1. Call the logout API to clear the server-side session/cookie
       await logout();
-      router.push("/auth/login");
+
+      // 2. Perform a hard reload of the window.
+      // This is the ONLY way to ensure React memory is wiped,
+      // fixing the "old account notifications showing up" issue.
+      window.location.href = "/auth/login";
     } catch (err) {
       console.error("Logout failed:", err);
+      // Fallback: reload anyway to be safe
+      window.location.href = "/auth/login";
     }
   };
 

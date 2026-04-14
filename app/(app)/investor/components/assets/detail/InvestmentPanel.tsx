@@ -75,7 +75,7 @@ export default function InvestmentPanel({
       setAmountInvested(amount);
       setShowModal(false);
       setShowSuccess(true);
-      showAlert("success", "Investment confirmed successfully.");
+      showAlert("success", "Investment confirmed successfully!");
     } catch (err: any) {
       showAlert(
         "error",

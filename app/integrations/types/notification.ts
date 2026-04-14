@@ -1,8 +1,11 @@
-// app/(app)/investor/notification/types.ts
+// app/types/notification.ts
 export interface NotificationItem {
   id: string;
   title: string;
   message?: string;
   type?: "info" | "success" | "warning" | "error";
-  date?: string; // optional, e.g., "2 mins ago"
+  read: boolean;
+  actionUrl?: string;
+  createdAt: string; // ISO Date string from Backend
+  date?: string;
 }

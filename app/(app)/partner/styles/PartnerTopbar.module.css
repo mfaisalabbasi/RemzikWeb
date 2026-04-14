@@ -6,17 +6,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  position: fixed; /* <-- change from sticky to fixed */
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 1001; /* above sidebar */
+  z-index: 1001;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   font-family: "Inter", sans-serif;
 }
 
-/* Hamburger (Mobile) */
+/* Hamburger (Mobile Only) */
 .menu {
-  display: none;
+  display: none; /* Hidden by default on desktop */
   background: none;
   border: none;
   font-size: 1.6rem;
@@ -29,17 +29,12 @@
   color: #e8b87a;
 }
 
-/* Brand / Logo */
-.brand {
-  display: flex;
-  align-items: center;
-}
-
 /* Right section */
 .rightSection {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto; /* Pushes content to the right if there's no brand */
 }
 
 /* Notifications */
@@ -52,14 +47,15 @@
   display: flex;
   align-items: center;
   padding: 6px;
+  text-decoration: none;
 }
 
 .notificationDot {
   position: absolute;
   top: 2px;
   right: 2px;
-  min-width: 10px;
-  height: 10px;
+  min-width: 12px;
+  height: 12px;
   background: #f8b82b;
   border-radius: 50%;
   border: 1px solid #0b2f23;
@@ -72,47 +68,16 @@
   padding: 0 2px;
 }
 
-/* User */
-.user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.username {
-  color: #f8fffd;
-  font-weight: 600;
-}
-
-.logout {
-  background: none;
-  border: none;
-  color: #c19363;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.logout:hover {
-  color: #e8b87a;
-}
-
 /* ------------------------------
    Responsive (Mobile)
 ------------------------------ */
 @media (max-width: 900px) {
   .menu {
-    display: block;
+    display: block; /* Explicitly show only on mobile */
   }
 
-  .brand {
-    font-size: 1rem;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .rightSection {
-    gap: 8px;
-    font-size: 0.9rem;
+  /* Adjust spacing for mobile if needed */
+  .topbar {
+    padding: 0 16px;
   }
 }

@@ -1,27 +1,22 @@
 "use client";
 
-import styles from "@/app/(app)/investor/styles/Topbar.module.css";
-import { FiBell } from "react-icons/fi"; // Notification bell icon
+import styles from "../../styles/PartnerTopbar.module.css";
+import { FiBell } from "react-icons/fi";
 import Image from "next/image";
-import Logo from "@/public/finalrem.png";
+import Logo from "@/public/finalrem.png"; // Ensure this path is correct
 import Link from "next/link";
 
 interface TopbarProps {
   onMenuClick: () => void;
-  onLogout?: () => void;
-  username?: string; // dynamically from backend
   notificationsCount?: number;
 }
 
-export default function Topbar({
+export default function PartnerTopbar({
   onMenuClick,
-  onLogout,
-  username,
   notificationsCount = 0,
 }: TopbarProps) {
   return (
     <header className={styles.topbar}>
-      {/* Hamburger for mobile */}
       <button
         className={styles.menu}
         onClick={onMenuClick}
@@ -30,34 +25,18 @@ export default function Topbar({
         ☰
       </button>
 
-      {/* Logo */}
+      {/* ADDED Logo section */}
       <div className={styles.brand}>
-        <Image src={Logo} alt="Remzik" width={120} height={24} />
+        <Image src={Logo} alt="Remzik" width={120} height={24} priority />
       </div>
 
-      {/* Right section: notifications + user */}
       <div className={styles.rightSection}>
-        <Link
-          href="/partner/notification"
-          className={styles.notification}
-          title="Notifications"
-        >
+        <Link href="/partner/notification" className={styles.notification}>
           <FiBell size={20} />
           {notificationsCount > 0 && (
             <span className={styles.notificationDot}>{notificationsCount}</span>
           )}
         </Link>
-
-        {username && (
-          <div className={styles.user}>
-            <span className={styles.username}>{username}</span>
-            {onLogout && (
-              <button className={styles.logout} onClick={onLogout}>
-                Logout
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </header>
   );

@@ -7,8 +7,24 @@ import AssetsFilter from "./AssetFilter";
 import SubmitAssetModal from "./SubmitAssetModal";
 import { getPartnerAssets } from "@/app/integrations/api/asset";
 
+/**
+ * ✅ Added Asset Interface
+ * This defines the exact structure we expect from the backend
+ */
+interface AssetData {
+  id: string;
+  name: string;
+  type: string;
+  stage: string;
+  target: number;
+  raised: number;
+  roi: number;
+  investors: number;
+}
+
 export default function PartnerAssetsPage() {
-  const [assets, setAssets] = useState<any[]>([]);
+  // ✅ Changed state from any[] to AssetData[]
+  const [assets, setAssets] = useState<AssetData[]>([]);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("");
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -17,20 +33,28 @@ export default function PartnerAssetsPage() {
     const fetchAssets = async () => {
       try {
         const res = await getPartnerAssets();
-        setAssets(res);
+        // Ensure res is an array before setting state
+        setAssets(Array.isArray(res) ? res : []);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching partner assets:", err);
       }
     };
 
     fetchAssets();
   }, []);
 
-  const filteredAssets = assets.filter(
-    (a) =>
-      a.name.toLowerCase().includes(search.toLowerCase()) &&
-      (stageFilter ? a.stage === stageFilter : true),
-  );
+  /**
+   * ✅ FIXED: TypeScript "possibly null" error
+   * Added checks to ensure 'a' and 'a.name' exist before calling .toLowerCase()
+   */
+  const filteredAssets = assets.filter((a) => {
+    if (!a || !a.name) return false;
+
+    const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase());
+    const matchesStage = stageFilter ? a.stage === stageFilter : true;
+
+    return matchesSearch && matchesStage;
+  });
 
   return (
     <div className={styles.wrapper}>
@@ -56,9 +80,20 @@ export default function PartnerAssetsPage() {
       {/* Grid */}
       <div className={styles.assetGrid}>
         {filteredAssets.length > 0 ? (
-          filteredAssets.map((a) => <AssetCard key={a.id} {...a} />)
+          filteredAssets.map((a) => (
+            <AssetCard
+              key={a.id}
+              name={a.name}
+              type={a.type}
+              stage={a.stage}
+              target={a.target}
+              raised={a.raised}
+              roi={a.roi}
+              investors={a.investors}
+            />
+          ))
         ) : (
-          <p>No assets found.</p>
+          <p className={styles.noData}>No assets found.</p>
         )}
       </div>
 

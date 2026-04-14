@@ -59,3 +59,35 @@
   font-size: 0.85rem;
   color: #6b7280;
 }
+
+.notification {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+/* Unread state: Subtle highlight */
+.notification.unread {
+  background-color: #f0fdf4; /* Very light emerald */
+  border-left: 4px solid #10b981;
+}
+
+.notification:hover {
+  background-color: #f9fafb;
+}
+
+.success {
+  border-left: 4px solid #10b981;
+}
+.warning {
+  border-left: 4px solid #f59e0b;
+}
+.error {
+  border-left: 4px solid #ef4444;
+}
+.info {
+  border-left: 4px solid #3b82f6;
+}

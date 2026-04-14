@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "@/app/(app)/investor/styles/Topbar.module.css";
-import { FiBell } from "react-icons/fi"; // Notification bell icon
+import { FiBell } from "react-icons/fi";
 import Image from "next/image";
 import Logo from "@/public/finalrem.png";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import Link from "next/link";
 interface TopbarProps {
   onMenuClick: () => void;
   onLogout?: () => void;
-  username?: string; // dynamically from backend
+  username?: string;
   notificationsCount?: number;
 }
 
@@ -21,7 +21,6 @@ export default function Topbar({
 }: TopbarProps) {
   return (
     <header className={styles.topbar}>
-      {/* Hamburger for mobile */}
       <button
         className={styles.menu}
         onClick={onMenuClick}
@@ -30,12 +29,17 @@ export default function Topbar({
         ☰
       </button>
 
-      {/* Logo */}
       <div className={styles.brand}>
-        <Image src={Logo} alt="Remzik" width={120} height={24} />
+        <Image
+          src={Logo}
+          alt="Remzik"
+          width={120}
+          height={24}
+          priority // ✅ Fix for LCP warning
+          loading="eager" // ✅ Fix for LCP warning
+        />
       </div>
 
-      {/* Right section: notifications + user */}
       <div className={styles.rightSection}>
         <Link
           href="/investor/notification"

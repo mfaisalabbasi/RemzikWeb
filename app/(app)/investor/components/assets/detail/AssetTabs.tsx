@@ -1,11 +1,14 @@
+"use client";
+
 import React, { useState } from "react";
 import styles from "./Details.module.css";
+import { FiFileText, FiDownload } from "react-icons/fi";
 
 interface AssetTabsProps {
   overview: string;
   financials: string;
   shariah: string;
-  documents: string[];
+  documents: any[]; // Changed to any[] to handle object data
 }
 
 export default function AssetTabs({
@@ -28,15 +31,38 @@ export default function AssetTabs({
       case "Documents":
         return (
           <div className={styles.tabBlock}>
-            <ul>
-              {documents.map((doc, idx) => (
-                <li key={idx}>
-                  <a href={doc} target="_blank" rel="noreferrer">
-                    {doc.split("/").pop()}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {documents && documents.length > 0 ? (
+              <div className={styles.documentList}>
+                {documents.map((doc, idx) => (
+                  <div key={idx} className={styles.docItem}>
+                    <div className={styles.docInfo}>
+                      <FiFileText className={styles.docIcon} />
+                      <div className={styles.docMeta}>
+                        <span className={styles.docTitle}>
+                          {doc.title || doc.name || "Untitled Document"}
+                        </span>
+                        <span className={styles.docType}>
+                          {doc.type || "PDF Document"}
+                        </span>
+                      </div>
+                    </div>
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.viewBtn}
+                    >
+                      <FiDownload size={16} />
+                      View
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.emptyMsg}>
+                No official documents available for this asset yet.
+              </p>
+            )}
           </div>
         );
       default:

@@ -7,7 +7,7 @@ import { FiAlertCircle, FiCheckCircle, FiInfo, FiX } from "react-icons/fi";
 type AlertType = "success" | "error" | "info";
 
 interface AlertItem {
-  id: number;
+  id: string; // ✅ Changed from number to string for UUID
   type: AlertType;
   message: string;
 }
@@ -27,15 +27,17 @@ export const useAlert = () => {
 export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
-  const removeAlert = useCallback((id: number) => {
+  const removeAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
   const showAlert = (type: AlertType, message: string) => {
-    const id = Date.now();
+    // ✅ Use crypto.randomUUID() to guarantee uniqueness even in milliseconds
+    const id = crypto.randomUUID();
+
     setAlerts((prev) => [...prev, { id, type, message }]);
 
-    // 5 seconds is better for complex financial error messages
+    // Auto-remove after 5 seconds
     setTimeout(() => {
       removeAlert(id);
     }, 5000);

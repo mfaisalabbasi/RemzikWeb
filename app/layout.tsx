@@ -13,8 +13,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <AlertProvider>{children}</AlertProvider>
+      <body suppressHydrationWarning={true}>
+        {/* AlertProvider must wrap children so that 
+          useAlert() can be called from any nested component or hook.
+        */}
+        <AlertProvider>
+          <main>{children}</main>
+        </AlertProvider>
       </body>
     </html>
   );

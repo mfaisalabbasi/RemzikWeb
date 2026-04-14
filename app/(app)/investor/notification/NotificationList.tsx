@@ -1,33 +1,39 @@
-// app/(app)/investor/notification/NotificationList.tsx
 "use client";
 
+import { useRouter } from "next/navigation";
+import { NotificationItem } from "@/app/integrations/types/notification";
 import styles from "./notification.module.css";
 import clsx from "clsx";
-import { NotificationItem } from "./types";
 
-interface NotificationProps {
-  notifications?: NotificationItem[];
+interface Props {
+  notifications: NotificationItem[];
+  onMarkRead: (id: string) => void;
 }
 
-export default function NotificationList({ notifications }: NotificationProps) {
-  const list = notifications ?? [];
+export default function NotificationList({ notifications, onMarkRead }: Props) {
+  const router = useRouter();
+  const list = Array.isArray(notifications) ? notifications : [];
+
+  const handleClick = async (n: NotificationItem) => {
+    if (!n.read) onMarkRead(n.id);
+    if (n.actionUrl) router.push(n.actionUrl);
+  };
 
   return (
     <div className={styles.notificationWrapper}>
-      {list.length === 0 && (
-        <div className={styles.empty}>No notifications yet</div>
-      )}
-
       {list.map((n) => (
         <div
           key={n.id}
-          className={clsx(styles.notification, n.type && styles[n.type])}
+          onClick={() => handleClick(n)}
+          className={clsx(styles.notification, !n.read && styles.unread)}
         >
           <div className={styles.content}>
             <strong>{n.title}</strong>
-            {n.message && <p>{n.message}</p>}
+            <p>{n.message}</p>
           </div>
-          {n.date && <span className={styles.date}>{n.date}</span>}
+          <span className={styles.date}>
+            {new Date(n.createdAt).toLocaleDateString()}
+          </span>
         </div>
       ))}
     </div>

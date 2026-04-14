@@ -1,132 +1,48 @@
-export const getPerformance = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/performance`,
-    {
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const fetcher = async (path: string) => {
+  console.log(`🚀 Requesting: ${API_URL}${path}`); // LOG REQUEST
+
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: "GET",
       credentials: "include",
-    },
-  );
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch performance");
+    if (!res.ok) {
+      console.error(`❌ API Error ${res.status}: ${res.statusText}`);
+      throw new Error(`API Error: ${res.status}`);
+    }
+
+    const result = await res.json();
+    console.log(`✅ Success for ${path}:`, result); // LOG SUCCESS
+    return result;
+  } catch (error) {
+    console.error(`🔥 Network/Fetch Error for ${path}:`, error);
+    throw error;
   }
-
-  return res.json();
 };
 
-export const getPartnerKPI = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/kpi`,
-    {
-      credentials: "include",
-    },
-  );
+export const getPerformance = () => fetcher("/assets/partner/performance");
+export const getPartnerKPI = () => fetcher("/assets/partner/kpi");
+export const getLiveFundingAssets = () =>
+  fetcher("/assets/partner/live-funding");
+export const getFundingTable = () => fetcher("/assets/partner/funding-table");
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch KPI");
-  }
+/** * ✅ FIXED: Changed path from "/assets/partner/activity"
+ * to "/assets/partner/recent-activity" to match the Backend Controller
+ */
+export const getRecentActivity = () =>
+  fetcher("/assets/partner/recent-activity");
 
-  return res.json();
-};
-
-export const getLiveFundingAssets = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/live-funding`,
-    {
-      credentials: "include",
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch live funding assets");
-  }
-
-  return res.json();
-};
-
-export const getFundingTable = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/funding-table`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed funding table");
-
-  return res.json();
-};
-
-export const getRecentActivity = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/activity`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed activity");
-
-  return res.json();
-};
-
-export const getPartnerAssets = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/assets`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed to fetch assets");
-
-  return res.json();
-};
-
-export const getPartnerInvestors = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/investors`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed investors");
-
-  return res.json();
-};
-
-export const getWithdrawals = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/withdrawals`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed withdrawals");
-
-  return res.json();
-};
-
-export const getPartnerFunding = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/funding`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed funding data");
-
-  return res.json();
-};
-
-export const getPartnerDistributions = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/distributions`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed distributions");
-
-  return res.json();
-};
-
-export const getPartnerDocuments = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/assets/partner/documents`,
-    { credentials: "include" },
-  );
-
-  if (!res.ok) throw new Error("Failed documents");
-
-  return res.json();
-};
+export const getPartnerAssets = () => fetcher("/assets/partner/assets");
+export const getPartnerInvestors = () => fetcher("/assets/partner/investors");
+export const getWithdrawals = () => fetcher("/assets/partner/withdrawals");
+export const getPartnerFunding = () => fetcher("/assets/partner/funding");
+export const getPartnerDistributions = () =>
+  fetcher("/assets/partner/distributions");
+export const getPartnerDocuments = () => fetcher("/assets/partner/documents");

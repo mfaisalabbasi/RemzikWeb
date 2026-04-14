@@ -23,42 +23,36 @@ export type SignupData = {
   password: string;
 };
 
+// ... (types stay the same)
+
 // SIGNUP
 export const signup = async (data: SignupData) => {
-  const res = await api.post("/api/auth/signup", data, {
+  // Now uses: /api + /auth/signup = /api/auth/signup (CORRECT)
+  const res = await api.post("/auth/signup", data, {
     withCredentials: true,
   });
-
   return res.data;
 };
 
 // LOGIN
 export const login = async (data: { email: string; password: string }) => {
-  const res = await api.post<AuthLoginResponse>("/api/auth/login", data, {
+  // Now uses: /api + /auth/login = /api/auth/login (CORRECT)
+  const res = await api.post<AuthLoginResponse>("/auth/login", data, {
     withCredentials: true,
   });
-
   return res.data;
 };
 
 // GET CURRENT USER
 export const getCurrentUser = async () => {
-  const res = await api.get<CurrentUser>("/api/auth/me", {
+  const res = await api.get<CurrentUser>("/auth/me", {
     withCredentials: true,
   });
-
   return res.data;
 };
 
-// ✅ LOGOUT
+// LOGOUT
 export const logout = async () => {
-  const res = await api.post(
-    "/api/auth/logout",
-    {},
-    {
-      withCredentials: true,
-    },
-  );
-
+  const res = await api.post("/auth/logout", {}, { withCredentials: true });
   return res.data;
 };

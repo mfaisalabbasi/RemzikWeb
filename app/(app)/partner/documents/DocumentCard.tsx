@@ -32,10 +32,24 @@ export default function DocumentCard({ document, onClick }: Props) {
       </div>
       <p className={styles.type}>{document.type}</p>
       <p className={styles.uploaded}>Uploaded: {document.uploaded}</p>
-      <button className={styles.downloadBtn}>
+
+      {/* Using an <a> tag styled as a button is the most reliable way 
+          to handle S3 downloads without getting blocked by CORS.
+      */}
+      <a
+        href={document.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        download={document.title}
+        className={styles.downloadBtn}
+        onClick={(e) => {
+          // IMPORTANT: Stops the card's 'onClick' from opening the modal
+          e.stopPropagation();
+        }}
+      >
         <FiDownload size={16} />
         Download
-      </button>
+      </a>
     </div>
   );
 }

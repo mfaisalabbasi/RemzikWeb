@@ -7,19 +7,30 @@ import { getRecentActivity } from "@/app/integrations/api/asset";
 
 export default function RecentActivityFeed() {
   const [activity, setActivity] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchActivity = async () => {
       try {
         const res = await getRecentActivity();
-        setActivity(res);
+        // Ensure res is an array to avoid map errors
+        setActivity(Array.isArray(res) ? res : []);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching activity:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchActivity();
   }, []);
+
+  if (loading)
+    return (
+      <div className={styles.card}>
+        <p>Loading activity...</p>
+      </div>
+    );
 
   return (
     <div className={styles.card}>
@@ -33,21 +44,23 @@ export default function RecentActivityFeed() {
                 <FiUser size={20} />
               </div>
               <div className={styles.investorInfo}>
-                <p className={styles.name}>{item.investorName}</p>
-                <span className={styles.asset}>{item.assetName}</span>
+                <p className={styles.name}>{item.investorName || "Investor"}</p>
+                <span className={styles.asset}>
+                  {item.assetName || "Property"}
+                </span>
               </div>
             </div>
 
             <div className={styles.right}>
               <p className={styles.amount}>
-                SAR {item.amount.toLocaleString()}
+                SAR {(item.amount || 0).toLocaleString()}
               </p>
               <span className={styles.time}>{item.date}</span>
             </div>
           </div>
         ))
       ) : (
-        <p>No activity yet</p>
+        <p className={styles.noData}>No activity yet</p>
       )}
     </div>
   );
