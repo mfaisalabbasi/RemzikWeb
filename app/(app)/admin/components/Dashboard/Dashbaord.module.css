@@ -1,0 +1,113 @@
+/* Dashboard.module.css */
+
+.adminDashboardRoot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Luxury Card with Dynamic Hover */
+.statCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  border-color: #c5a059;
+  box-shadow: 0 10px 25px -5px rgba(197, 160, 89, 0.15);
+}
+
+.iconBox {
+  background: #fdf6ea;
+  color: #c5a059;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: background 0.3s;
+}
+
+.statCard:hover .iconBox {
+  background: #c5a059;
+  color: #ffffff;
+}
+
+/* Refined Activity & Queue */
+.mainContentSplit {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.sectionContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f8fafc;
+  transition: background 0.2s;
+}
+
+.row:hover {
+  background: #fafafa;
+  padding-left: 0.5rem;
+}
+
+/* --- High-Density Data Grid Logic --- */
+.sectionContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+/* Forces alignment of data rows */
+.dataRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto; /* Item | Time | Action/Status */
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s;
+}
+
+.dataRow:hover {
+  background: #f8fafc;
+  padding-left: 0.5rem;
+}
+
+/* Status Labels */
+.statusPill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.btnAction {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border: none;
+  cursor: pointer;
+}

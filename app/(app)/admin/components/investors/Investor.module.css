@@ -1,0 +1,116 @@
+/* Base Styles */
+.investorPage {
+  padding: 1rem; /* Mobile default */
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Responsive Grid System */
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column on mobile */
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Tablet & Desktop Optimization */
+@media (min-width: 768px) {
+  .investorPage {
+    padding: 2rem;
+  }
+  .gridContainer {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+}
+
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-x: auto; /* Handles mobile overflow for tables/grids */
+}
+
+.card h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.125rem;
+  color: #0f172a;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 0.75rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9375rem;
+}
+
+.pillApproved {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btnAction {
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.btnAction:hover {
+  filter: brightness(1.1);
+}
+
+.ledgerRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+}
+.actionBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchBar {
+  flex: 2;
+  padding: 0.6rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.filterSelect {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-size: 0.9rem;
+}

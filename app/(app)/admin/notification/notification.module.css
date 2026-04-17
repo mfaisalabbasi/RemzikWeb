@@ -1,0 +1,66 @@
+.notificationWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.notification {
+  background: #ffffff;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Unread State: Subtle glow or bolder border */
+.notification.unread {
+  border-left: 4px solid #3b82f6; /* Blue indicator for unread */
+  background: #f8fafc;
+}
+
+.notification:hover {
+  transform: translateX(4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.iconSection {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0; /* Prevents text overflow */
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.message {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 8px;
+  display: block;
+}

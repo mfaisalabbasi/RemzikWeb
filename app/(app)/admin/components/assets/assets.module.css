@@ -1,0 +1,89 @@
+.assetsPage {
+  padding: 1rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr; /* Mobile: Stacks everything */
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Tablet and Desktop: Scales grid */
+@media (min-width: 768px) {
+  .gridContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .assetsPage {
+    padding: 2rem;
+  }
+  .gridContainer {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* TABLE FIX: Keeps tables contained within cards */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto; /* Allows scrolling only inside the card */
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 300px; /* Smaller min-width to allow shrinking */
+}
+
+.table th {
+  text-align: left;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.table td {
+  padding: 1rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+.actionBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchBar {
+  flex: 2;
+  padding: 0.6rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.filterSelect {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-size: 0.9rem;
+}
