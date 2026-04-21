@@ -18,7 +18,7 @@ export default function PartnerLayout({
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
 
-  const { unreadCount } = useNotifications(user?.id);
+  const { unreadCount } = useNotifications(user?.id, "PARTNERS");
 
   useEffect(() => {
     getCurrentUser()

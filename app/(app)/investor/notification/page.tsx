@@ -16,25 +16,23 @@ export default function NotificationPage() {
     });
   }, []);
 
-  const { notifications, loading, markAsReadLocal } = useNotifications(userId);
+  // CRITICAL FIX: You MUST pass "INVESTORS" here so the hook joins the room
+  const { notifications, loading, markAsReadLocal } = useNotifications(
+    userId,
+    "INVESTORS",
+  );
 
   if (!ready) return <div className="p-10 text-center">Authenticating...</div>;
   if (loading)
     return <div className="p-10 text-center">Loading notifications...</div>;
 
   return (
-    // Add key={userId || 'loading'} here.
-    // This forces a complete DOM re-render when the account switches.
     <div key={userId || "loading"} className="container py-6">
       <h1 className="mb-4 text-xl font-bold">Notifications</h1>
-      {notifications.length === 0 ? (
-        <p className="text-gray-500">No notifications found.</p>
-      ) : (
-        <NotificationList
-          notifications={notifications}
-          onMarkRead={markAsReadLocal}
-        />
-      )}
+      <NotificationList
+        notifications={notifications}
+        onMarkRead={markAsReadLocal}
+      />
     </div>
   );
 }

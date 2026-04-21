@@ -8,4 +8,5 @@ export interface NotificationItem {
   actionUrl?: string;
   createdAt: string; // ISO Date string from Backend
   date?: string;
+  isBroadcast?: boolean;
 }

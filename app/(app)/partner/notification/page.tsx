@@ -7,7 +7,12 @@ import { getCurrentUser } from "@/app/integrations/api/auth";
 
 export default function PartnerNotificationPage() {
   const [userId, setUserId] = useState<string>();
-  const { notifications, markAsReadLocal, loading } = useNotifications(userId);
+
+  // CRITICAL FIX: Pass "PARTNERS" here
+  const { notifications, markAsReadLocal, loading } = useNotifications(
+    userId,
+    "PARTNERS",
+  );
 
   useEffect(() => {
     getCurrentUser().then((user) => setUserId(user.id));
@@ -16,7 +21,6 @@ export default function PartnerNotificationPage() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    // Adding the key here is vital for data isolation
     <div key={userId || "loading"} className="container py-6">
       <h1 className="text-2xl font-bold mb-6 text-emerald-900">
         Partner Notifications

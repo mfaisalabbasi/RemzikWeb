@@ -5,34 +5,31 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { NotificationItem } from "@/app/integrations/types/notification";
 
-// ✅ 1. Explicitly export the interface
-export interface NotificationProps {
-  notifications: NotificationItem[];
-  onMarkRead: (id: string) => void;
-}
-
-// ✅ 2. Apply it to the component
 export default function NotificationList({
   notifications,
   onMarkRead,
-}: NotificationProps) {
-  const list = Array.isArray(notifications) ? notifications : [];
+}: {
+  notifications: NotificationItem[];
+  onMarkRead: (id: string) => void;
+}) {
   const router = useRouter();
+  const list = Array.isArray(notifications) ? notifications : [];
 
-  const handleNotificationClick = async (n: NotificationItem) => {
+  const handleAction = async (n: NotificationItem) => {
     if (!n.read) {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/${n.id}/read`,
-        {
-          method: "PATCH",
-        },
-      );
+      if (!n.isBroadcast) {
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/notifications/${n.id}/read`,
+            { method: "PATCH" },
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
       onMarkRead(n.id);
     }
-
-    if (n.actionUrl) {
-      router.push(n.actionUrl);
-    }
+    if (n.actionUrl) router.push(n.actionUrl);
   };
 
   return (
@@ -40,22 +37,16 @@ export default function NotificationList({
       {list.length === 0 && (
         <div className={styles.empty}>No notifications yet</div>
       )}
-
       {list.map((n) => (
         <div
           key={n.id}
-          onClick={() => handleNotificationClick(n)}
-          className={clsx(
-            styles.notification,
-            n.type && styles[n.type],
-            !n.read && styles.unread,
-          )}
+          onClick={() => handleAction(n)}
+          className={clsx(styles.notification, !n.read && styles.unread)}
         >
           <div className={styles.content}>
             <strong>{n.title}</strong>
-            {n.message && <p>{n.message}</p>}
+            <p>{n.message}</p>
           </div>
-
           <span className={styles.date}>
             {n.createdAt
               ? new Date(n.createdAt).toLocaleDateString()

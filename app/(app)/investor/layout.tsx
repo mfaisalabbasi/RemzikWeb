@@ -18,7 +18,7 @@ export default function InvestorLayout({
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const { unreadCount } = useNotifications(user?.id);
+  const { unreadCount } = useNotifications(user?.id, "INVESTORS");
 
   useEffect(() => {
     getCurrentUser()
