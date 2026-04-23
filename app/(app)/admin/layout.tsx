@@ -18,7 +18,8 @@ export default function InvestorLayout({
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const { unreadCount } = useNotifications(user?.id);
+  // The hook now listens for user changes and fetches history only when ready
+  const { unreadCount } = useNotifications(user?.id, user?.role);
 
   useEffect(() => {
     getCurrentUser()

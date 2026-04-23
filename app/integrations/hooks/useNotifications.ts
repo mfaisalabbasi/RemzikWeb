@@ -11,13 +11,11 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
   const { showAlert } = useAlert();
   const socketRef = useRef<Socket | null>(null);
 
-  // STORAGE HELPER
   const getReadBroadcasts = (): string[] => {
     if (typeof window === "undefined" || !userId) return [];
     return JSON.parse(localStorage.getItem(`read_bcasts_${userId}`) || "[]");
   };
 
-  // BELL COUNT - Now uses a simple, reliable check
   const unreadCount = useMemo(() => {
     const readBcastIds = getReadBroadcasts();
     return notifications.filter((n) => {
@@ -46,22 +44,23 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
     if (!userId) return;
     let isMounted = true;
 
-    // 1. FETCH DATA (Historical)
     const load = async () => {
       try {
+        // FIXED: Pointing to /notifications (the unified endpoint) instead of /admin/notifications
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/notifications?role=${role || ""}`,
           { credentials: "include" },
         );
         const data = await res.json();
         if (isMounted) setNotifications(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load notification history:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
     load();
 
-    // 2. SOCKET CONNECTION
     const socketUrl = (process.env.NEXT_PUBLIC_API_URL as string).replace(
       "/api",
       "",
@@ -74,13 +73,12 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
       withCredentials: true,
     });
 
-    // 3. REAL-TIME INJECTION
     const inject = (data: any, forceBcast = false) => {
       if (!isMounted) return;
 
-      // STABLE ID LOGIC: Always prefix broadcasts
       const isB = forceBcast || data.isBroadcast === true;
       const rawId = data.id?.toString() || Date.now().toString();
+
       const finalId = isB
         ? rawId.startsWith("bcast-")
           ? rawId
@@ -90,7 +88,6 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
       setNotifications((prev) => {
         if (prev.some((n) => n.id.toString() === finalId)) return prev;
 
-        // Visual Alert
         setTimeout(
           () => showAlert(isB ? "info" : "success", data.title || "New Update"),
           50,
@@ -115,7 +112,7 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
       isMounted = false;
       socketRef.current?.disconnect();
     };
-  }, [userId, role]); // showAlert removed to stop socket resets
+  }, [userId, role]);
 
   return { notifications, unreadCount, markAsReadLocal, loading };
 };
