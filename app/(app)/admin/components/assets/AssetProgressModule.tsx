@@ -1,67 +1,86 @@
+"use client";
 import styles from "./assets.module.css";
 
-export const AssetProgressModule = () => {
-  // Mock data - replace with actual state
-  const tokenProgress = 65; // Percentage funded
-  const lifecycleStage = 2; // 0=Posted, 1=KYC, 2=Tokenized, 3=Active
+interface AssetProgressProps {
+  asset: any;
+}
+
+export const AssetProgressModule = ({ asset }: AssetProgressProps) => {
+  if (!asset) return null;
+
+  // 1. Calculate Funding Percentage
+  const fundedAmount = Number(asset.funded) || 0;
+  const totalValue = Number(asset.totalValue) || 1; // Prevent division by zero
+  const tokenProgress = Math.min(
+    Math.round((fundedAmount / totalValue) * 100),
+    100,
+  );
+
+  // 2. Map Backend Status to Lifecycle Stages (0-3)
+  // Stages: 0 = Originated, 1 = KYC/Compliance, 2 = Tokenized/Active, 3 = Live/Trading
+  const getLifecycleStage = (status: string) => {
+    switch (status) {
+      case "SUBMITTED":
+        return 0;
+      case "PENDING":
+        return 1;
+      case "APPROVED":
+        return 2;
+      case "LIVE":
+        return 3;
+      default:
+        return 0;
+    }
+  };
+
+  const currentStageIndex = getLifecycleStage(asset.status);
+  const stages = ["Originated", "Compliance", "Tokenized", "Live"];
 
   return (
     <div className={styles.card}>
-      <h3>Capital & Tokenization Progress</h3>
+      <h3 className={styles.cardTitle}>Capital & Tokenization Progress</h3>
 
-      {/* 1. Funding Progress Bar */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "0.8rem",
-            marginBottom: "0.5rem",
-          }}
-        >
-          <span>Funding Progress</span>
-          <span style={{ fontWeight: 700 }}>{tokenProgress}%</span>
+      {/* Funding Progress Section */}
+      <div className={styles.progressSection}>
+        <div className={styles.progressLabelRow}>
+          <span className={styles.progressLabel}>Funding Progress</span>
+          <span className={styles.progressValue}>{tokenProgress}%</span>
         </div>
-        <div
-          style={{
-            height: "10px",
-            background: "#e2e8f0",
-            borderRadius: "5px",
-            overflow: "hidden",
-          }}
-        >
+        <div className={styles.progressTrack}>
           <div
-            style={{
-              width: `${tokenProgress}%`,
-              height: "100%",
-              background: "#2563eb",
-            }}
+            className={styles.progressBarFill}
+            style={{ width: `${tokenProgress}%` }}
           ></div>
+        </div>
+        <div className={styles.progressSubtext}>
+          {fundedAmount.toLocaleString()} / {totalValue.toLocaleString()} SAR
+          raised
         </div>
       </div>
 
-      {/* 2. Lifecycle Progress */}
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        {["Originated", "KYC", "Tokenized", "Live"].map((stage, i) => (
-          <div key={stage} style={{ flex: 1 }}>
-            <div
-              style={{
-                height: "6px",
-                borderRadius: "3px",
-                background: i <= lifecycleStage ? "#059669" : "#e2e8f0",
-              }}
-            ></div>
-            <div
-              style={{
-                fontSize: "0.65rem",
-                marginTop: "0.4rem",
-                color: i <= lifecycleStage ? "#059669" : "#94a3b8",
-              }}
-            >
-              {stage}
+      {/* Lifecycle Stepper */}
+      <div className={styles.lifecycleContainer}>
+        {stages.map((stage, i) => {
+          const isCompleted = i < currentStageIndex;
+          const isCurrent = i === currentStageIndex;
+
+          return (
+            <div key={stage} className={styles.stepItem}>
+              <div
+                className={`${styles.stepIndicator} ${
+                  isCompleted || isCurrent ? styles.stepActive : ""
+                }`}
+              ></div>
+              <div
+                className={`${styles.stepLabel} ${
+                  isCurrent ? styles.stepLabelCurrent : ""
+                } ${isCompleted ? styles.stepLabelActive : ""}`}
+              >
+                {stage}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

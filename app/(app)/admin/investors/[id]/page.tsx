@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import styles from "../../components/investors/Investor.module.css"; // Ensure this path is correct
 import { InvestorProfileSummary } from "../../components/investors/InvestorProfileSummary";
 import { InvestorDocuments } from "../../components/investors/InvestorDocuments";
 import { InvestorLedger } from "../../components/investors/InvestorLedger";
@@ -63,18 +64,11 @@ export default function InvestorDetailPage({
 
   return (
     <div
-      className="container py-8"
+      className={styles.investorPage}
       style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}
     >
       {/* Header Section */}
-      <div
-        style={{
-          marginBottom: "2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-        }}
-      >
+      <div className={styles.headerSection}>
         <div>
           <h1
             style={{
@@ -97,7 +91,6 @@ export default function InvestorDetailPage({
           </p>
         </div>
 
-        {/* Status Badge */}
         <div
           style={{
             padding: "0.5rem 1rem",
@@ -113,36 +106,25 @@ export default function InvestorDetailPage({
         </div>
       </div>
 
-      {/* Financial Overview Cards */}
       <InvestorProfileSummary data={investor} />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.6fr 1fr",
-          gap: "1.5rem",
-        }}
-      >
-        {/* Left Column: Transactional & Identity Data */}
+      {/* FIXED: Using gridContainer class instead of hardcoded inline style */}
+      <div className={styles.gridContainer}>
         <div
           style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
         >
           <InvestorLedger ledger={investor.ledger} />
-
-          {/* CRITICAL FIX: Passing the documents array here */}
           <InvestorDocuments documents={investor.documents} />
         </div>
 
-        {/* Right Column: Admin Actions & Governance */}
         <div
           style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
         >
           <InvestorGovernance
-            id={investor.id} // Passing investorProfile ID
+            id={investor.id}
             status={investor.status}
             isActive={investor.isActive}
           />
-
           <InvestorDirectMessage
             userId={investor.userId}
             name={investor.name}

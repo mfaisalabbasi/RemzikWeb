@@ -1,25 +1,23 @@
-import styles from "../assets/assets.module.css";
+"use client";
+import styles from "./assets.module.css";
 
-export const ActionBar = () => (
+export const ActionBar = ({ onSearch, onFilter }: any) => (
   <div className={styles.actionBar}>
-    {/* Search Input */}
     <input
       type="text"
-      placeholder="Search by ID or Partner..."
+      placeholder="Search by ID, Name or Partner..."
       className={styles.searchBar}
+      onChange={(e) => onSearch(e.target.value)}
     />
 
-    {/* Filter Dropdowns */}
-    <select className={styles.filterSelect}>
-      <option>All Statuses</option>
-      <option>Verified</option>
-      <option>Pending</option>
-    </select>
-
-    <select className={styles.filterSelect}>
-      <option>Asset Type</option>
-      <option>Real Estate</option>
-      <option>Commodities</option>
+    <select
+      className={styles.filterSelect}
+      onChange={(e) => onFilter(e.target.value)}
+    >
+      <option value="All">All Statuses</option>
+      <option value="APPROVED">Approved</option>
+      <option value="PENDING">Pending</option>
+      <option value="LIVE">Live</option>
     </select>
   </div>
 );

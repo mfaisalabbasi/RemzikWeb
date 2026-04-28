@@ -114,3 +114,86 @@
   color: #64748b;
   font-size: 0.9rem;
 }
+/* gridContainer inside your investor module css */
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr; /* Stacked for mobile */
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* This is the magic part for your MacBook/Desktop view */
+@media (min-width: 1024px) {
+  .gridContainer {
+    grid-template-columns: 1.6fr 1fr; /* 60/40 Split only on big screens */
+  }
+}
+
+/* Fix for the header so it doesn't overlap on iPhone */
+.headerSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+  .headerSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+/* Add these to your existing assets.module.css */
+
+.investorPage {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* This fixes the "Disturbed" cards by allowing them to stack on mobile */
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column for mobile */
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Side-by-side only for Large Tablets and Desktops */
+@media (min-width: 1024px) {
+  .gridContainer {
+    grid-template-columns: 1.6fr 1fr; /* The 60/40 Split you wanted */
+  }
+}
+
+/* Responsive Header */
+.headerSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .headerSection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Card overflow safety */
+.card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto; /* Prevents tables from breaking the card layout */
+  width: 100%;
+}
