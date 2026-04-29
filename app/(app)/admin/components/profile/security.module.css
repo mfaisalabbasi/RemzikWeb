@@ -51,3 +51,47 @@
   background: #f8fafc;
   border-color: #cbd5e1;
 }
+.securityRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.securityRow:last-child {
+  border-bottom: none;
+}
+
+.rowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rowTitle {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.rowDesc {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.btnOutline {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnOutline:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}

@@ -5,7 +5,7 @@ interface Asset {
   id: string;
   title: string;
   type: string;
-  valuation: number;
+  totalValue: number;
   status: string;
 }
 
@@ -55,7 +55,7 @@ export const AssetOriginationLedger = ({ assets }: { assets: Asset[] }) => (
                 </td>
                 <td className={styles.valuationCell}>
                   <span className={styles.currencySymbol}>SAR</span>
-                  {Number(asset.valuation).toLocaleString()}
+                  {Number(asset.totalValue).toLocaleString()}
                 </td>
                 <td>
                   <div className={styles.ddStatus}>
