@@ -4,13 +4,16 @@ import styles from "./styles/ProfileForm.module.css";
 import { useState } from "react";
 import { updateProfile } from "@/app/integrations/api/profile";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
+
 export default function ProfileForm({ profile }: any) {
   const { showAlert } = useAlert();
+
+  // Initialize state with fallbacks to avoid the "null" value warning
   const [form, setForm] = useState({
-    name: profile.name,
-    email: profile.email,
-    phone: profile.phone,
-    address: profile.address,
+    name: profile?.name || "",
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    address: profile?.address || "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -26,10 +29,10 @@ export default function ProfileForm({ profile }: any) {
         address: form.address,
       });
 
-      showAlert("success", "Avatar updated successfully");
+      showAlert("success", "Profile updated successfully"); // Fixed message
     } catch (err) {
       console.error(err);
-      alert("Update failed");
+      showAlert("error", "Update failed. Please try again.");
     }
   };
 
@@ -39,7 +42,7 @@ export default function ProfileForm({ profile }: any) {
         <label>Name</label>
         <input
           type="text"
-          value={form.name}
+          value={form.name || ""} // Added fallback
           onChange={(e) => handleChange("name", e.target.value)}
         />
       </div>
@@ -47,19 +50,27 @@ export default function ProfileForm({ profile }: any) {
       {/* 🚫 READ ONLY */}
       <div className={styles.inputGroup}>
         <label>Email</label>
-        <input type="email" value={form.email} disabled />
+        <input
+          type="email"
+          value={form.email || ""} // Added fallback
+          disabled
+        />
       </div>
 
       <div className={styles.inputGroup}>
         <label>Phone</label>
-        <input type="text" value={form.phone} disabled />
+        <input
+          type="text"
+          value={form.phone || ""} // Added fallback
+          disabled
+        />
       </div>
 
       <div className={styles.inputGroup}>
         <label>Address</label>
         <input
           type="text"
-          value={form.address}
+          value={form.address || ""} // Added fallback
           onChange={(e) => handleChange("address", e.target.value)}
         />
       </div>

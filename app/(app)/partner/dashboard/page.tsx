@@ -2,50 +2,52 @@
 
 import styles from "../components/Dashboard/styles/Dashboard.module.css";
 import PartnerKPICard from "../components/Dashboard/KPICard";
-import FundingSnapshotCard from "../components/Dashboard/FundingSnapshotCard.module";
 import RecentActivityFeed from "../components/Dashboard/RecentActivityFeed";
 import AssetFundingTable from "../components/Dashboard/AssetFundingTable";
 import FundingAssetCard from "../components/Dashboard/FundingAssetCard";
-import LifecycleStrip from "../components/Dashboard/LifecycleStrip";
 import PerformanceCards from "../components/Dashboard/PerformanceCards";
 import { useEffect, useState } from "react";
 import {
   getLiveFundingAssets,
   getPartnerKPI,
 } from "@/app/integrations/api/asset";
+
 export default function PartnerDashboardPage() {
   const [kpi, setKpi] = useState<any>(null);
+  const [liveAssets, setLiveAssets] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // 1. Fetch KPI Data
   useEffect(() => {
     const fetchKPI = async () => {
       try {
         const res = await getPartnerKPI();
         setKpi(res);
       } catch (err) {
-        console.error(err);
+        console.error("KPI Fetch Error:", err);
       }
     };
-
     fetchKPI();
   }, []);
 
-  const [liveAssets, setLiveAssets] = useState<any[]>([]);
+  // 2. Fetch Live Assets
   useEffect(() => {
     const fetchLiveAssets = async () => {
+      setIsLoading(true);
       try {
         const res = await getLiveFundingAssets();
-        console.log("LIVE ASSETS:", res); // 👈 ADD THIS
-        setLiveAssets(res);
+        setLiveAssets(res || []);
       } catch (err) {
-        console.error(err);
+        console.error("Live Assets Fetch Error:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-
     fetchLiveAssets();
   }, []);
+
   return (
     <div className={styles.wrapper}>
-      {/* <LifecycleStrip currentStep={2} /> */}
       <PerformanceCards />
 
       {/* KPI SECTION */}
@@ -55,37 +57,32 @@ export default function PartnerDashboardPage() {
         <div className={styles.kpiGrid}>
           <PartnerKPICard
             title="Total Assets"
-            value={kpi ? String(kpi.totalAssets) : "13"}
+            value={kpi ? String(kpi.totalAssets) : "0"}
           />
-
           <PartnerKPICard
             title="Active Funding"
-            value={kpi ? String(kpi.activeFunding) : "4"}
+            value={kpi ? String(kpi.activeFunding) : "0"}
           />
-
           <PartnerKPICard
             title="Fully Funded"
-            value={kpi ? String(kpi.fullyFunded) : "6"}
+            value={kpi ? String(kpi.fullyFunded) : "0"}
           />
-
           <PartnerKPICard
             title="Pending Compliance"
-            value={kpi ? String(kpi.pendingCompliance) : "2"}
+            value={kpi ? String(kpi.pendingCompliance) : "0"}
           />
-
           <PartnerKPICard
             title="Total Raised"
-            value={kpi ? `SAR ${kpi.totalRaised.toLocaleString()}` : "SAR 3.4M"}
+            value={kpi ? `SAR ${kpi.totalRaised.toLocaleString()}` : "SAR 0"}
           />
-
           <PartnerKPICard
             title="Avg ROI"
-            value={kpi ? `${kpi.avgROI}%` : "8.2%"}
+            value={kpi ? `${kpi.avgROI}%` : "0%"}
           />
         </div>
       </div>
 
-      {/* LIVE FUNDING */}
+      {/* LIVE FUNDING - Dummy logic removed */}
       <div className={styles.sectionShell}>
         <span className={styles.sectionHeader}>Live Asset Funding</span>
 
@@ -101,21 +98,11 @@ export default function PartnerDashboardPage() {
               />
             ))
           ) : (
-            <>
-              {/* fallback UI */}
-              <FundingAssetCard
-                name="Jeddah Residential Tower"
-                target={9000000}
-                raised={6300000}
-                stage="Funding"
-              />
-              <FundingAssetCard
-                name="Riyadh Commercial Hub"
-                target={2000000}
-                raised={1500000}
-                stage="Funding"
-              />
-            </>
+            <div className={styles.noDataMessage}>
+              {isLoading
+                ? "Loading assets..."
+                : "No live funding assets available."}
+            </div>
           )}
         </div>
       </div>

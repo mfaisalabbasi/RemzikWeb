@@ -41,7 +41,7 @@ export const InvestorGrid = ({ initialData = [] }: InvestorGridProps) => {
           <tr>
             <th>Investor</th>
             <th>Status</th>
-            <th>Balance</th>
+            <th>Investments</th>
           </tr>
         </thead>
         <tbody>
