@@ -25,3 +25,14 @@ export interface TradeInput {
   quantity: number;
   price: number;
 }
+
+export interface ActiveTrade {
+  id: string;
+  assetTitle: string;
+  amount: number;
+  status: "LOCKED" | "DISPUTED" | "RELEASED";
+  type: "buy" | "sell";
+  createdAt: string;
+  buyerId?: string; // Add this
+  sellerId?: string; // Add this for completeness
+}

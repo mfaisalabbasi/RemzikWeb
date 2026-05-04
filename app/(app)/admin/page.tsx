@@ -9,6 +9,7 @@ import { BroadcastFeed } from "./components/Dashboard/BroadcastFeed";
 import styles from "./components/Dashboard/Dashbaord.module.css";
 import { SystemCompliance } from "./components/Dashboard/SystemCompliance";
 import { PipelineSnapshot } from "./components/Dashboard/PipelineSnapshot";
+import { DisputeMonitor } from "./components/Dashboard/DisputeMonitor"; //
 import { useEffect, useState } from "react";
 import { getAdminDashboardStats } from "@/app/integrations/api/admin";
 
@@ -25,12 +26,7 @@ export default function AdminPage() {
     async function loadStats() {
       try {
         const data = await getAdminDashboardStats();
-
-        // backend return verification
-        console.log("Analytics Data Received:", data);
-
         setStats({
-          // Ensure we fall back to 0 if the backend value is null or undefined
           totalAUM: Number(data?.totalAUM) || 0,
           investorCount: Number(data?.investorCount) || 0,
           partnerCount: Number(data?.partnerCount) || 0,
@@ -45,7 +41,6 @@ export default function AdminPage() {
     loadStats();
   }, []);
 
-  // Loading State - You can style this to match your premium UI
   if (loading && stats.totalAUM === 0) {
     return (
       <div className={styles.adminDashboardRoot}>
@@ -58,32 +53,33 @@ export default function AdminPage() {
 
   return (
     <div className={styles.adminDashboardRoot}>
-      {/* SECTION 1: THE EMPIRE SNAPSHOT */}
-      <StatCard
-        label="Total AUM"
-        value={
-          stats.totalAUM >= 1000000
-            ? `${(stats.totalAUM / 1000000).toFixed(1)}M SAR`
-            : `${stats.totalAUM.toLocaleString()} SAR`
-        }
-        icon={BarChart3}
-      />
-      <StatCard
-        label="Investors"
-        value={stats.investorCount.toLocaleString()}
-        icon={Users}
-      />
-      <StatCard
-        label="Partners"
-        value={stats.partnerCount.toLocaleString()}
-        icon={Briefcase}
-      />
-      <StatCard
-        label="Live Assets"
-        // Ensure this doesn't crash if liveAssets is undefined
-        value={(stats.liveAssets || 0).toString()}
-        icon={Building2}
-      />
+      {/* SECTION 1: THE EMPIRE SNAPSHOT - Wrapped to protect the grid */}
+      <div className={styles.statsWrapper}>
+        <StatCard
+          label="Total AUM"
+          value={
+            stats.totalAUM >= 1000000
+              ? `${(stats.totalAUM / 1000000).toFixed(1)}M SAR`
+              : `${stats.totalAUM.toLocaleString()} SAR`
+          }
+          icon={BarChart3}
+        />
+        <StatCard
+          label="Investors"
+          value={stats.investorCount.toLocaleString()}
+          icon={Users}
+        />
+        <StatCard
+          label="Partners"
+          value={stats.partnerCount.toLocaleString()}
+          icon={Briefcase}
+        />
+        <StatCard
+          label="Live Assets"
+          value={(stats.liveAssets || 0).toString()}
+          icon={Building2}
+        />
+      </div>
 
       {/* SECTION 2: OPERATIONAL EXECUTION */}
       <div className={styles.mainContentSplit}>
@@ -91,15 +87,20 @@ export default function AdminPage() {
         <RecentActivity />
       </div>
 
-      {/* SECTION 3: INSTITUTIONAL GOVERNANCE */}
+      {/* SECTION 3: ARBITRATION (The New Section) */}
       <div className={styles.mainContentSplit}>
+        <DisputeMonitor />
         <SystemCompliance />
-        <PipelineSnapshot />
       </div>
 
       {/* SECTION 4: STRATEGIC TOOLS */}
       <div className={styles.mainContentSplit}>
+        <PipelineSnapshot />
         <LiquidityMonitor />
+      </div>
+
+      {/* SECTION 5: FEED */}
+      <div className={styles.mainContentSplit}>
         <BroadcastFeed />
       </div>
     </div>

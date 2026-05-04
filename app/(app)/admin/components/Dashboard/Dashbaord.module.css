@@ -111,3 +111,325 @@
   border: none;
   cursor: pointer;
 }
+/* Add this to your existing Dashboard.module.css */
+
+.statsWrapper {
+  grid-column: 1 / -1; /* Ensures stats take full width of the root grid */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Ensure root grid doesn't force everything into columns */
+.adminDashboardRoot {
+  display: flex; /* Changed from grid to flex-column for better vertical control */
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Keep your existing mainContentSplit logic but ensure it's responsive */
+.mainContentSplit {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+}
+
+/* --- Remzik Dispute Monitor Styles --- */
+
+.disputeRow {
+  display: grid;
+  grid-template-columns: 140px 1fr 110px; /* Reference | Subject | Actions */
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease-in-out;
+}
+
+.disputeRow:hover {
+  background: #fdf6ea; /* Signature Gold Tint */
+  transform: translateX(4px);
+}
+
+.referenceBadge {
+  background: #0f172a; /* Slate-900 */
+  color: #ffffff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  width: fit-content;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.approveBtn {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.approveBtn:hover {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.rejectBtn {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.rejectBtn:hover {
+  background: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+}
+
+.metaText {
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* Dashbaord.module.css */
+
+.sectionContainer {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eef2f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.disputeCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.disputeCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Header within the card */
+.cardHeader {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reference {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+/* Content Layout */
+.cardBody {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 20px;
+}
+
+.reasonTitle {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.reasonText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* Action Bar */
+.actionBar {
+  background: #ffffff;
+  padding: 12px 16px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resolveBtn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.buyerBtn {
+  color: #be123c;
+  background: #fff1f2;
+}
+
+.buyerBtn:hover {
+  background: #ffe4e6;
+  border-color: #fecdd3;
+}
+
+.sellerBtn {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.sellerBtn:hover {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+}
+
+/* Dashbaord.module.css */
+
+.sectionContainer {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eef2f6;
+}
+
+.disputeCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.disputeCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  background: #f8fafc;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardBody {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr; /* Split Reason and Identity */
+  gap: 24px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.reasonText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.5;
+  border-left: 3px solid #e2e8f0;
+  padding-left: 12px;
+}
+
+.identityBox {
+  background: #f1f5f9;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer {
+  padding: 12px 20px;
+  background: #ffffff;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.refundBtn {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.refundBtn:hover {
+  background: #ffe4e6;
+}
+
+.releaseBtn {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.releaseBtn:hover {
+  background: #d1fae5;
+}
+
+.reference {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+}

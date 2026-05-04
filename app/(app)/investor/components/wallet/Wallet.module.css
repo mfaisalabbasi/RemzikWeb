@@ -238,3 +238,28 @@
     padding: 16px;
   }
 }
+
+.lockedCard {
+  border-left: 4px solid #d4af37; /* Remzik Gold */
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.lockedCard .cardIcon {
+  color: #d4af37;
+}
+
+.cardDescription {
+  display: block;
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.highlightCard {
+  background: linear-gradient(
+    135deg,
+    #1beab0 0%,
+    #6eae9c 100%
+  ); /* Emerald Green */
+  color: white;
+}
