@@ -12,6 +12,7 @@ import { PipelineSnapshot } from "./components/Dashboard/PipelineSnapshot";
 import { DisputeMonitor } from "./components/Dashboard/DisputeMonitor"; //
 import { useEffect, useState } from "react";
 import { getAdminDashboardStats } from "@/app/integrations/api/admin";
+import { DistributionApprovalQueue } from "./components/Dashboard/DistributionApprovalQueue";
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
@@ -84,6 +85,7 @@ export default function AdminPage() {
       {/* SECTION 2: OPERATIONAL EXECUTION */}
       <div className={styles.mainContentSplit}>
         <UrgentQueue />
+        <DistributionApprovalQueue />
         <RecentActivity />
       </div>
 

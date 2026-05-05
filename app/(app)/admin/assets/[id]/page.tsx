@@ -23,6 +23,7 @@ import { MarketMetrics } from "../../components/assets/MarketMetrics";
 import { AssetProgressModule } from "../../components/assets/AssetProgressModule";
 import { SecondaryMarketMetrics } from "../../components/assets/SecondaryMarketMetrics";
 import { SecondaryMarketDashboard } from "../../components/assets/SecondaryMarketDashboard";
+import { DistributionRegistry } from "../../components/assets/DistributionRegistry";
 
 interface AssetParams {
   id: string;
@@ -140,7 +141,7 @@ export default function AssetDetail({
 
       <div className={styles.gridContainer}>
         <AuditLogDisplay assetId={asset.id} />
-
+        <DistributionRegistry assetId={asset.id} />
         <MarketActivityLog assetId={asset.id} />
         {/* <SecondaryMarketMetrics assetId={asset.id} /> */}
       </div>

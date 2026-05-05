@@ -10,7 +10,7 @@ export const RecentActivity = () => {
   const [showAll, setShowAll] = useState(false);
 
   // Configuration for visibility
-  const INITIAL_LIMIT = 10;
+  const INITIAL_LIMIT = 3;
 
   useEffect(() => {
     const fetchLogs = async () => {

@@ -939,3 +939,182 @@ button:disabled {
     display: none; /* Hide Seller IDs on mobile to save space */
   }
 }
+
+.moduleTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.moduleSubtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.fintechTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px; /* Spaced rows */
+  margin-top: 12px;
+}
+
+.fintechTable th {
+  padding: 8px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.fintechTable td {
+  padding: 12px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+}
+
+.fintechTable tr td:first-child {
+  border-left: 1px solid #f1f5f9;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.fintechTable tr td:last-child {
+  border-right: 1px solid #f1f5f9;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.periodText {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.batchText {
+  font-family: "SF Mono", monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.amountText {
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+}
+
+/* Status Badges */
+.badgePaid,
+.badgePending {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.badgePaid {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
+}
+
+.badgePending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fef3c7;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.assetModuleCard {
+  background: white;
+  border-radius: 24px; /* Soft institutional curves */
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+}
+
+.iconCircle {
+  width: 40px;
+  height: 40px;
+  background: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.fintechTable {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+}
+
+.fintechTable th {
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  padding-bottom: 0.75rem;
+}
+
+.fintechTable td {
+  padding: 1rem 0;
+  border-top: 1px solid #f8fafc;
+  vertical-align: middle;
+}
+
+/* Matching your existing badge styles */
+.badgePaid {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badgePending {
+  background: #fffbeb;
+  color: #d97706;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
