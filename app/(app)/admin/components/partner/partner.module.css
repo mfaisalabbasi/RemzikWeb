@@ -733,3 +733,167 @@
   color: #1e293b;
   margin: 0;
 }
+.subHeader {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 4px;
+}
+
+.btnSecondary {
+  background: #fff1f2; /* Light red for rejection */
+  color: #be123c;
+  border: 1px solid #fda4af;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btnSecondary:hover {
+  background: #ffe4e6;
+}
+
+.complianceSection {
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+}
+.governanceContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Side-by-side layout */
+  gap: 24px;
+  width: 100%;
+}
+
+.govCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.govHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 16px;
+}
+
+.govTitle h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.govTitle p {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Status Badges */
+.statusBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.approved,
+.verified {
+  background: #d1fae5;
+  color: #065f46;
+}
+.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Document Rows */
+.docRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f9fafb;
+}
+
+.docLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.docLink {
+  background: none;
+  border: 1px solid #064e3b;
+  color: #064e3b;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.docLink:disabled {
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Admin Action Buttons */
+.adminActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.approveBtn {
+  background: #064e3b;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rejectBtn {
+  background: #ffffff;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .governanceContainer {
+    grid-template-columns: 1fr;
+  }
+}

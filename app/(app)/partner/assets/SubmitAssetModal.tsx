@@ -16,8 +16,6 @@ interface Props {
 
 export default function SubmitAssetModal({ onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
-
-  // ✅ ALERT STATES (added)
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -35,7 +33,6 @@ export default function SubmitAssetModal({ onClose }: Props) {
     fileList?: FileList | null,
   ) => {
     if (!fileList) return;
-
     Array.from(fileList).forEach((file) => {
       formData.append(key, file);
     });
@@ -43,19 +40,15 @@ export default function SubmitAssetModal({ onClose }: Props) {
 
   const onSubmit = async (data: AssetFormData) => {
     setSubmitting(true);
-
-    // ✅ reset alerts
     setError("");
     setSuccess("");
 
     try {
       const formData = new FormData();
-
       formData.append("title", data.title);
       formData.append("type", data.type);
       formData.append("description", data.description);
       formData.append("totalValue", data.totalValue);
-
       formData.append("location", data.location);
       formData.append("expectedYield", data.expectedYield);
       formData.append("rentalIncome", data.rentalIncome);
@@ -74,7 +67,6 @@ export default function SubmitAssetModal({ onClose }: Props) {
       });
 
       const text = await res.text();
-
       let message = "Asset submission failed";
 
       try {
@@ -85,22 +77,17 @@ export default function SubmitAssetModal({ onClose }: Props) {
       }
 
       if (!res.ok) {
-        // ❌ replaced alert
         setError(message);
-        throw new Error(message);
+        return;
       }
 
-      // ✅ success alert
       setSuccess("Asset submitted successfully");
-
       setTimeout(() => {
         onClose();
       }, 1200);
     } catch (err: any) {
       console.error(err);
-
-      // ❌ replaced alert
-      setError(err.message || "Unexpected error");
+      setError(err.message || "An unexpected network error occurred");
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +96,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
+        {/* 1. STICKY HEADER */}
         <div className={styles.header}>
           <h3>Submit New Asset</h3>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -116,17 +104,19 @@ export default function SubmitAssetModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* ✅ ALERT UI (added) */}
-        {error && (
-          <Alert type="error" message={error} onClose={() => setError("")} />
-        )}
-        {success && (
-          <Alert
-            type="success"
-            message={success}
-            onClose={() => setSuccess("")}
-          />
-        )}
+        {/* 2. STICKY ALERT CONTAINER (Offset below header) */}
+        <div className={styles.stickyAlertContainer}>
+          {error && (
+            <Alert type="error" message={error} onClose={() => setError("")} />
+          )}
+          {success && (
+            <Alert
+              type="success"
+              message={success}
+              onClose={() => setSuccess("")}
+            />
+          )}
+        </div>
 
         <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
           <label>

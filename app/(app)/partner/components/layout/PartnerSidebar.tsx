@@ -8,7 +8,13 @@ import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/app/integrations/api/auth";
 
-import { FiHome, FiLayers, FiUser, FiUsers } from "react-icons/fi";
+import {
+  FiCreditCard,
+  FiHome,
+  FiLayers,
+  FiUser,
+  FiUsers,
+} from "react-icons/fi";
 import { AiFillFund } from "react-icons/ai";
 import { HandCoins } from "lucide-react";
 import { GrDocument } from "react-icons/gr";
@@ -24,6 +30,7 @@ const navItems = [
     icon: HandCoins,
   },
   { label: "Documents", href: "/partner/documents", icon: GrDocument },
+  { label: "Wallet", href: "/partner/wallet", icon: FiCreditCard },
   { label: "Profile", href: "/partner/profile", icon: FiUser },
 ];
 

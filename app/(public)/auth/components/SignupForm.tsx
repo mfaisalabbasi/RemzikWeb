@@ -5,45 +5,67 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../integrations/validation/auth.schema";
-import { signup } from "../../../integrations/api/auth";
+import { kycSchema } from "@/app/integrations/validation/kyc.schema";
+import { signup } from "../../../integrations/api/auth"; // You will update this API call to handle multipart
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import styles from "../styles/Auth.module.css";
+import kycStyles from "../styles/kyc.module.css";
 import Alert from "../../../integrations/Alert/Alert";
 
-type FormData = z.infer<typeof signupSchema>;
+type AuthFormData = z.infer<typeof signupSchema>;
+type KYCFormData = z.infer<typeof kycSchema>;
 type Role = "INVESTOR" | "PARTNER" | null;
 
 export default function SignupForm() {
   const router = useRouter();
 
+  // Multi-step state
   const [step, setStep] = useState(1);
-  const [step1Data, setStep1Data] = useState<FormData | null>(null);
+  const [authData, setAuthData] = useState<AuthFormData | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role>(null);
+
+  // UI State
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // react-hook-form for step 1
+  // Step 1 Form: Basic Auth
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({
+    register: regAuth,
+    handleSubmit: handleAuthSubmit,
+    formState: { errors: authErrors },
+  } = useForm<AuthFormData>({
     resolver: zodResolver(signupSchema),
   });
 
-  // Step 1: Save basic info
-  const handleStep1 = (data: FormData) => {
-    setStep1Data(data);
-    setStep(2); // move to role selection
+  // Step 3 Form: KYC
+  const {
+    register: regKyc,
+    handleSubmit: handleKycSubmit,
+    formState: { errors: kycErrors },
+  } = useForm<KYCFormData>({
+    resolver: zodResolver(kycSchema),
+  });
+
+  // Handle Step 1 -> 2
+  const onAuthSubmit = (data: AuthFormData) => {
+    setAuthData(data);
+    setStep(2);
     setError("");
   };
 
-  // Step 2: Final submit
-  const handleStep2 = async () => {
-    if (!selectedRole || !step1Data) {
-      setError("Please select a role to continue.");
+  // Handle Step 2 -> 3
+  const onRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+    setStep(3);
+    setError("");
+  };
+
+  // Final Step: Atomic Registration + KYC Submission
+  const onFinalSubmit = async (kycData: KYCFormData) => {
+    if (!authData || !selectedRole) {
+      setStep(1);
       return;
     }
 
@@ -52,30 +74,45 @@ export default function SignupForm() {
     setIsSubmitting(true);
 
     try {
-      // Prepare payload exactly as backend expects
-      const payload = {
-        name: step1Data.name,
-        email: step1Data.email,
-        phone: step1Data.phone,
-        password: step1Data.password,
-        role: selectedRole,
-      };
+      // Use FormData to support file uploads (ID and Address proof)
+      const formData = new FormData();
 
-      await signup(payload);
+      // Auth Fields
+      formData.append("name", authData.name);
+      formData.append("email", authData.email);
+      formData.append("phone", authData.phone);
+      formData.append("password", authData.password);
+      formData.append("role", selectedRole);
 
-      setSuccess("Account created successfully!");
+      // KYC Fields
+      formData.append("fullName", kycData.fullName);
+      formData.append("dob", kycData.dob);
+      if (kycData.idDocument?.[0])
+        formData.append("idDocument", kycData.idDocument[0]);
+      if (kycData.addressProof?.[0])
+        formData.append("addressProof", kycData.addressProof[0]);
+
+      // Using a unified endpoint for Atomic Transaction
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register-with-kyc`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+
+      setSuccess("Account and KYC submitted for review!");
       setTimeout(() => {
-        router.push("/auth/kyc"); // move to KYC or dashboard
-      }, 1500);
+        router.push("/auth/login");
+      }, 2000);
     } catch (err: any) {
-      // Replace line 71 with this to see the real error:
-      console.error(
-        "Signup Error Details:",
-        err.response?.data || err.message || err,
-      );
-      setError(
-        err?.response?.data?.message || "Server error. Please try again later.",
-      );
+      console.error("Signup/KYC Error:", err);
+      setError(err.message || "Server error. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -84,12 +121,15 @@ export default function SignupForm() {
   return (
     <section className={styles.authCard}>
       <div className={styles.header}>
-        <h1>Create Account</h1>
-        <p>Secure access to the Remzik Protocol platform</p>
+        <h1>{step === 3 ? "KYC Verification" : "Create Account"}</h1>
+        <p>
+          {step === 3
+            ? "Complete identity verification to finalize registration."
+            : "Secure access to the Remzik Protocol platform"}
+        </p>
       </div>
 
       <div className={styles.formWrapper}>
-        {/* ALERTS */}
         {error && (
           <Alert type="error" message={error} onClose={() => setError("")} />
         )}
@@ -101,72 +141,77 @@ export default function SignupForm() {
           />
         )}
 
-        {/* STEP 1: User Info */}
+        {/* STEP 1: Basic Info */}
         {step === 1 && (
-          <form className={styles.form} onSubmit={handleSubmit(handleStep1)}>
+          <form
+            className={styles.form}
+            onSubmit={handleAuthSubmit(onAuthSubmit)}
+          >
             <label className={styles.field}>
               Full Name
               <input
-                {...register("name")}
+                {...regAuth("name")}
                 type="text"
                 placeholder="John Doe"
                 className={styles.fieldInput}
               />
-              {errors.name && (
-                <span className={styles.error}>{errors.name.message}</span>
+              {authErrors.name && (
+                <span className={styles.error}>{authErrors.name.message}</span>
               )}
             </label>
 
             <label className={styles.field}>
               Phone Number
               <input
-                {...register("phone")}
+                {...regAuth("phone")}
                 type="tel"
                 placeholder="+966..."
                 className={styles.fieldInput}
               />
-              {errors.phone && (
-                <span className={styles.error}>{errors.phone.message}</span>
+              {authErrors.phone && (
+                <span className={styles.error}>{authErrors.phone.message}</span>
               )}
             </label>
 
             <label className={styles.field}>
               Email Address
               <input
-                {...register("email")}
+                {...regAuth("email")}
                 type="email"
                 placeholder="john@email.com"
                 className={styles.fieldInput}
               />
-              {errors.email && (
-                <span className={styles.error}>{errors.email.message}</span>
+              {authErrors.email && (
+                <span className={styles.error}>{authErrors.email.message}</span>
               )}
             </label>
 
             <label className={styles.field}>
               Password
               <input
-                {...register("password")}
+                {...regAuth("password")}
                 type="password"
                 placeholder="Create password"
                 className={styles.fieldInput}
               />
-              {errors.password && (
-                <span className={styles.error}>{errors.password.message}</span>
+              {authErrors.password && (
+                <span className={styles.error}>
+                  {authErrors.password.message}
+                </span>
               )}
             </label>
 
             <label className={styles.field}>
               Confirm Password
               <input
-                {...register("confirmPassword")}
+                {...regAuth("confirmPassword")}
                 type="password"
                 placeholder="Confirm password"
                 className={styles.fieldInput}
               />
-              {errors.confirmPassword && (
+              {authErrors.confirmPassword && (
                 <span className={styles.error}>
-                  {errors.confirmPassword.message}
+                  {authErrors.confirmPassword.message}
                 </span>
               )}
             </label>
@@ -174,7 +219,6 @@ export default function SignupForm() {
             <button className={styles.primary} type="submit">
               Next
             </button>
-
             <p className={styles.note}>
               Already registered?{" "}
               <Link href="/auth/login" className={styles.link}>
@@ -201,18 +245,17 @@ export default function SignupForm() {
                 onClick={() => setSelectedRole("PARTNER")}
               >
                 <h3>Partner</h3>
-                <p>Submit real-world assets and manage tokenized listings.</p>
+                <p>Submit real-world assets and manage listings.</p>
               </div>
             </div>
 
             <button
               className={styles.primary}
-              onClick={handleStep2}
-              disabled={!selectedRole || isSubmitting}
+              onClick={() => step === 2 && onRoleSelect(selectedRole)}
+              disabled={!selectedRole}
             >
-              {isSubmitting ? "Creating Account..." : "Finish Signup"}
+              Next: Identity Verification
             </button>
-
             <button
               className={styles.secondary}
               onClick={() => setStep(1)}
@@ -221,6 +264,87 @@ export default function SignupForm() {
               Back
             </button>
           </div>
+        )}
+
+        {/* STEP 3: KYC Fields (Merged) */}
+        {step === 3 && (
+          <form
+            className={styles.form}
+            onSubmit={handleKycSubmit(onFinalSubmit)}
+          >
+            <label className={styles.field}>
+              Full Name (as per ID)
+              <input
+                {...regKyc("fullName")}
+                type="text"
+                placeholder="John Doe"
+                className={styles.fieldInput}
+              />
+              {kycErrors.fullName && (
+                <span className={styles.error}>
+                  {kycErrors.fullName.message}
+                </span>
+              )}
+            </label>
+
+            <label className={styles.field}>
+              Date of Birth
+              <input
+                {...regKyc("dob")}
+                type="date"
+                className={styles.fieldInput}
+              />
+              {kycErrors.dob && (
+                <span className={styles.error}>{kycErrors.dob.message}</span>
+              )}
+            </label>
+
+            <label className={styles.field}>
+              Identity Document (Passport/Iqama)
+              <input
+                {...regKyc("idDocument")}
+                type="file"
+                accept=".jpg,.png,.pdf"
+                className={styles.fieldInput}
+              />
+              {kycErrors.idDocument && (
+                <span className={styles.error}>
+                  {kycErrors.idDocument.message as string}
+                </span>
+              )}
+            </label>
+
+            <label className={styles.field}>
+              Address Proof
+              <input
+                {...regKyc("addressProof")}
+                type="file"
+                accept=".jpg,.png,.pdf"
+                className={styles.fieldInput}
+              />
+              {kycErrors.addressProof && (
+                <span className={styles.error}>
+                  {kycErrors.addressProof.message as string}
+                </span>
+              )}
+            </label>
+
+            <button
+              className={styles.primary}
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Securing Your Account..." : "Finalize & Submit"}
+            </button>
+            <button
+              className={styles.secondary}
+              type="button"
+              onClick={() => setStep(2)}
+              style={{ marginTop: "10px" }}
+            >
+              Back
+            </button>
+          </form>
         )}
       </div>
     </section>

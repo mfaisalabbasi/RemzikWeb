@@ -5,121 +5,163 @@ import styles from "./partner.module.css";
 export const PartnerGovernance = ({ partner, onAction }: any) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Map backend fields to the UI list safely
-  const corporateDocs = [
-    {
-      name: "Articles of Association",
-      status: partner?.articlesOfAssociation ? "VERIFIED" : "MISSING",
-      url: partner?.articlesOfAssociation,
-    },
-    {
-      name: "Commercial Registration (CR)",
-      status: partner?.commercialRegistration ? "VERIFIED" : "MISSING",
-      url: partner?.commercialRegistration,
-    },
-    {
-      name: "Authorized Signatory ID",
-      status: partner?.signatoryId ? "VERIFIED" : "MISSING",
-      url: partner?.signatoryId,
-    },
-    {
-      name: "AML/CTF Policy Disclosure",
-      status: partner?.amlPolicy ? "VERIFIED" : "MISSING",
-      url: partner?.amlPolicy,
-    },
-  ];
+  // Data mapping from the separate table via the User->Kyc relation
+  const kyc = partner?.user?.kyc;
 
-  const handleStatusUpdate = async () => {
-    // 1. Logic fix: Backend expects APPROVED, not VERIFIED
-    const isCurrentlyApproved = partner?.status === "APPROVED";
-    const newStatus = isCurrentlyApproved ? "PENDING" : "APPROVED";
+  const handleStatusUpdate = async (
+    type: "partner" | "kyc",
+    newStatus: string,
+  ) => {
+    const targetId = type === "partner" ? partner.id : kyc?.id;
+    if (!targetId) return alert(`Error: ${type} record ID not found.`);
 
-    if (!confirm(`Switch entity status to ${newStatus}?`)) return;
+    // Handle Rejection Reason (Required by your AdminService logic)
+    let reason = "";
+    if (newStatus === "REJECTED") {
+      reason =
+        prompt(`Please provide a reason for rejecting this ${type}:`) || "";
+      if (!reason.trim()) return alert("Rejection reason is required.");
+    }
+
+    if (!confirm(`Confirm ${type} status update to: ${newStatus}?`)) return;
 
     setIsUpdating(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/partners/${partner.id}/status`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: newStatus }),
-        },
-      );
 
-      if (response.ok) {
-        alert(`✅ Status updated to ${newStatus} successfully.`);
-        onAction(); // Refreshes the parent page data
+    // Endpoints match your AdminController routes
+    const endpoint =
+      type === "partner"
+        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/partners/${targetId}/status`
+        : `${process.env.NEXT_PUBLIC_API_URL}/admin/kyc/${targetId}/status`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: newStatus,
+          reason: reason, // Passed to handleKycAction/handlePartnerAction
+        }),
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        alert(`✅ ${type.toUpperCase()} successfully ${newStatus}`);
+        onAction();
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Server Response:", errorData);
-        alert(`❌ Error: ${errorData.message || "Failed to update status."}`);
+        const error = await res.json();
+        alert(`❌ Error: ${error.message || "Update failed"}`);
       }
     } catch (err) {
-      console.error("Network Error:", err);
       alert("❌ Network Error: Could not reach the server.");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  return (
-    <div className={styles.card}>
-      <div className={styles.cardHeader}>
-        <h3 className={styles.cardTitle}>Entity KYC & Regulatory Standing</h3>
-        {/* 2. Visual fix: Class name change based on APPROVED status */}
-        <span
-          className={
-            partner?.status === "APPROVED"
-              ? styles.statusDot
-              : styles.statusDotPending
-          }
-        >
-          {partner?.status || "UNKNOWN"}
-        </span>
-      </div>
-
-      <div className={styles.docGrid}>
-        {corporateDocs.map((doc, idx) => (
-          <div key={idx} className={styles.docItem}>
-            <div className={styles.docInfo}>
-              <span className={styles.docName}>{doc.name}</span>
-              <span className={styles.docDate}>Regulatory Requirement</span>
-            </div>
-            <div className={styles.docActions}>
-              <span
-                className={
-                  doc.status === "VERIFIED"
-                    ? styles.statusPill
-                    : styles.statusPillPending
-                }
-              >
-                {doc.status}
-              </span>
-              <button
-                className={styles.iconBtn}
-                onClick={() => doc.url && window.open(doc.url, "_blank")}
-                disabled={!doc.url}
-              >
-                View
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.institutionalActions}>
-        <button className={styles.btnSecondary}>Audit History</button>
+  const DocRow = ({ label, url }: { label: string; url?: string }) => {
+    const hasFile = url && url.trim().length > 0;
+    return (
+      <div className={styles.docRow}>
+        <div className={styles.docLabel}>
+          <span
+            className={styles.dot}
+            style={{ background: hasFile ? "#10b981" : "#ef4444" }}
+          />
+          {label}
+        </div>
         <button
-          className={styles.btnPrimary}
-          onClick={handleStatusUpdate}
-          disabled={isUpdating}
+          className={styles.docLink}
+          onClick={() => hasFile && window.open(url, "_blank")}
+          disabled={!hasFile}
         >
-          {isUpdating ? "Updating..." : "Update Entity Status"}
+          {hasFile ? "View" : "Missing"}
         </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className={styles.governanceContainer}>
+      {/* 1. INDIVIDUAL KYC CARD */}
+      <div className={styles.govCard}>
+        <div className={styles.govHeader}>
+          <div className={styles.govTitle}>
+            <h4>Representative KYC</h4>
+            <p>Verification of the individual person</p>
+          </div>
+          <span
+            className={`${styles.statusBadge} ${styles[kyc?.status?.toLowerCase() || "pending"]}`}
+          >
+            {kyc?.status || "NOT SUBMITTED"}
+          </span>
+        </div>
+
+        <div className={styles.docList}>
+          {/* Using column names from your KycProfile entity */}
+          <DocRow label="National ID / Passport" url={kyc?.idDocumentUrl} />
+          <DocRow label="Proof of Address" url={kyc?.addressProofUrl} />
+        </div>
+
+        <div className={styles.adminActions}>
+          <button
+            className={styles.rejectBtn}
+            onClick={() => handleStatusUpdate("kyc", "REJECTED")}
+            disabled={isUpdating || !kyc || kyc.status === "REJECTED"}
+          >
+            Reject
+          </button>
+          <button
+            className={styles.approveBtn}
+            onClick={() => handleStatusUpdate("kyc", "APPROVED")}
+            disabled={isUpdating || !kyc || kyc.status === "APPROVED"}
+          >
+            Approve
+          </button>
+        </div>
+      </div>
+
+      {/* 2. CORPORATE KYB CARD */}
+      <div className={styles.govCard}>
+        <div className={styles.govHeader}>
+          <div className={styles.govTitle}>
+            <h4>Business Entity (KYB)</h4>
+            <p>Verification of the legal company</p>
+          </div>
+          <span
+            className={`${styles.statusBadge} ${styles[partner.status?.toLowerCase()]}`}
+          >
+            {partner.status}
+          </span>
+        </div>
+
+        <div className={styles.docList}>
+          <DocRow
+            label="Commercial Registration"
+            url={partner.commercialRegistration}
+          />
+          <DocRow label="VAT/Tax Certificate" url={partner.amlPolicy} />
+          <DocRow
+            label="Articles of Association"
+            url={partner.articlesOfAssociation}
+          />
+        </div>
+
+        <div className={styles.adminActions}>
+          <button
+            className={styles.rejectBtn}
+            onClick={() => handleStatusUpdate("partner", "REJECTED")}
+            disabled={isUpdating || partner.status === "REJECTED"}
+          >
+            Reject
+          </button>
+          <button
+            className={styles.approveBtn}
+            onClick={() => handleStatusUpdate("partner", "APPROVED")}
+            disabled={isUpdating || partner.status === "APPROVED"}
+          >
+            Approve
+          </button>
+        </div>
       </div>
     </div>
   );

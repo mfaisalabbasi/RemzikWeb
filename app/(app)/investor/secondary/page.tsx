@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import styles from "../components/secondary/secondary.module.css";
 import {
   MarketPosition,
@@ -18,7 +18,6 @@ import {
   ShieldAlert,
   Clock,
   CheckCircle,
-  Lock, // Added to signal immutable state
 } from "lucide-react";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
 
@@ -35,23 +34,21 @@ export default function SecondaryMarketPage() {
 
   const fetchMarketData = useCallback(async () => {
     try {
+      const timestamp = Date.now();
       const [posRes, listingsRes, tradesRes, userRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/investors/my-positions`, {
-          credentials: "include",
-        }),
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/all`,
-          {
-            credentials: "include",
-          },
+          `${process.env.NEXT_PUBLIC_API_URL}/investors/my-positions?cb=${timestamp}`,
+          { credentials: "include" },
         ),
         fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/active`,
-          {
-            credentials: "include",
-          },
+          `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/all?cb=${timestamp}`,
+          { credentials: "include" },
         ),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/active?cb=${timestamp}`,
+          { credentials: "include" },
+        ),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me?cb=${timestamp}`, {
           credentials: "include",
         }),
       ]);
@@ -77,7 +74,7 @@ export default function SecondaryMarketPage() {
           id: t.id,
           assetTitle: t.asset?.title || "Real Estate Unit",
           amount: parseFloat(t.totalPrice) || 0,
-          status: t.status,
+          status: t.status ? t.status.toString().toUpperCase() : "LOCKED",
           buyerId: t.buyer?.user?.id,
           sellerId: t.seller?.user?.id,
         }));
@@ -97,13 +94,15 @@ export default function SecondaryMarketPage() {
     fetchMarketData();
   }, [fetchMarketData]);
 
+  // --- THE FILTER: Only show trades that are still "In Progress" ---
+  const visibleActiveTrades = useMemo(() => {
+    return activeTrades.filter(
+      (t) => t.status === "LOCKED" || t.status === "DISPUTED",
+    );
+  }, [activeTrades]);
+
   const handleSettleTrade = async (tradeId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to release funds to the seller? This action cannot be undone.",
-      )
-    )
-      return;
+    if (!confirm("Release funds to seller? This action is final.")) return;
     setActionLoading(true);
     try {
       const res = await fetch(
@@ -113,15 +112,9 @@ export default function SecondaryMarketPage() {
           credentials: "include",
         },
       );
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Settlement failed");
-      }
-      showAlert(
-        "success",
-        "Trade settled successfully. Funds released to seller.",
-      );
-      fetchMarketData();
+      if (!res.ok) throw new Error("Settlement failed");
+      showAlert("success", "Trade settled successfully.");
+      await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -130,7 +123,7 @@ export default function SecondaryMarketPage() {
   };
 
   const handleOpenDispute = async (tradeId: string) => {
-    const reason = prompt("Please enter the reason for the dispute:");
+    const reason = prompt("Reason for dispute:");
     if (!reason) return;
     setActionLoading(true);
     try {
@@ -144,15 +137,9 @@ export default function SecondaryMarketPage() {
           reason,
         }),
       });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Could not open dispute");
-      }
-      showAlert(
-        "success",
-        "Dispute opened. Funds are frozen until resolution.",
-      );
-      fetchMarketData();
+      if (!res.ok) throw new Error("Dispute failed");
+      showAlert("success", "Dispute opened. Trade status updated to frozen.");
+      await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -170,9 +157,9 @@ export default function SecondaryMarketPage() {
           credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Trade failed");
+      if (!res.ok) throw new Error("Trade execution failed");
       setSuccessMessage("Asset Acquired! Ownership updated on Remzik Ledger.");
-      fetchMarketData();
+      await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -196,12 +183,10 @@ export default function SecondaryMarketPage() {
           }),
         },
       );
-      if (!res.ok) throw new Error("Failed to post listing");
-      setSuccessMessage(
-        "Asset listed! Units are now secured in Remzik Escrow.",
-      );
+      if (!res.ok) throw new Error("Listing failed");
+      setSuccessMessage("Asset listed! Units secured in Remzik Escrow.");
       setSelectedSell(null);
-      fetchMarketData();
+      await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -264,63 +249,56 @@ export default function SecondaryMarketPage() {
               <h2>Active Trades</h2>
             </div>
             <div className={styles.activeTradesContainer}>
-              {activeTrades.length > 0 ? (
-                activeTrades.map((t) => {
+              {visibleActiveTrades.length > 0 ? (
+                visibleActiveTrades.map((t) => {
                   const isBuyer = currentUserId === t.buyerId;
-                  const status = t.status.toUpperCase();
-
-                  // ✅ DEFINITIVE GATE: If transaction is final, block all actions
-                  const isTerminal = [
-                    "SETTLED",
-                    "DISPUTED",
-                    "REFUNDED",
-                    "CANCELLED",
-                  ].includes(status);
+                  const isDisputed = t.status === "DISPUTED";
+                  const statusClass =
+                    styles[t.status.toLowerCase()] || styles.statusGeneric;
 
                   return (
-                    <div key={t.id} className={styles.fintechTradeCard}>
+                    <div
+                      key={t.id}
+                      className={`${styles.fintechTradeCard} ${isDisputed ? styles.disputedCard : ""}`}
+                    >
                       <div className={styles.tradeMain}>
                         <div className={styles.tradeLeft}>
                           <strong>{t.assetTitle}</strong>
                           <span>SAR {t.amount.toLocaleString()}</span>
                         </div>
-                        <div
-                          className={`${styles.statusPill} ${styles[t.status.toLowerCase()]}`}
-                        >
+                        <div className={`${styles.statusPill} ${statusClass}`}>
                           {t.status}
                         </div>
                       </div>
 
-                      {/* Only show controls if the trade is locked and NOT terminal */}
-                      {!isTerminal && status === "LOCKED" ? (
-                        <div className={styles.tradeActions}>
-                          {isBuyer ? (
-                            <button
-                              onClick={() => handleSettleTrade(t.id)}
-                              className={styles.settleAction}
-                            >
-                              <CheckCircle size={12} /> Confirm & Release
-                            </button>
-                          ) : (
-                            <div className={styles.waitingBadge}>
-                              Waiting for Buyer Release
-                            </div>
-                          )}
-                          <button
-                            onClick={() => handleOpenDispute(t.id)}
-                            className={styles.disputeAction}
-                          >
-                            <ShieldAlert size={12} /> Raise Dispute
-                          </button>
-                        </div>
-                      ) : (
-                        // Finalized state UX
-                        isTerminal && (
-                          <div className="pt-3 border-t border-slate-50 mt-2 flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                            <Lock size={10} /> Finalized on Ledger
+                      <div className={styles.tradeActions}>
+                        {isDisputed ? (
+                          <div className={styles.disputeWarning}>
+                            <ShieldAlert size={14} /> Under Admin Review
                           </div>
-                        )
-                      )}
+                        ) : (
+                          <>
+                            {isBuyer ? (
+                              <button
+                                onClick={() => handleSettleTrade(t.id)}
+                                className={styles.settleAction}
+                              >
+                                <CheckCircle size={12} /> Confirm & Release
+                              </button>
+                            ) : (
+                              <div className={styles.waitingBadge}>
+                                Waiting for Release
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleOpenDispute(t.id)}
+                              className={styles.disputeAction}
+                            >
+                              <ShieldAlert size={12} /> Raise Dispute
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   );
                 })
