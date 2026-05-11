@@ -21,9 +21,12 @@ import {
 } from "lucide-react";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
 
+// Local type extension to ensure sellerId is recognized throughout the page
+export type ExtendedOrder = Order & { sellerId: string };
+
 export default function SecondaryMarketPage() {
   const [positions, setPositions] = useState<MarketPosition[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<ExtendedOrder[]>([]);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -61,14 +64,17 @@ export default function SecondaryMarketPage() {
 
         if (userData) setCurrentUserId(userData.id);
 
-        const mappedOrders = (listingsData || []).map((l: any) => ({
-          id: l.id,
-          assetId: l.assetId,
-          assetTitle: l.asset?.title || "Real Estate Unit",
-          type: "sell",
-          quantity: parseFloat(l.unitsForSale),
-          price: parseFloat(l.pricePerUnit),
-        }));
+        const mappedOrders: ExtendedOrder[] = (listingsData || []).map(
+          (l: any) => ({
+            id: l.id,
+            assetId: l.assetId,
+            assetTitle: l.asset?.title || "Real Estate Unit",
+            type: "sell",
+            quantity: parseFloat(l.unitsForSale),
+            price: parseFloat(l.pricePerUnit),
+            sellerId: l.sellerId,
+          }),
+        );
 
         const mappedTrades = (tradesData || []).map((t: any) => ({
           id: t.id,
@@ -94,7 +100,6 @@ export default function SecondaryMarketPage() {
     fetchMarketData();
   }, [fetchMarketData]);
 
-  // --- THE FILTER: Only show trades that are still "In Progress" ---
   const visibleActiveTrades = useMemo(() => {
     return activeTrades.filter(
       (t) => t.status === "LOCKED" || t.status === "DISPUTED",
@@ -147,7 +152,17 @@ export default function SecondaryMarketPage() {
     }
   };
 
+  // --- ADDED CONFIRMATION GUARD ---
   const handleExecuteTrade = async (listingId: string) => {
+    const order = orders.find((o) => o.id === listingId);
+    const totalCost = order ? order.quantity * order.price : 0;
+
+    const confirmed = window.confirm(
+      `CONFIRM TRADE EXECUTION\n\nAsset: ${order?.assetTitle}\nCost: SAR ${totalCost.toLocaleString()}\n\nDo you want to proceed with this purchase? Funds will be locked in escrow.`,
+    );
+
+    if (!confirmed) return;
+
     setActionLoading(true);
     try {
       const res = await fetch(
@@ -159,6 +174,27 @@ export default function SecondaryMarketPage() {
       );
       if (!res.ok) throw new Error("Trade execution failed");
       setSuccessMessage("Asset Acquired! Ownership updated on Remzik Ledger.");
+      await fetchMarketData();
+    } catch (err: any) {
+      showAlert("error", err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelListing = async (listingId: string) => {
+    if (!confirm("Are you sure you want to retract this listing?")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${listingId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+      if (!res.ok) throw new Error("Cancellation failed");
+      showAlert("success", "Listing retracted successfully.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
@@ -270,7 +306,6 @@ export default function SecondaryMarketPage() {
                           {t.status}
                         </div>
                       </div>
-
                       <div className={styles.tradeActions}>
                         {isDisputed ? (
                           <div className={styles.disputeWarning}>
@@ -315,7 +350,12 @@ export default function SecondaryMarketPage() {
             <h2>Order Book</h2>
           </div>
           <div className={styles.tableCard}>
-            <OrderBookTable orders={orders} onBuyNow={handleExecuteTrade} />
+            <OrderBookTable
+              orders={orders}
+              onBuyNow={handleExecuteTrade}
+              onCancel={handleCancelListing}
+              currentUserId={currentUserId}
+            />
           </div>
         </section>
       </main>
@@ -337,7 +377,7 @@ export default function SecondaryMarketPage() {
         <div className={styles.actionOverlay}>
           <div className={styles.glassLoader}>
             <div className={styles.spinner}></div>
-            <p>Settling Transaction...</p>
+            <p>Processing Transaction...</p>
           </div>
         </div>
       )}

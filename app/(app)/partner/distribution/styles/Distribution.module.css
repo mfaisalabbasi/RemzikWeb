@@ -1,162 +1,255 @@
+.mainContainer {
+  min-height: 100vh;
+  background: #f8fafc; /* Professional off-white */
+  padding: 40px;
+  font-family: "Inter", sans-serif;
+}
+
+.contentWrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.topHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 48px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 24px;
+}
+
+.titleMain {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+}
+
+.titleSub {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* MODAL ENGINE - FIXES THE HIDING ISSUE */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  z-index: 9999; /* Ensure it's above everything */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.4); /* Deep slate overlay */
-  backdrop-filter: blur(8px);
-  animation: fadeIn 0.3s ease-out;
+  padding: 24px;
 }
 
-.modalContent {
-  background: #ffffff;
+.fintechModal {
+  background: #fff;
   width: 100%;
-  max-width: 440px;
-  padding: 32px;
-  border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transform: scale(1);
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 900px;
+  height: 600px;
+  border-radius: 32px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  overflow: hidden;
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.4);
+  animation: modalEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.iconWrapper {
-  width: 56px;
-  height: 56px;
-  background: #f0fdf4; /* Light success green */
-  border-radius: 16px;
+.modalSidebar {
+  background: #0f172a; /* Deep Navy Institutional */
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.sidebarIcon {
+  background: #1e293b;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #16a34a;
-  margin-bottom: 24px;
+  margin-bottom: 60px;
 }
 
-.title {
-  font-size: 24px;
+.stepActive {
+  font-weight: 700;
+  font-size: 14px;
+  color: #10b981;
+}
+.stepPending {
+  font-weight: 500;
+  font-size: 14px;
+  color: #475569;
+  margin-top: 20px;
+}
+.stepLine {
+  width: 2px;
+  height: 40px;
+  background: #1e293b;
+  margin: 10px 0 0 10px;
+}
+
+.modalMain {
+  padding: 60px;
+  position: relative;
+  background: white;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: #f1f5f9;
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.modalTitle {
+  font-size: 28px;
   font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
-
-.description {
+.modalSubtitle {
   color: #64748b;
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 28px;
+  margin-bottom: 40px;
 }
 
-.inputGroup {
+.inputStack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
   margin-bottom: 32px;
 }
 
-.label {
+.finInputGroup label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.inputWrapper {
-  position: relative;
+.inputBox {
   display: flex;
   align-items: center;
-}
-
-.currencyPrefix {
-  position: absolute;
-  left: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  font-size: 18px;
-}
-
-.amountInput {
-  width: 100%;
   background: #f8fafc;
-  border: 2px solid #f1f5f9;
+  border: 2px solid #e2e8f0;
   border-radius: 16px;
-  padding: 16px 16px 16px 64px;
-  font-size: 20px;
+  padding: 12px 20px;
+}
+
+.inputBox:focus-within {
+  border-color: #0f172a;
+}
+
+.unit {
+  font-weight: 800;
+  color: #cbd5e1;
+  margin-right: 12px;
+  font-size: 14px;
+}
+.inputBox input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-weight: 700;
+  font-size: 18px;
+  outline: none;
+}
+
+/* LEDGER CARD */
+.ledgerCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.ledgerRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #475569;
+}
+.monoValue {
+  font-family: "JetBrains Mono", monospace;
   font-weight: 700;
   color: #0f172a;
-  transition: all 0.2s ease;
 }
-
-.amountInput:focus {
-  border-color: #10b981; /* Fintech Green focus */
-  background: #ffffff;
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-}
-
-.buttonGroup {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 12px;
-}
-
-.cancelBtn {
-  padding: 14px;
-  border-radius: 14px;
+.feeValue {
+  font-family: "JetBrains Mono", monospace;
   font-weight: 700;
-  color: #64748b;
-  background: #f1f5f9;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
+  color: #ef4444;
 }
-
-.cancelBtn:hover {
+.ledgerDivider {
+  height: 1px;
   background: #e2e8f0;
+  margin: 16px 0;
+}
+.ledgerTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.payoutValue {
+  font-size: 24px;
+  font-weight: 900;
+  color: #10b981;
+  font-family: "JetBrains Mono", monospace;
 }
 
-.confirmBtn {
-  padding: 14px;
-  border-radius: 14px;
+.executeBtn {
+  width: 100%;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+  border-radius: 18px;
   font-weight: 700;
-  color: #ffffff;
-  background: #0f172a; /* Sophisticated black/blue */
   border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
-  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
-  transition:
-    transform 0.2s,
-    background 0.2s;
+  transition: all 0.2s;
 }
 
-.confirmBtn:hover:not(:disabled) {
+.executeBtn:hover:not(:disabled) {
   background: #1e293b;
   transform: translateY(-2px);
 }
-
-.confirmBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.executeBtn:disabled {
+  background: #cbd5e1;
 }
 
-@keyframes fadeIn {
+.complianceNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+@keyframes modalEnter {
   from {
     opacity: 0;
+    transform: scale(0.9) translateY(30px);
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }

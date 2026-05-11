@@ -582,3 +582,45 @@
     transform: rotate(360deg);
   }
 }
+
+.myOrderRow {
+  background: rgba(248, 250, 252, 0.4);
+}
+
+.myBadge {
+  font-size: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-left: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1px solid #e2e8f0;
+}
+
+.cancelBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+}
+
+.cancelBtn svg {
+  color: #ef4444;
+}

@@ -1,6 +1,6 @@
 /**
  * Remzik Partner API Integration
- * Location: app/integrations/api/asset.ts (or similar)
+ * Unified Fetcher/Poster Standard
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -38,7 +38,7 @@ const fetcher = async (path: string) => {
 
 /**
  * Standard POST Fetcher
- * Added to handle actions like Yield Distribution without breaking existing logic.
+ * Handles all write actions (Income Reports, Distributions)
  */
 const poster = async (path: string, body: any) => {
   console.log(`🚀 Requesting POST: ${API_URL}${path}`, body);
@@ -54,7 +54,6 @@ const poster = async (path: string, body: any) => {
     });
 
     if (!res.ok) {
-      // Attempt to get custom error message from NestJS ExceptionHandler
       const errorData = await res.json().catch(() => ({}));
       const message = errorData.message || `API Error: ${res.status}`;
       console.error(`❌ POST Error:`, message);
@@ -70,15 +69,32 @@ const poster = async (path: string, body: any) => {
   }
 };
 
-// --- ACTION METHODS (POST) ---
+// --- INCOME & DISTRIBUTION ACTIONS (NEW) ---
 
 /**
- * Triggers pro-rata yield distribution to all confirmed investors of an asset.
+ * Sends the Revenue Report (Gross, Expenses, Period) to the backend.
+ * Creates the AssetIncome record.
+ */
+export const submitAssetIncome = (data: {
+  assetId: string;
+  grossAmount: number;
+  expenses: number;
+  period: string;
+}) => poster("/assets/income/report", data);
+
+/**
+ * Triggers the distribution batch based on a specific Income Report ID.
+ */
+export const triggerDistributionFromIncome = (incomeId: string) =>
+  poster(`/distributions/trigger-from-income`, { incomeId });
+
+/**
+ * Legacy/Alternative trigger (if still needed)
  */
 export const triggerYieldDistribution = (assetId: string, amount: number) =>
   poster(`/partner/assets/${assetId}/distribute`, { amount });
 
-// --- DATA METHODS (GET) ---
+// --- DATA RETRIEVAL METHODS (GET) ---
 
 export const getPerformance = () => fetcher("/assets/partner/performance");
 export const getPartnerKPI = () => fetcher("/assets/partner/kpi");
@@ -87,8 +103,7 @@ export const getLiveFundingAssets = () =>
 export const getFundingTable = () => fetcher("/assets/partner/funding-table");
 
 /**
- * ✅ FIXED: Changed path from "/assets/partner/activity"
- * to "/assets/partner/recent-activity" to match the Backend Controller
+ * ✅ FIXED: Recent Activity Path
  */
 export const getRecentActivity = () =>
   fetcher("/assets/partner/recent-activity");
@@ -97,6 +112,17 @@ export const getPartnerAssets = () => fetcher("/assets/partner/assets");
 export const getPartnerInvestors = () => fetcher("/assets/partner/investors");
 export const getWithdrawals = () => fetcher("/assets/partner/withdrawals");
 export const getPartnerFunding = () => fetcher("/assets/partner/funding");
+export const getPartnerDocuments = () => fetcher("/assets/partner/documents");
+
+/**
+ * ✅ Standardized Name: getPartnerDistribution
+ * Used by your Distribution page to fetch the grid items.
+ */
+export const getPartnerDistribution = () =>
+  fetcher("/assets/partner/distributions");
+
+/**
+ * Plural version kept for backward compatibility if needed elsewhere
+ */
 export const getPartnerDistributions = () =>
   fetcher("/assets/partner/distributions");
-export const getPartnerDocuments = () => fetcher("/assets/partner/documents");
