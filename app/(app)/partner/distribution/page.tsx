@@ -10,15 +10,7 @@ import {
   triggerDistributionFromIncome,
 } from "@/app/integrations/api/asset";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
-import {
-  Receipt,
-  ArrowRight,
-  X,
-  TrendingUp,
-  ShieldCheck,
-  Landmark,
-  Wallet,
-} from "lucide-react";
+import { ArrowRight, X, ShieldCheck, Landmark } from "lucide-react";
 
 export default function PartnerDistributionPage() {
   const [distributions, setDistributions] = useState<any[]>([]);
@@ -57,6 +49,9 @@ export default function PartnerDistributionPage() {
   const platformFee = netProfit > 0 ? netProfit * 0.01 : 0;
   const finalPayout = netProfit - platformFee;
 
+  /**
+   * ✅ HARDENED TRANSACTION ENGINE PIPELINE
+   */
   const handleProcessDistribution = async () => {
     if (!selectedAsset || netProfit <= 0) {
       if (netProfit <= 0 && report.grossAmount)
@@ -66,6 +61,7 @@ export default function PartnerDistributionPage() {
 
     setIsLoading(true);
     try {
+      // 1. Register Asset Income Report
       const incomeRecord = await submitAssetIncome({
         assetId: selectedAsset.id,
         grossAmount: gross,
@@ -73,7 +69,17 @@ export default function PartnerDistributionPage() {
         period: report.period,
       });
 
-      await triggerDistributionFromIncome(incomeRecord.id);
+      // 🛡️ Safe Extraction: Handle case if backend wraps data inside a .data property
+      const incomeId = incomeRecord?.id || incomeRecord?.data?.id;
+
+      if (!incomeId) {
+        throw new Error(
+          "Unable to read ID from registered income payload report.",
+        );
+      }
+
+      // 2. Authorize distribution batch ledger initialization
+      await triggerDistributionFromIncome(incomeId);
 
       showAlert(
         "success",
@@ -83,7 +89,15 @@ export default function PartnerDistributionPage() {
       setReport({ grossAmount: "", expenses: "", period: "May 2026" });
       fetchData();
     } catch (err: any) {
-      showAlert("error", err.message || "Execution failed");
+      console.error("🔥 Distribution Pipeline Crash Error Context:", err);
+
+      // Extract the deep nested string message sent back by NestJS validation exceptions
+      const backendMessage =
+        err?.response?.data?.message || err.message || "Execution failed";
+      showAlert(
+        "error",
+        typeof backendMessage === "object" ? backendMessage[0] : backendMessage,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +137,7 @@ export default function PartnerDistributionPage() {
             {distributions
               .filter(
                 (d) =>
-                  d.asset.toLowerCase().includes(search.toLowerCase()) &&
+                  d.asset?.toLowerCase().includes(search.toLowerCase()) &&
                   (stageFilter ? d.stage === stageFilter : true),
               )
               .map((d) => (

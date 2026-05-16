@@ -6,26 +6,30 @@ import RecentActivityFeed from "../components/Dashboard/RecentActivityFeed";
 import AssetFundingTable from "../components/Dashboard/AssetFundingTable";
 import FundingAssetCard from "../components/Dashboard/FundingAssetCard";
 import PerformanceCards from "../components/Dashboard/PerformanceCards";
-import BusinessVerification from "../components/Dashboard/BusinessVerification"; // Import here
+import BusinessVerification from "../components/Dashboard/BusinessVerification";
 import { useEffect, useState } from "react";
 import {
   getLiveFundingAssets,
   getPartnerKPI,
 } from "@/app/integrations/api/asset";
-import { getBusinessProfileStatus } from "@/app/integrations/api/partner"; // Import status check
+import { getBusinessProfileStatus } from "@/app/integrations/api/partner";
+import { getCurrentUser } from "@/app/integrations/api/auth";
+import KycAlert from "../components/Dashboard/KycAlert";
 
 export default function PartnerDashboardPage() {
   const [kpi, setKpi] = useState<any>(null);
   const [liveAssets, setLiveAssets] = useState<any[]>([]);
   const [businessStatus, setBusinessStatus] = useState<string>("UNVERIFIED");
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // 1. Fetch Business Status
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const res = await getBusinessProfileStatus();
-        setBusinessStatus(res.status); // e.g., 'UNVERIFIED', 'PENDING', 'VERIFIED'
+        setBusinessStatus(res.status);
       } catch (err) {
         console.error("Status Fetch Error:", err);
       }
@@ -62,11 +66,29 @@ export default function PartnerDashboardPage() {
     fetchLiveAssets();
   }, []);
 
+  // 4. Fetch User Data (Crucial for KycAlert)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getCurrentUser();
+        setUser(data);
+      } catch (error) {
+        console.error("Failed to fetch user context", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
   return (
     <div className={styles.wrapper}>
-      <PerformanceCards />
+      {/* CRITICAL FIX: We only render KycAlert when !loading and user exists.
+          This prevents the component from self-destructing while the user data is null.
+      */}
+      {!loading && user && <KycAlert user={user} />}
 
-      {/* BUSINESS VERIFICATION SECTION - Only shows if not fully verified */}
+      <PerformanceCards />
 
       {/* KPI SECTION */}
       <div className={styles.sectionShell}>
