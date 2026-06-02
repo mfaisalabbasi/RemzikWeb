@@ -7,7 +7,7 @@ import { useNotifications } from "@/app/integrations/hooks/useNotifications";
 import PartnerSidebar from "./components/layout/PartnerSidebar";
 import PartnerTopbar from "./components/layout/PartnerTopbar";
 import styles from "./styles/PartnerLayout.module.css";
-
+import { PrivyDashboardWrapper } from "@/app/integrations/web3/PrivyDashboardWrapper";
 export default function PartnerLayout({
   children,
 }: {
@@ -23,8 +23,10 @@ export default function PartnerLayout({
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
-        if (data.role !== "PARTNER") router.replace("/auth/login");
-        else {
+        // Enforce role isolation: bounce anyone who isn't explicitly a PARTNER
+        if (data.role !== "PARTNER") {
+          router.replace("/auth/login");
+        } else {
           setUser(data);
           setLoading(false);
         }
@@ -35,18 +37,20 @@ export default function PartnerLayout({
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className={styles.layout}>
-      <PartnerSidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-      <div className={styles.main}>
-        <PartnerTopbar
-          onMenuClick={() => setSidebarOpen(true)}
-          notificationsCount={unreadCount}
+    <PrivyDashboardWrapper>
+      <div className={styles.layout}>
+        <PartnerSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
-        <div className={styles.content}>{children}</div>
+        <div className={styles.main}>
+          <PartnerTopbar
+            onMenuClick={() => setSidebarOpen(true)}
+            notificationsCount={unreadCount}
+          />
+          <div className={styles.content}>{children}</div>
+        </div>
       </div>
-    </div>
+    </PrivyDashboardWrapper>
   );
 }
