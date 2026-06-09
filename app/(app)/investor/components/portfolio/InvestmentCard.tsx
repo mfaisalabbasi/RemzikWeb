@@ -6,6 +6,7 @@ export default function InvestmentCard({ investment }: { investment: any }) {
   if (!investment) return null;
 
   const { assetTitle, amountInvested, roi, status, image } = investment;
+  const statusKey = status ? status.toLowerCase() : "pending";
 
   return (
     <div className={styles.assetCard}>
@@ -17,9 +18,21 @@ export default function InvestmentCard({ investment }: { investment: any }) {
       <div className={styles.cardDetails}>
         <div className={styles.cardHeader}>
           <h4>{assetTitle}</h4>
-          <span
-            className={`${styles.statusDot} ${styles[status.toLowerCase()] || styles.pending}`}
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              className={`${styles.statusDot} ${styles[statusKey] || styles.pending}`}
+            />
+            <span
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                color: "#64748b",
+              }}
+            >
+              {status}
+            </span>
+          </div>
         </div>
 
         <div className={styles.capitalRow}>

@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import InvestmentModal from "./InvestmentModal";
 import ModalSuccess from "./ModalSucces";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
-import { ShieldCheck, TrendingUp, Wallet, ArrowRight } from "lucide-react"; // Optional: if you use lucide-react, otherwise use SVGs
+import { ShieldCheck, TrendingUp, Wallet } from "lucide-react";
 
 interface InvestmentPanelProps {
   assetId: string;
   min: number;
-  roi: number; // e.g., 12.5
-  tenure: number; // e.g., 12 (months)
+  roi: number;
+  tenure: number;
 }
 
 export default function InvestmentPanel({
@@ -23,14 +23,15 @@ export default function InvestmentPanel({
 }: InvestmentPanelProps) {
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [amountInvested, setAmountInvested] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
+  const [lastInvestmentId, setLastInvestmentId] = useState<string | null>(null);
 
   const { showAlert } = useAlert();
   const router = useRouter();
 
-  // Financial calculation for the "hook"
   const projectedProfit = (min * (roi / 100) * (tenure / 12)).toFixed(0);
 
   useEffect(() => {
@@ -50,6 +51,48 @@ export default function InvestmentPanel({
     };
     fetchBalance();
   }, []);
+
+  // Poll for status using the specific investment ID
+  useEffect(() => {
+    if (!isProcessing || !lastInvestmentId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/investments/${lastInvestmentId}`,
+          { credentials: "include" },
+        );
+        const data = await res.json();
+
+        // 1. Success Case: Change to CONFIRMED
+        if (data.status === "CONFIRMED") {
+          setIsProcessing(false);
+          clearInterval(interval);
+
+          // Trigger the success UI
+          setShowSuccess(true);
+
+          // Auto-redirect to portfolio after a 2-second delay
+          setTimeout(() => {
+            router.push("/investor/portfolio");
+          }, 2000);
+        }
+        // 2. Failure Case
+        else if (data.status === "FAILED") {
+          setIsProcessing(false);
+          showAlert(
+            "error",
+            "Blockchain verification failed. Funds have been refunded.",
+          );
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isProcessing, lastInvestmentId, showAlert, router]);
 
   const handleInvestSubmit = async (amount: number) => {
     if (userBalance !== null && amount > userBalance) {
@@ -73,9 +116,13 @@ export default function InvestmentPanel({
       if (!response.ok) throw new Error(data.message || "Investment failed");
 
       setAmountInvested(amount);
+      setLastInvestmentId(data.id); // Set the ID here to trigger the polling effect
       setShowModal(false);
-      setShowSuccess(true);
-      showAlert("success", "Investment confirmed successfully!");
+      setIsProcessing(true);
+      showAlert("info", "Investment submitted. Syncing with blockchain...");
+      setTimeout(() => {
+        router.push("/investor/portfolio");
+      }, 2000);
     } catch (err: any) {
       showAlert(
         "error",
@@ -91,7 +138,6 @@ export default function InvestmentPanel({
   return (
     <>
       <div className={styles.card}>
-        {/* Header with high-trust badge */}
         <div
           style={{
             display: "flex",
@@ -118,7 +164,6 @@ export default function InvestmentPanel({
           </div>
         </div>
 
-        {/* Dynamic Balance Indicator */}
         <div className={styles.balanceStatus}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Wallet size={14} color="#64748b" />
@@ -134,7 +179,6 @@ export default function InvestmentPanel({
           </strong>
         </div>
 
-        {/* Investment Details Group */}
         <div
           style={{
             background: "#f8fafc",
@@ -152,7 +196,6 @@ export default function InvestmentPanel({
               SAR {min.toLocaleString()}
             </span>
           </div>
-
           <div className={styles.field} style={{ border: "none", padding: 0 }}>
             <span className={styles.label}>Expected Profit (Min) </span>
             <span className={styles.value} style={{ color: "#0b3018" }}>
@@ -161,7 +204,6 @@ export default function InvestmentPanel({
           </div>
         </div>
 
-        {/* Projected ROI Highlight */}
         <div
           style={{
             display: "flex",
@@ -178,11 +220,10 @@ export default function InvestmentPanel({
           </span>
         </div>
 
-        {/* Main Action */}
         <button
           className={styles.cta}
           onClick={() => setShowModal(true)}
-          disabled={loading || isBalanceLow}
+          disabled={loading || isProcessing || isBalanceLow}
           style={{
             display: "flex",
             alignItems: "center",
@@ -190,18 +231,13 @@ export default function InvestmentPanel({
             gap: "8px",
           }}
         >
-          {loading ? (
-            "Verifying..."
-          ) : isBalanceLow ? (
-            "Top up to Invest"
-          ) : (
-            <>
-              Invest Now <ArrowRight size={18} />
-            </>
-          )}
+          {loading || isProcessing
+            ? "Syncing with Chain..."
+            : isBalanceLow
+              ? "Top up to Invest"
+              : "Invest Now"}
         </button>
 
-        {/* Trust Footer */}
         <div
           style={{
             borderTop: "1px solid #f1f5f9",

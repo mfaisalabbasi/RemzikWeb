@@ -10,10 +10,14 @@ export default function InvestmentList() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/investors/profile`,
-          { credentials: "include" },
+          {
+            credentials: "include",
+            cache: "no-store", // Force fresh data fetch
+          },
         );
         const result = await res.json();
         setData(result);
@@ -33,7 +37,6 @@ export default function InvestmentList() {
 
   return (
     <div className={styles.portfolioWrapper}>
-      {/* PROFESSIONAL SUMMARY BAR */}
       <header className={styles.dashboardHeader}>
         <div className={styles.mainTitle}>
           <h1>
