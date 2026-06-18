@@ -2,14 +2,12 @@
 
 import React, { useState } from "react";
 import styles from "../components/invest/Invest.module.css";
-import { Asset, InvestmentInput } from "../components/invest/type";
+import { Asset } from "../components/invest/type";
 import InvestmentCard from "../components/invest/InvestmentCard";
 import InvestmentModal from "../components/invest/InvestmentModal";
 import ModalSuccess from "../components/invest/ModalSuccess";
+import Alert from "@/app/integrations/Alert/Alert";
 
-/* ==========================
-   Mock Assets
-========================== */
 const ASSETS: Asset[] = [
   {
     id: "a1",
@@ -44,13 +42,31 @@ export default function InvestmentPage() {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [investments, setInvestments] = useState<{ [id: string]: number }>({});
   const [successAmount, setSuccessAmount] = useState<number | null>(null);
+  const [errorAlert, setErrorAlert] = useState<string | null>(null);
 
-  const handleInvest = (data: InvestmentInput) => {
+  const handleInvest = async (assetId: string, amount: number) => {
+    const transactionId = crypto.randomUUID();
+
+    const response = await fetch("/investments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assetId, amount, transactionId }),
+    });
+
+    // Throwing an Error here is mandatory for the Modal to catch it
+    if (response.status === 503) {
+      throw new Error("SERVICE_UNAVAILABLE");
+    }
+
+    if (!response.ok) {
+      throw new Error("INVESTMENT_FAILED");
+    }
+
     setInvestments((prev) => ({
       ...prev,
-      [data.assetId]: (prev[data.assetId] || 0) + data.amount,
+      [assetId]: (prev[assetId] || 0) + amount,
     }));
-    setSuccessAmount(data.amount);
+    setSuccessAmount(amount);
     setSelectedAsset(null);
   };
 
@@ -59,7 +75,15 @@ export default function InvestmentPage() {
 
   return (
     <div className={styles.profilePage}>
-      {/* LEFT COLUMN */}
+      {/* Alert display */}
+      {errorAlert && (
+        <Alert
+          type="error"
+          message={errorAlert}
+          onClose={() => setErrorAlert(null)}
+        />
+      )}
+
       <div className={styles.leftColumn}>
         <h1 className={styles.pageTitle}>Available Assets</h1>
         <div className={styles.investmentsList}>
@@ -80,7 +104,6 @@ export default function InvestmentPage() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN / SIDEBAR */}
       <div className={styles.rightColumn}>
         <div className={styles.sidebarCard}>
           <h3 className={styles.sidebarTitle}>Portfolio Summary</h3>
@@ -95,16 +118,26 @@ export default function InvestmentPage() {
         </div>
       </div>
 
-      {/* INVESTMENT MODAL */}
       {selectedAsset && (
         <InvestmentModal
           asset={selectedAsset}
           onClose={() => setSelectedAsset(null)}
-          onInvest={handleInvest}
+          onInvest={async (amount) => {
+            try {
+              await handleInvest(selectedAsset.id, amount);
+            } catch (err: any) {
+              // Now we catch the error thrown in handleInvest and update state
+              setErrorAlert(
+                err.message === "SERVICE_UNAVAILABLE"
+                  ? "Service is currently unavailable"
+                  : "Investment failed",
+              );
+              throw err; // Re-throw so the modal can handle button states
+            }
+          }}
         />
       )}
 
-      {/* SUCCESS MODAL */}
       {successAmount && (
         <ModalSuccess
           amount={successAmount}

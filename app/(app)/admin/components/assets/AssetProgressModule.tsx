@@ -8,39 +8,30 @@ interface AssetProgressProps {
 export const AssetProgressModule = ({ asset }: AssetProgressProps) => {
   if (!asset) return null;
 
-  // 1. Calculate Funding Percentage
   const fundedAmount = Number(asset.funded) || 0;
-  const totalValue = Number(asset.totalValue) || 1; // Prevent division by zero
+  const totalValue = Number(asset.totalValue) || 1;
   const tokenProgress = Math.min(
     Math.round((fundedAmount / totalValue) * 100),
     100,
   );
 
-  // 2. Map Backend Status to Lifecycle Stages (0-3)
-  // Stages: 0 = Originated, 1 = KYC/Compliance, 2 = Tokenized/Active, 3 = Live/Trading
-  const getLifecycleStage = (status: string) => {
-    switch (status) {
-      case "SUBMITTED":
-        return 0;
-      case "PENDING":
-        return 1;
-      case "APPROVED":
-        return 2;
-      case "LIVE":
-        return 3;
-      default:
-        return 0;
-    }
+  // LOGIC:
+  // 0: Originated (SUBMITTED)
+  // 1: Compliance (APPROVED)
+  // 2: Tokenized (tokenAddress exists)
+  const getLifecycleStage = (asset: any) => {
+    if (asset.tokenAddress) return 2; // Final step: Truly tokenized on-chain
+    if (asset.status === "APPROVED") return 1; // Middle step: Approved/Compliance
+    return 0; // Default: Originated
   };
 
-  const currentStageIndex = getLifecycleStage(asset.status);
-  const stages = ["Originated", "Compliance", "Tokenized", "Live"];
+  const currentStageIndex = getLifecycleStage(asset);
+  const stages = ["Originated", "Compliance", "Tokenized"];
 
   return (
     <div className={styles.card}>
       <h3 className={styles.cardTitle}>Capital & Tokenization Progress</h3>
 
-      {/* Funding Progress Section */}
       <div className={styles.progressSection}>
         <div className={styles.progressLabelRow}>
           <span className={styles.progressLabel}>Funding Progress</span>
@@ -58,7 +49,6 @@ export const AssetProgressModule = ({ asset }: AssetProgressProps) => {
         </div>
       </div>
 
-      {/* Lifecycle Stepper */}
       <div className={styles.lifecycleContainer}>
         {stages.map((stage, i) => {
           const isCompleted = i < currentStageIndex;
@@ -67,14 +57,10 @@ export const AssetProgressModule = ({ asset }: AssetProgressProps) => {
           return (
             <div key={stage} className={styles.stepItem}>
               <div
-                className={`${styles.stepIndicator} ${
-                  isCompleted || isCurrent ? styles.stepActive : ""
-                }`}
+                className={`${styles.stepIndicator} ${isCompleted || isCurrent ? styles.stepActive : ""}`}
               ></div>
               <div
-                className={`${styles.stepLabel} ${
-                  isCurrent ? styles.stepLabelCurrent : ""
-                } ${isCompleted ? styles.stepLabelActive : ""}`}
+                className={`${styles.stepLabel} ${isCurrent ? styles.stepLabelCurrent : ""} ${isCompleted ? styles.stepLabelActive : ""}`}
               >
                 {stage}
               </div>

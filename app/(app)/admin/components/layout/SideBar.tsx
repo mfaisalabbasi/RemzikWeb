@@ -25,7 +25,7 @@ const navItems = [
     icon: FiUsers,
   },
   { label: "Assets", href: "/admin/assets", icon: FiLayers },
-
+  { label: "Blockchain", href: "/admin/blockchain", icon: FiTrendingUp },
   { label: "Profile", href: "/admin/profile", icon: FiUser },
 ];
 

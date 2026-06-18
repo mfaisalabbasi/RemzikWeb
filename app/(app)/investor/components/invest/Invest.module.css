@@ -194,3 +194,18 @@
     height: auto;
   }
 }
+.ctaPrimary:disabled {
+  background-color: #ccc !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+/* Add this to your CSS file */
+.ctaPrimary:disabled {
+  background-color: #666 !important; /* Make it look inactive */
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.ctaPrimary:hover:disabled {
+  background-color: #666 !important; /* Prevent color change on hover */
+}
