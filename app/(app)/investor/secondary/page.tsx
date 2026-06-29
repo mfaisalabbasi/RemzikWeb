@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { ethers } from "ethers";
+import { useWallets } from "@privy-io/react-auth";
 import styles from "../components/secondary/secondary.module.css";
 import {
   MarketPosition,
   Order,
-  TradeInput,
   ActiveTrade,
 } from "../components/secondary/types";
 import MarketPositionCard from "../components/secondary/MarketPositionCard";
@@ -21,8 +22,7 @@ import {
 } from "lucide-react";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
 
-// Local type extension to ensure sellerId is recognized throughout the page
-export type ExtendedOrder = Order & { sellerId: string };
+export type ExtendedOrder = Order & { sellerId: string; tokenAddress: string };
 
 export default function SecondaryMarketPage() {
   const [positions, setPositions] = useState<MarketPosition[]>([]);
@@ -33,7 +33,9 @@ export default function SecondaryMarketPage() {
   const [selectedSell, setSelectedSell] = useState<MarketPosition | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
   const { showAlert } = useAlert();
+  const { wallets } = useWallets();
 
   const fetchMarketData = useCallback(async () => {
     try {
@@ -64,8 +66,9 @@ export default function SecondaryMarketPage() {
 
         if (userData) setCurrentUserId(userData.id);
 
-        const mappedOrders: ExtendedOrder[] = (listingsData || []).map(
-          (l: any) => ({
+        setPositions(posData || []);
+        setOrders(
+          (listingsData || []).map((l: any) => ({
             id: l.id,
             assetId: l.assetId,
             assetTitle: l.asset?.title || "Real Estate Unit",
@@ -73,23 +76,21 @@ export default function SecondaryMarketPage() {
             quantity: parseFloat(l.unitsForSale),
             price: parseFloat(l.pricePerUnit),
             sellerId: l.sellerId,
-          }),
+            tokenAddress: l.asset?.tokenAddress,
+          })),
         );
-
-        const mappedTrades = (tradesData || []).map((t: any) => ({
-          id: t.id,
-          assetTitle: t.asset?.title || "Real Estate Unit",
-          amount: parseFloat(t.totalPrice) || 0,
-          status: t.status ? t.status.toString().toUpperCase() : "LOCKED",
-          buyerId: t.buyer?.user?.id,
-          sellerId: t.seller?.user?.id,
-        }));
-
-        setPositions(posData || []);
-        setOrders(mappedOrders);
-        setActiveTrades(mappedTrades);
+        setActiveTrades(
+          (tradesData || []).map((t: any) => ({
+            id: t.id,
+            assetTitle: t.asset?.title || "Real Estate Unit",
+            amount: parseFloat(t.totalPrice) || 0,
+            status: t.status ? t.status.toString().toUpperCase() : "LOCKED",
+            buyerId: t.buyer?.user?.id,
+            sellerId: t.seller?.user?.id,
+          })),
+        );
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Market sync failed:", error);
     } finally {
       setLoading(false);
@@ -100,11 +101,13 @@ export default function SecondaryMarketPage() {
     fetchMarketData();
   }, [fetchMarketData]);
 
-  const visibleActiveTrades = useMemo(() => {
-    return activeTrades.filter(
-      (t) => t.status === "LOCKED" || t.status === "DISPUTED",
-    );
-  }, [activeTrades]);
+  const visibleActiveTrades = useMemo(
+    () =>
+      activeTrades.filter(
+        (t) => t.status === "LOCKED" || t.status === "DISPUTED",
+      ),
+    [activeTrades],
+  );
 
   const handleSettleTrade = async (tradeId: string) => {
     if (!confirm("Release funds to seller? This action is final.")) return;
@@ -112,10 +115,7 @@ export default function SecondaryMarketPage() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/settle/${tradeId}`,
-        {
-          method: "POST",
-          credentials: "include",
-        },
+        { method: "POST", credentials: "include" },
       );
       if (!res.ok) throw new Error("Settlement failed");
       showAlert("success", "Trade settled successfully.");
@@ -143,7 +143,7 @@ export default function SecondaryMarketPage() {
         }),
       });
       if (!res.ok) throw new Error("Dispute failed");
-      showAlert("success", "Dispute opened. Trade status updated to frozen.");
+      showAlert("success", "Dispute opened.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
@@ -152,25 +152,19 @@ export default function SecondaryMarketPage() {
     }
   };
 
-  // --- ADDED CONFIRMATION GUARD ---
   const handleExecuteTrade = async (listingId: string) => {
     const order = orders.find((o) => o.id === listingId);
-    const totalCost = order ? order.quantity * order.price : 0;
-
-    const confirmed = window.confirm(
-      `CONFIRM TRADE EXECUTION\n\nAsset: ${order?.assetTitle}\nCost: SAR ${totalCost.toLocaleString()}\n\nDo you want to proceed with this purchase? Funds will be locked in escrow.`,
-    );
-
-    if (!confirmed) return;
+    if (
+      !order ||
+      !window.confirm(`Confirm acquisition of ${order.assetTitle}?`)
+    )
+      return;
 
     setActionLoading(true);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
-        {
-          method: "POST",
-          credentials: "include",
-        },
+        { method: "POST", credentials: "include" },
       );
       if (!res.ok) throw new Error("Trade execution failed");
       setSuccessMessage("Asset Acquired! Ownership updated on Remzik Ledger.");
@@ -183,51 +177,57 @@ export default function SecondaryMarketPage() {
   };
 
   const handleCancelListing = async (listingId: string) => {
-    if (!confirm("Are you sure you want to retract this listing?")) return;
+    const order = orders.find((o) => o.id === listingId);
+    if (!order || !confirm("Retract this listing?")) return;
+
     setActionLoading(true);
+
     try {
+      // 1. Setup Wallet & Contract
+      const wallet = wallets[0];
+      const provider = new ethers.BrowserProvider(
+        await wallet.getEthereumProvider(),
+      );
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS!,
+        ["function cancelListing(string calldata listingId) external"],
+        signer,
+      );
+
+      // 2. WAIT FOR BLOCKCHAIN SUCCESS
+      // The code stops here until the wallet popup is signed and mined.
+      const tx = await contract.cancelListing(order.id);
+      await tx.wait();
+
+      // 3. ONLY NOW: Delete from Database
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${listingId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
+        { method: "DELETE", credentials: "include" },
       );
-      if (!res.ok) throw new Error("Cancellation failed");
-      showAlert("success", "Listing retracted successfully.");
-      await fetchMarketData();
+
+      if (!res.ok) throw new Error("Backend failed to sync deletion.");
+
+      // 4. Update UI
+      showAlert("success", "Listing canceled and removed.");
+      await fetchMarketData(); // Reload everything to be 100% sure the list matches the DB
     } catch (err: any) {
-      showAlert("error", err.message);
+      if (err.message.includes("not yet updated")) {
+        showAlert("info", "Blockchain is updating... refreshing in 2 seconds.");
+        setTimeout(() => fetchMarketData(), 2500);
+      } else {
+        showAlert("error", `Cancellation failed: ${err.message}`);
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleCreateListing = async (trade: TradeInput) => {
-    setActionLoading(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            assetId: trade.assetId,
-            unitsForSale: trade.quantity,
-            pricePerUnit: trade.price,
-          }),
-        },
-      );
-      if (!res.ok) throw new Error("Listing failed");
-      setSuccessMessage("Asset listed! Units secured in Remzik Escrow.");
-      setSelectedSell(null);
-      await fetchMarketData();
-    } catch (err: any) {
-      showAlert("error", err.message);
-    } finally {
-      setActionLoading(false);
-    }
+  // REPLACED: Simple refresh trigger
+  const handleListingSuccess = async () => {
+    setSuccessMessage("Asset listed! Units secured in Remzik Escrow.");
+    setSelectedSell(null);
+    await fetchMarketData();
   };
 
   if (loading) {
@@ -289,9 +289,6 @@ export default function SecondaryMarketPage() {
                 visibleActiveTrades.map((t) => {
                   const isBuyer = currentUserId === t.buyerId;
                   const isDisputed = t.status === "DISPUTED";
-                  const statusClass =
-                    styles[t.status.toLowerCase()] || styles.statusGeneric;
-
                   return (
                     <div
                       key={t.id}
@@ -302,14 +299,16 @@ export default function SecondaryMarketPage() {
                           <strong>{t.assetTitle}</strong>
                           <span>SAR {t.amount.toLocaleString()}</span>
                         </div>
-                        <div className={`${styles.statusPill} ${statusClass}`}>
+                        <div
+                          className={`${styles.statusPill} ${styles[t.status.toLowerCase()] || styles.statusGeneric}`}
+                        >
                           {t.status}
                         </div>
                       </div>
                       <div className={styles.tradeActions}>
                         {isDisputed ? (
                           <div className={styles.disputeWarning}>
-                            <ShieldAlert size={14} /> Under Admin Review
+                            <ShieldAlert size={14} /> Under Review
                           </div>
                         ) : (
                           <>
@@ -363,8 +362,9 @@ export default function SecondaryMarketPage() {
       {selectedSell && (
         <SellPositionModal
           position={selectedSell}
+          tokenAddress={selectedSell.tokenAddress}
           onClose={() => setSelectedSell(null)}
-          onSell={handleCreateListing}
+          onSell={handleListingSuccess}
         />
       )}
       {successMessage && (

@@ -7,6 +7,7 @@ export interface MarketPosition {
   currentPrice: number;
   pnl: number;
   image?: string;
+  tokenAddress: string;
 }
 
 export interface Order {
