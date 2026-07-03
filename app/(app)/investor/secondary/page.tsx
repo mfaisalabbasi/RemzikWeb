@@ -110,15 +110,27 @@ export default function SecondaryMarketPage() {
   );
 
   const handleSettleTrade = async (tradeId: string) => {
-    if (!confirm("Release funds to seller? This action is final.")) return;
+    if (
+      !confirm(
+        "Confirm acquisition & release funds to seller? This settles the trade on-chain.",
+      )
+    )
+      return;
+
     setActionLoading(true);
     try {
+      // Backend triggers the on-chain settlement via BlockchainService
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/settle/${tradeId}`,
-        { method: "POST", credentials: "include" },
+        {
+          method: "POST",
+          credentials: "include",
+        },
       );
+
       if (!res.ok) throw new Error("Settlement failed");
-      showAlert("success", "Trade settled successfully.");
+
+      showAlert("success", "Trade finalized on-chain and funds released.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
@@ -162,12 +174,18 @@ export default function SecondaryMarketPage() {
 
     setActionLoading(true);
     try {
+      // Backend creates the "Intent" (Status: LOCKED) and Web2 Escrow
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
-        { method: "POST", credentials: "include" },
+        {
+          method: "POST",
+          credentials: "include",
+        },
       );
-      if (!res.ok) throw new Error("Trade execution failed");
-      setSuccessMessage("Asset Acquired! Ownership updated on Remzik Ledger.");
+
+      if (!res.ok) throw new Error("Trade intent failed");
+
+      setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
