@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TradeInput, MarketPosition } from "./types";
 import styles from "./secondary.module.css";
 import { BrowserProvider, Contract, parseUnits } from "ethers";
@@ -9,7 +9,8 @@ import { useWallets } from "@privy-io/react-auth";
 const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 
 interface Props {
-  position: MarketPosition;
+  // Added reservedUnits to the interface to support the new safety logic
+  position: MarketPosition & { reservedUnits?: number };
   tokenAddress: string;
   onClose: () => void;
   onSell: (trade: TradeInput) => void;
@@ -21,37 +22,70 @@ export default function SellPositionModal({
   onClose,
   onSell,
 }: Props) {
+  // Calculate available units based on total owned minus what is already tied up
+  const reserved = position.reservedUnits || 0;
+  const available = position.quantity - reserved;
+
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(position?.currentPrice ?? 0);
   const [step, setStep] = useState<
     "INPUT" | "APPROVING" | "READY" | "SIGNING" | "CONFIRMING"
   >("INPUT");
+
   const { wallets } = useWallets();
 
   const handleApprove = async () => {
+    // Validate against available balance (not just total)
+    if (quantity <= 0 || quantity > available) {
+      alert(
+        `Invalid quantity. You have ${available} units available. (${reserved} already listed)`,
+      );
+      return;
+    }
+
     setStep("APPROVING");
     try {
       const wallet = wallets[0];
       const provider = new BrowserProvider(await wallet.getEthereumProvider());
       const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
 
       const tokenContract = new Contract(
         tokenAddress,
         [
           "function approve(address spender, uint256 amount) external returns (bool)",
-          "function decimals() view returns (uint8)",
+          "function allowance(address owner, address spender) external view returns (uint256)",
         ],
         signer,
       );
 
-      const decimals = await tokenContract.decimals().catch(() => 18);
-      const tx = await tokenContract.approve(
+      const currentAllowance = await tokenContract.allowance(
+        userAddress,
         MARKETPLACE_ADDRESS!,
-        parseUnits(quantity.toString(), decimals),
       );
-      await tx.wait();
+
+      const MAX_UINT = BigInt(
+        "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      );
+
+      const requiredAmount = parseUnits(quantity.toString(), 18);
+
+      if (currentAllowance < requiredAmount) {
+        if (currentAllowance > BigInt(0)) {
+          const resetTx = await tokenContract.approve(
+            MARKETPLACE_ADDRESS!,
+            BigInt(0),
+          );
+          await resetTx.wait();
+        }
+
+        const tx = await tokenContract.approve(MARKETPLACE_ADDRESS!, MAX_UINT);
+        await tx.wait();
+      }
+
       setStep("READY");
     } catch (err: any) {
+      console.error("Approval Error:", err);
       alert(`Approval failed: ${err.message}`);
       setStep("INPUT");
     }
@@ -60,66 +94,75 @@ export default function SellPositionModal({
   const handleSubmit = async () => {
     setStep("SIGNING");
     try {
-      // 1. Backend Intent: Get a Listing ID
+      const wallet = wallets[0];
+      const provider = new BrowserProvider(await wallet.getEthereumProvider());
+      const signer = await provider.getSigner();
+
+      // 1. PREPARE: Get Listing ID from Backend
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/prepare`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({
             assetId: position.assetId,
             unitsForSale: quantity,
             pricePerUnit: price,
           }),
+          credentials: "include",
         },
       );
 
+      // Handle custom error messages (e.g., "Insufficient available units")
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to prepare listing.");
+      }
       const { listingId } = await res.json();
-      if (!listingId) throw new Error("Failed to reserve listing ID");
 
-      // 2. Blockchain Execution: Sign with User Wallet
-      const wallet = wallets[0];
-      const provider = new BrowserProvider(await wallet.getEthereumProvider());
-      const signer = await provider.getSigner();
+      // 2. DYNAMIC DECIMALS & CONTRACT CALL
+      const tokenContract = new Contract(
+        tokenAddress,
+        ["function decimals() view returns (uint8)"],
+        signer,
+      );
+      const decimals = await tokenContract.decimals().catch(() => 18);
 
-      // ABI updated to match: createListing(string, address, uint256)
       const contract = new Contract(
         MARKETPLACE_ADDRESS!,
-        [
-          "function createListing(string listingId, address token, uint256 amount) external",
-        ],
+        ["function createListing(string, address, uint256) external"],
         signer,
       );
 
-      // Arguments updated to match: Removed 'seller' address
       const tx = await contract.createListing(
         listingId,
         tokenAddress,
-        parseUnits(quantity.toString(), 18),
+        parseUnits(quantity.toString(), decimals),
       );
 
-      await tx.wait(); // Wait for blockchain confirmation
+      await tx.wait();
 
-      // 3. Backend Finalize: Tell backend to activate
+      // 3. CONFIRM: Finalize state
       setStep("CONFIRMING");
       const confirmRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/confirm`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({ listingId }),
+          credentials: "include",
         },
       );
 
-      if (!confirmRes.ok) throw new Error("Failed to finalize listing");
+      if (!confirmRes.ok)
+        throw new Error("Listing on-chain, but ledger sync failed.");
 
       onSell({ assetId: position.assetId, type: "sell", quantity, price });
       onClose();
     } catch (err: any) {
+      console.error("Submission Error:", err);
       alert(`Transaction Failed: ${err.message}`);
-      setStep("READY");
+      setStep("READY"); // Return to ready if signing fails
     }
   };
 
@@ -131,15 +174,21 @@ export default function SellPositionModal({
         {step === "INPUT" && (
           <>
             <div className={styles.field}>
-              <label>Quantity</label>
+              <label>Quantity (Available: {available})</label>
               <input
                 type="number"
                 value={quantity}
+                max={available}
                 onChange={(e) => setQuantity(Number(e.target.value))}
               />
+              {reserved > 0 && (
+                <small className={styles.hint}>
+                  ({reserved} units already listed)
+                </small>
+              )}
             </div>
             <div className={styles.field}>
-              <label>Price (SAR)</label>
+              <label>Price per unit (SAR)</label>
               <input
                 type="number"
                 value={price}
@@ -159,7 +208,8 @@ export default function SellPositionModal({
 
         {step === "APPROVING" && (
           <div className={styles.loadingState}>
-            <p>Waiting for Approval...</p>
+            <div className={styles.spinner}></div>
+            <p>Approving tokens for Remzik Marketplace...</p>
           </div>
         )}
 
@@ -173,11 +223,14 @@ export default function SellPositionModal({
 
         {step === "SIGNING" && (
           <div className={styles.loadingState}>
-            <p>Sign in your wallet...</p>
+            <div className={styles.spinner}></div>
+            <p>Waiting for wallet signature...</p>
           </div>
         )}
+
         {step === "CONFIRMING" && (
           <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
             <p>Syncing with Remzik Ledger...</p>
           </div>
         )}

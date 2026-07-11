@@ -29,7 +29,10 @@ export default function SecondaryMarketPage() {
   const [orders, setOrders] = useState<ExtendedOrder[]>([]);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+
+  // FIXED: Track loading per-item to prevent global UI lock
+  const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
+
   const [selectedSell, setSelectedSell] = useState<MarketPosition | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -110,6 +113,7 @@ export default function SecondaryMarketPage() {
   );
 
   const handleSettleTrade = async (tradeId: string) => {
+    if (loadingIds[tradeId]) return;
     if (
       !confirm(
         "Confirm acquisition & release funds to seller? This settles the trade on-chain.",
@@ -117,32 +121,38 @@ export default function SecondaryMarketPage() {
     )
       return;
 
-    setActionLoading(true);
+    setLoadingIds((prev) => ({ ...prev, [tradeId]: true }));
     try {
-      // Backend triggers the on-chain settlement via BlockchainService
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/settle/${tradeId}`,
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
         },
       );
 
-      if (!res.ok) throw new Error("Settlement failed");
+      if (!res.ok) {
+        const errorData = await res
+          .json()
+          .catch(() => ({ message: "Unknown settlement error" }));
+        throw new Error(errorData.message || "Settlement failed.");
+      }
 
       showAlert("success", "Trade finalized on-chain and funds released.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => ({ ...prev, [tradeId]: false }));
     }
   };
 
   const handleOpenDispute = async (tradeId: string) => {
     const reason = prompt("Reason for dispute:");
     if (!reason) return;
-    setActionLoading(true);
+
+    setLoadingIds((prev) => ({ ...prev, [tradeId]: true }));
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/disputes`, {
         method: "POST",
@@ -160,7 +170,7 @@ export default function SecondaryMarketPage() {
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => ({ ...prev, [tradeId]: false }));
     }
   };
 
@@ -172,9 +182,8 @@ export default function SecondaryMarketPage() {
     )
       return;
 
-    setActionLoading(true);
+    setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      // Backend creates the "Intent" (Status: LOCKED) and Web2 Escrow
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
         {
@@ -182,7 +191,6 @@ export default function SecondaryMarketPage() {
           credentials: "include",
         },
       );
-
       if (!res.ok) throw new Error("Trade intent failed");
 
       setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
@@ -190,7 +198,7 @@ export default function SecondaryMarketPage() {
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => ({ ...prev, [listingId]: false }));
     }
   };
 
@@ -198,10 +206,8 @@ export default function SecondaryMarketPage() {
     const order = orders.find((o) => o.id === listingId);
     if (!order || !confirm("Retract this listing?")) return;
 
-    setActionLoading(true);
-
+    setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      // 1. Setup Wallet & Contract
       const wallet = wallets[0];
       const provider = new ethers.BrowserProvider(
         await wallet.getEthereumProvider(),
@@ -213,39 +219,45 @@ export default function SecondaryMarketPage() {
         signer,
       );
 
-      // 2. WAIT FOR BLOCKCHAIN SUCCESS
-      // The code stops here until the wallet popup is signed and mined.
       const tx = await contract.cancelListing(order.id);
       await tx.wait();
 
-      // 3. ONLY NOW: Delete from Database
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${listingId}`,
-        { method: "DELETE", credentials: "include" },
-      );
+      const syncWithRetry = async (retries = 3) => {
+        for (let i = 0; i < retries; i++) {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${listingId}`,
+            {
+              method: "DELETE",
+              credentials: "include",
+            },
+          );
+          if (res.ok) return true;
+          await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+        }
+        throw new Error("Blockchain updated, but database failed to sync.");
+      };
 
-      if (!res.ok) throw new Error("Backend failed to sync deletion.");
-
-      // 4. Update UI
-      showAlert("success", "Listing canceled and removed.");
-      await fetchMarketData(); // Reload everything to be 100% sure the list matches the DB
+      await syncWithRetry();
+      showAlert("success", "Listing successfully retracted.");
+      await fetchMarketData();
     } catch (err: any) {
-      if (err.message.includes("not yet updated")) {
-        showAlert("info", "Blockchain is updating... refreshing in 2 seconds.");
-        setTimeout(() => fetchMarketData(), 2500);
-      } else {
-        showAlert("error", `Cancellation failed: ${err.message}`);
-      }
+      showAlert("error", `Cancellation failed: ${err.message}`);
     } finally {
-      setActionLoading(false);
+      setLoadingIds((prev) => ({ ...prev, [listingId]: false }));
     }
   };
 
-  // REPLACED: Simple refresh trigger
+  // FIXED: Polling sync instead of unreliable setTimeout
   const handleListingSuccess = async () => {
-    setSuccessMessage("Asset listed! Units secured in Remzik Escrow.");
+    setSuccessMessage("Asset listed! Syncing with Remzik Ledger...");
     setSelectedSell(null);
-    await fetchMarketData();
+
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      await fetchMarketData();
+      if (attempts >= 5) clearInterval(poll);
+    }, 2000);
   };
 
   if (loading) {
@@ -332,10 +344,17 @@ export default function SecondaryMarketPage() {
                           <>
                             {isBuyer ? (
                               <button
+                                disabled={loadingIds[t.id]}
                                 onClick={() => handleSettleTrade(t.id)}
                                 className={styles.settleAction}
                               >
-                                <CheckCircle size={12} /> Confirm & Release
+                                {loadingIds[t.id] ? (
+                                  "..."
+                                ) : (
+                                  <>
+                                    <CheckCircle size={12} /> Confirm & Release
+                                  </>
+                                )}
                               </button>
                             ) : (
                               <div className={styles.waitingBadge}>
@@ -343,6 +362,7 @@ export default function SecondaryMarketPage() {
                               </div>
                             )}
                             <button
+                              disabled={loadingIds[t.id]}
                               onClick={() => handleOpenDispute(t.id)}
                               className={styles.disputeAction}
                             >
@@ -390,14 +410,6 @@ export default function SecondaryMarketPage() {
           message={successMessage}
           onClose={() => setSuccessMessage(null)}
         />
-      )}
-      {actionLoading && (
-        <div className={styles.actionOverlay}>
-          <div className={styles.glassLoader}>
-            <div className={styles.spinner}></div>
-            <p>Processing Transaction...</p>
-          </div>
-        </div>
       )}
     </div>
   );
