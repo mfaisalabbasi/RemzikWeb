@@ -3,22 +3,34 @@
 import React, { useState } from "react";
 import styles from "./Details.module.css";
 import { FiFileText, FiDownload } from "react-icons/fi";
+import { InvestorGovernanceView } from "./InvestorGovernanceView";
+
+interface DocumentData {
+  title?: string;
+  name?: string;
+  type?: string;
+  url: string;
+}
 
 interface AssetTabsProps {
+  asset: any;
   overview: string;
   financials: string;
   shariah: string;
-  documents: any[]; // Changed to any[] to handle object data
+  documents: DocumentData[];
 }
 
 export default function AssetTabs({
+  asset,
   overview,
   financials,
   shariah,
   documents,
 }: AssetTabsProps) {
-  const tabs = ["Overview", "Financials", "Shariah", "Documents"];
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState<string>("Overview");
+
+  // Force-include the Governance tab so it always displays regardless of missing/unpopulated props
+  const tabs = ["Overview", "Financials", "Shariah", "Documents", "Governance"];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -31,7 +43,7 @@ export default function AssetTabs({
       case "Documents":
         return (
           <div className={styles.tabBlock}>
-            {documents && documents.length > 0 ? (
+            {documents?.length > 0 ? (
               <div className={styles.documentList}>
                 {documents.map((doc, idx) => (
                   <div key={idx} className={styles.docItem}>
@@ -59,10 +71,18 @@ export default function AssetTabs({
                 ))}
               </div>
             ) : (
-              <p className={styles.emptyMsg}>
-                No official documents available for this asset yet.
-              </p>
+              <div className={styles.emptyState}>
+                <p className={styles.emptyMsg}>
+                  No official documents available for this asset yet.
+                </p>
+              </div>
             )}
+          </div>
+        );
+      case "Governance":
+        return (
+          <div className={styles.tabBlock}>
+            <InvestorGovernanceView asset={asset} />
           </div>
         );
       default:
@@ -72,17 +92,18 @@ export default function AssetTabs({
 
   return (
     <div className={styles.tabs}>
-      <div className={styles.tabHeader}>
+      <nav className={styles.tabHeader} aria-label="Asset Details Navigation">
         {tabs.map((tab) => (
           <button
             key={tab}
             className={activeTab === tab ? styles.activeTab : styles.tabButton}
             onClick={() => setActiveTab(tab)}
+            aria-current={activeTab === tab ? "page" : undefined}
           >
             {tab}
           </button>
         ))}
-      </div>
+      </nav>
       <div className={styles.tabContent}>{renderContent()}</div>
     </div>
   );

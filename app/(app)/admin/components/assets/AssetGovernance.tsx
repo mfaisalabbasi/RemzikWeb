@@ -9,10 +9,14 @@ interface AssetGovernanceProps {
 
 export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [proposalDesc, setProposalDesc] = useState("");
+  const [proposalDuration, setProposalDuration] = useState("86400"); // Default 24h
+  const [proposalIdToExecute, setProposalIdToExecute] = useState("");
 
-  // Helper to check if asset already has a tokenization record
-  // (Works if your asset fetch includes the 'token' relation)
   const isAlreadyTokenized = !!asset.token;
+  const isGovernanceActive = !!asset.governanceAddress;
+
+  // --- EXISTING WORKFLOWS ---
 
   const updateAssetStatus = async (newStatus: string) => {
     let reason = null;
@@ -20,7 +24,6 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
       reason = prompt("Please provide a reason for rejection:");
       if (!reason) return;
     }
-
     if (!confirm(`Confirm status change to ${newStatus}?`)) return;
 
     setIsProcessing(true);
@@ -34,7 +37,6 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
           body: JSON.stringify({ status: newStatus, rejectionReason: reason }),
         },
       );
-
       if (response.ok) {
         alert(`✅ Status updated to ${newStatus}`);
         onAction();
@@ -50,28 +52,21 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
   };
 
   const initializeTokenization = async () => {
-    // 1. Data Validation
     const supply = Number(asset.tokenSupply);
     const valuation = Number(asset.totalValue);
-
-    if (!supply || supply <= 0) {
-      alert("❌ Setup Error: Define 'Token Supply' in asset details first.");
-      return;
-    }
-
+    if (!supply || supply <= 0)
+      return alert("❌ Setup Error: Define 'Token Supply'.");
     const pricePerShare = valuation / supply;
 
     if (
       !confirm(
         `Initialize ${supply.toLocaleString()} shares at SAR ${pricePerShare.toFixed(2)} per share?`,
       )
-    ) {
+    )
       return;
-    }
 
     setIsProcessing(true);
     try {
-      // 2. Call the specialized Tokenization Module (Like your Postman request)
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/tokenization/${asset.id}`,
         {
@@ -84,18 +79,116 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
           }),
         },
       );
-
       if (response.ok) {
-        alert(
-          "✅ Tokenization Success: Asset is now live in the Investing List.",
-        );
+        alert("✅ Tokenization Success.");
         onAction();
       } else {
         const error = await response.json();
-        alert(`❌ Tokenization Failed: ${error.message}`);
+        alert(`❌ Error: ${error.message}`);
       }
     } catch (err) {
       alert("❌ Critical: Tokenization Service is unreachable.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // --- ENHANCED GOVERNANCE FLOWS ---
+
+  const createProposal = async () => {
+    if (!proposalDesc) return alert("❌ Define proposal description");
+    setIsProcessing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/governance/${asset.id}/propose`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            desc: proposalDesc,
+            duration: Number(proposalDuration),
+          }),
+        },
+      );
+      if (response.ok) {
+        alert("✅ Proposal submitted to blockchain.");
+        setProposalDesc("");
+        onAction();
+      } else {
+        const error = await response.json();
+        alert(`❌ Error: ${error.message}`);
+      }
+    } catch (err) {
+      alert("❌ Governance Service unreachable.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const executeProposal = async () => {
+    if (!proposalIdToExecute)
+      return alert("❌ Enter a valid Proposal ID to execute.");
+    if (
+      !confirm(
+        `Confirm execution of Proposal #${proposalIdToExecute}? Ensure voting deadline has passed and majority voted YES.`,
+      )
+    )
+      return;
+
+    setIsProcessing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/governance/${asset.id}/execute/${proposalIdToExecute}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      if (response.ok) {
+        alert(
+          `✅ Proposal #${proposalIdToExecute} successfully executed on-chain.`,
+        );
+        setProposalIdToExecute("");
+        onAction();
+      } else {
+        const error = await response.json();
+        alert(`❌ Error: ${error.message}`);
+      }
+    } catch (err) {
+      alert("❌ Governance Execution Service unreachable.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const triggerEmergencyLiquidation = async () => {
+    if (
+      !confirm(
+        "⚠️ CRITICAL: Trigger Emergency Liquidation? This is immutable and pauses all token transfers.",
+      )
+    )
+      return;
+    setIsProcessing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/governance/${asset.id}/liquidate`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      if (response.ok) {
+        alert("✅ Emergency Liquidation proposal signal sent and executed.");
+        onAction();
+      } else {
+        const error = await response.json();
+        alert(`❌ Error: ${error.message}`);
+      }
+    } catch (err) {
+      alert("❌ Critical: Governance Service is unreachable.");
     } finally {
       setIsProcessing(false);
     }
@@ -106,7 +199,6 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
       <h3 className={styles.cardTitle}>Admin Control Workflow</h3>
 
       <div className={styles.actionColumn}>
-        {/* APPROVE BUTTON */}
         <button
           className={styles.btnApprove}
           disabled={isProcessing || asset.status === "APPROVED"}
@@ -117,7 +209,6 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
             : "Verify & Approve"}
         </button>
 
-        {/* TOKENIZE BUTTON */}
         <button
           className={styles.btnTokenize}
           disabled={
@@ -130,7 +221,6 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
             : "Initialize Tokenization"}
         </button>
 
-        {/* REJECT BUTTON */}
         <button
           className={styles.btnReject}
           disabled={
@@ -140,25 +230,120 @@ export const AssetGovernance = ({ asset, onAction }: AssetGovernanceProps) => {
         >
           Reject Asset
         </button>
+
+        {isGovernanceActive && (
+          <div
+            style={{
+              marginTop: "20px",
+              borderTop: "1px solid #e5e7eb",
+              paddingTop: "20px",
+            }}
+          >
+            {/* 1. Propose Action Section */}
+            <h4 className={styles.label} style={{ color: "#3b82f6" }}>
+              DAO Proposal Management
+            </h4>
+            <input
+              type="text"
+              placeholder="Proposal (e.g., RENOVATION, BUYOUT)"
+              value={proposalDesc}
+              onChange={(e) => setProposalDesc(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "8px",
+                borderRadius: "6px",
+                border: "1px solid #d1d5db",
+                fontSize: "14px",
+              }}
+            />
+            <select
+              value={proposalDuration}
+              onChange={(e) => setProposalDuration(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "6px",
+                border: "1px solid #d1d5db",
+                fontSize: "14px",
+                backgroundColor: "#fff",
+              }}
+            >
+              <option value="3600">Duration: 1 Hour (Test)</option>
+              <option value="86400">Duration: 24 Hours</option>
+              <option value="604800">Duration: 7 Days</option>
+            </select>
+            <button
+              className={styles.btnApprove}
+              style={{ width: "100%", marginBottom: "20px" }}
+              disabled={isProcessing}
+              onClick={createProposal}
+            >
+              Submit Proposal On-Chain
+            </button>
+
+            {/* 2. Execute Proposal Section */}
+            <h4 className={styles.label} style={{ color: "#10b981" }}>
+              Finalize / Execute Proposal
+            </h4>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+              <input
+                type="number"
+                placeholder="ID #"
+                value={proposalIdToExecute}
+                onChange={(e) => setProposalIdToExecute(e.target.value)}
+                style={{
+                  width: "35%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                }}
+              />
+              <button
+                className={styles.btnTokenize}
+                style={{ flex: 1, margin: 0 }}
+                disabled={isProcessing || !proposalIdToExecute}
+                onClick={executeProposal}
+              >
+                Execute Passed Vote
+              </button>
+            </div>
+
+            {/* 3. Emergency Liquidation Section */}
+            <h4 className={styles.label} style={{ color: "#ef4444" }}>
+              Emergency Circuit Breaker
+            </h4>
+            <button
+              className={styles.btnReject}
+              style={{ background: "#ef4444", color: "white", width: "100%" }}
+              disabled={isProcessing || asset.status === "LIQUIDATED"}
+              onClick={triggerEmergencyLiquidation}
+            >
+              {asset.status === "LIQUIDATED"
+                ? "✓ Asset Liquidated"
+                : "Trigger Emergency Liquidation"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.statusLogSection}>
         <div className={styles.label}>Audit Log Excerpt</div>
         <div className={styles.logList}>
           <div className={styles.logItem}>
-            <span>{new Date(asset.updatedAt).toLocaleDateString()}</span>
-            <strong>Current Status: {asset.status}</strong>
+            <span>{new Date(asset.updatedAt).toLocaleDateString()}</span>{" "}
+            <strong>Status: {asset.status}</strong>
           </div>
-          {isAlreadyTokenized && (
-            <div className={styles.logItem} style={{ color: "#10b981" }}>
-              <span>{new Date().toLocaleDateString()}</span>
-              <strong>System: Tokenization Ledger Created</strong>
+          {isGovernanceActive && (
+            <div className={styles.logItem} style={{ color: "#3b82f6" }}>
+              <span>On-Chain</span>{" "}
+              <strong>
+                Gov: {asset.governanceAddress.substring(0, 10)}...
+              </strong>
             </div>
           )}
-          <div className={styles.logItem}>
-            <span>{new Date(asset.createdAt).toLocaleDateString()}</span>
-            <strong>Initial Submission Received</strong>
-          </div>
         </div>
       </div>
     </div>

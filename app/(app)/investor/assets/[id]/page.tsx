@@ -118,6 +118,7 @@ export default function AssetDetailPage() {
       <div className={styles.mainGrid}>
         <div className={styles.left}>
           <AssetTabs
+            asset={asset} // 👈 Pass the full raw asset object here!
             overview={uiData.overview}
             financials={uiData.financials}
             shariah={uiData.shariah}

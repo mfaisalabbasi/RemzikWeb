@@ -86,3 +86,179 @@
   font-size: 2rem;
   margin: 0 auto 20px;
 }
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  color: #111827;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #064e3b;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.statusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.warningBox {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proposalList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingState,
+.emptyState {
+  padding: 32px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #e5e7eb;
+}
+
+.proposalCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.proposalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.proposalId {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  borderradius: 6px;
+}
+
+.proposalDesc {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.5;
+  fontweight: 500;
+}
+
+.txLink {
+  font-size: 12px;
+  color: #059669;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.votingActions {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btnApprove {
+  flex: 1;
+  background: #065f46;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnApprove:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btnReject {
+  flex: 1;
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnReject:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.contractMeta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.codeBadge {
+  font-size: 11px;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #374151;
+  font-family: monospace;
+}
