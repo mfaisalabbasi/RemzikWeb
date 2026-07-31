@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import styles from "../../components/investors/Investor.module.css"; // Ensure this path is correct
+import styles from "../../components/investors/Investor.module.css";
 import { InvestorProfileSummary } from "../../components/investors/InvestorProfileSummary";
 import { InvestorDocuments } from "../../components/investors/InvestorDocuments";
 import { InvestorLedger } from "../../components/investors/InvestorLedger";
 import { InvestorGovernance } from "../../components/investors/InvestorGovernance";
 import { InvestorDirectMessage } from "../../components/investors/InvestorDirectMessage";
+import { InvestorRecoverySection } from "../../components/investors/InvestorRecoverySection";
 
 export default function InvestorDetailPage({
   params,
@@ -19,24 +20,24 @@ export default function InvestorDetailPage({
   const [investor, setInvestor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/investors/${investorId}`,
-          {
-            credentials: "include",
-          },
-        );
-        const data = await response.json();
-        setInvestor(data);
-      } catch (error) {
-        console.error("Error fetching investor details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDetails = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/investors/${investorId}`,
+        {
+          credentials: "include",
+        },
+      );
+      const data = await response.json();
+      setInvestor(data);
+    } catch (error) {
+      console.error("Error fetching investor details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (investorId) fetchDetails();
   }, [investorId]);
 
@@ -108,13 +109,17 @@ export default function InvestorDetailPage({
 
       <InvestorProfileSummary data={investor} />
 
-      {/* FIXED: Using gridContainer class instead of hardcoded inline style */}
       <div className={styles.gridContainer}>
         <div
           style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
         >
           <InvestorLedger ledger={investor.ledger} />
           <InvestorDocuments documents={investor.documents} />
+          {/* Investor Specific Recovery Section */}
+          <InvestorRecoverySection
+            recoveries={investor.recoveryRequests || []}
+            onRefresh={fetchDetails}
+          />
         </div>
 
         <div

@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { TradeInput, MarketPosition } from "./types";
 import styles from "./secondary.module.css";
-import { BrowserProvider, Contract, parseUnits } from "ethers";
-import { useWallets } from "@privy-io/react-auth";
+import { Contract, parseUnits } from "ethers";
+import { useAppWallet } from "../../../../integrations/context/WalletContext";
 
 const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 
 interface Props {
   // Added reservedUnits to the interface to support the new safety logic
-  position: MarketPosition & { reservedUnits?: number };
+  position: MarketPosition & { reservedUnits?: number; walletAddress?: string };
   tokenAddress: string;
   onClose: () => void;
   onSell: (trade: TradeInput) => void;
@@ -32,7 +32,8 @@ export default function SellPositionModal({
     "INPUT" | "APPROVING" | "READY" | "SIGNING" | "CONFIRMING"
   >("INPUT");
 
-  const { wallets } = useWallets();
+  // Use the global centralized wallet context hook
+  const { getVerifiedSigner } = useAppWallet();
 
   const handleApprove = async () => {
     // Validate against available balance (not just total)
@@ -45,10 +46,8 @@ export default function SellPositionModal({
 
     setStep("APPROVING");
     try {
-      const wallet = wallets[0];
-      const provider = new BrowserProvider(await wallet.getEthereumProvider());
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
+      // 🛡️ Fixed: Removed position.walletAddress to prevent forcing stale/pre-recovery wallets
+      const { signer, address: userAddress } = await getVerifiedSigner();
 
       const tokenContract = new Contract(
         tokenAddress,
@@ -94,9 +93,8 @@ export default function SellPositionModal({
   const handleSubmit = async () => {
     setStep("SIGNING");
     try {
-      const wallet = wallets[0];
-      const provider = new BrowserProvider(await wallet.getEthereumProvider());
-      const signer = await provider.getSigner();
+      // 🛡️ Fixed: Removed position.walletAddress here as well to enforce the synced database wallet
+      const { signer } = await getVerifiedSigner();
 
       // 1. PREPARE: Get Listing ID from Backend
       const res = await fetch(

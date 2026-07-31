@@ -3,16 +3,16 @@ import styles from "./Investor.module.css";
 
 interface ProfileSummaryProps {
   data: {
-    name: string;
-    status: string;
-    availableBalance: number;
-    lockedBalance: number;
-    totalEarned: number;
-    kycExpiry: string;
+    name?: string;
+    status?: string;
+    availableBalance?: number;
+    lockedBalance?: number;
+    totalEarned?: number;
+    kycExpiry?: string;
   };
 }
 
-export const InvestorProfileSummary = ({ data }: ProfileSummaryProps) => (
+export const InvestorProfileSummary = ({ data = {} }: ProfileSummaryProps) => (
   <div className={styles.card} style={{ marginBottom: "1.5rem" }}>
     <div
       style={{
@@ -22,15 +22,15 @@ export const InvestorProfileSummary = ({ data }: ProfileSummaryProps) => (
       }}
     >
       <div>
-        <h2 style={{ margin: "0 0 0.5rem 0" }}>{data.name}</h2>
+        <h2 style={{ margin: "0 0 0.5rem 0" }}>{data?.name || "N/A"}</h2>
         <span
           className={
-            data.status === "Approved"
+            data?.status === "Approved"
               ? styles.pillApproved
               : styles.pillPending
           }
         >
-          {data.status}
+          {data?.status || "Pending"}
         </span>
       </div>
       <div>
@@ -38,7 +38,7 @@ export const InvestorProfileSummary = ({ data }: ProfileSummaryProps) => (
           AVAILABLE BALANCE
         </div>
         <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#059669" }}>
-          {data.availableBalance.toLocaleString()} SAR
+          {Number(data?.availableBalance ?? 0).toLocaleString()} SAR
         </div>
       </div>
       <div>
@@ -46,7 +46,7 @@ export const InvestorProfileSummary = ({ data }: ProfileSummaryProps) => (
           LOCKED / INVESTED
         </div>
         <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>
-          {data.lockedBalance.toLocaleString()} SAR
+          {Number(data?.lockedBalance ?? 0).toLocaleString()} SAR
         </div>
       </div>
       <div>
@@ -54,7 +54,7 @@ export const InvestorProfileSummary = ({ data }: ProfileSummaryProps) => (
           TOTAL EARNED
         </div>
         <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#2563eb" }}>
-          {data.totalEarned.toLocaleString()} SAR
+          {Number(data?.totalEarned ?? 0).toLocaleString()} SAR
         </div>
       </div>
     </div>

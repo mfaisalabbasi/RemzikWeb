@@ -9,10 +9,11 @@ import { BroadcastFeed } from "./components/Dashboard/BroadcastFeed";
 import styles from "./components/Dashboard/Dashbaord.module.css";
 import { SystemCompliance } from "./components/Dashboard/SystemCompliance";
 import { PipelineSnapshot } from "./components/Dashboard/PipelineSnapshot";
-import { DisputeMonitor } from "./components/Dashboard/DisputeMonitor"; //
+import { DisputeMonitor } from "./components/Dashboard/DisputeMonitor";
 import { useEffect, useState } from "react";
 import { getAdminDashboardStats } from "@/app/integrations/api/admin";
 import { DistributionApprovalQueue } from "./components/Dashboard/DistributionApprovalQueue";
+import { RecoveryApprovalQueue } from "../admin/components/Dashboard/RecoveryApprovalQueue"; // New institutional recovery queue
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
@@ -54,7 +55,7 @@ export default function AdminPage() {
 
   return (
     <div className={styles.adminDashboardRoot}>
-      {/* SECTION 1: THE EMPIRE SNAPSHOT - Wrapped to protect the grid */}
+      {/* SECTION 1: THE EMPIRE SNAPSHOT */}
       <div className={styles.statsWrapper}>
         <StatCard
           label="Total AUM"
@@ -82,27 +83,29 @@ export default function AdminPage() {
         />
       </div>
 
-      {/* SECTION 2: OPERATIONAL EXECUTION */}
+      {/* SECTION 2: OPERATIONAL EXECUTION & COMPLIANCE QUEUES */}
       <div className={styles.mainContentSplit}>
         <UrgentQueue />
         <DistributionApprovalQueue />
+        <RecoveryApprovalQueue />{" "}
+        {/* Added Recovery Review & Execution Queue */}
+      </div>
+
+      {/* SECTION 3: RECENT ACTIVITY & ARBITRATION */}
+      <div className={styles.mainContentSplit}>
         <RecentActivity />
-      </div>
-
-      {/* SECTION 3: ARBITRATION (The New Section) */}
-      <div className={styles.mainContentSplit}>
         <DisputeMonitor />
+      </div>
+
+      {/* SECTION 4: SYSTEM COMPLIANCE & TOOLS */}
+      <div className={styles.mainContentSplit}>
         <SystemCompliance />
-      </div>
-
-      {/* SECTION 4: STRATEGIC TOOLS */}
-      <div className={styles.mainContentSplit}>
         <PipelineSnapshot />
-        <LiquidityMonitor />
       </div>
 
-      {/* SECTION 5: FEED */}
+      {/* SECTION 5: LIQUIDITY & BROADCAST FEED */}
       <div className={styles.mainContentSplit}>
+        <LiquidityMonitor />
         <BroadcastFeed />
       </div>
     </div>
