@@ -93,8 +93,7 @@ export default function SellPositionModal({
   const handleSubmit = async () => {
     setStep("SIGNING");
     try {
-      // 🛡️ Fixed: Removed position.walletAddress here as well to enforce the synced database wallet
-      const { signer } = await getVerifiedSigner();
+      const { signer, address: userAddress } = await getVerifiedSigner();
 
       // 1. PREPARE: Get Listing ID from Backend
       const res = await fetch(
@@ -111,20 +110,20 @@ export default function SellPositionModal({
         },
       );
 
-      // Handle custom error messages (e.g., "Insufficient available units")
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Failed to prepare listing.");
       }
       const { listingId } = await res.json();
 
-      // 2. DYNAMIC DECIMALS & CONTRACT CALL
+      // 2. CONTRACT INTERACTION VIA PROXY ADDRESS
       const tokenContract = new Contract(
         tokenAddress,
         ["function decimals() view returns (uint8)"],
         signer,
       );
       const decimals = await tokenContract.decimals().catch(() => 18);
+      const requiredUnits = parseUnits(quantity.toString(), decimals);
 
       const contract = new Contract(
         MARKETPLACE_ADDRESS!,
@@ -132,10 +131,17 @@ export default function SellPositionModal({
         signer,
       );
 
+      // Estimate gas beforehand so any contract reverts surface immediately in console
+      await contract.createListing.estimateGas(
+        listingId,
+        tokenAddress,
+        requiredUnits,
+      );
+
       const tx = await contract.createListing(
         listingId,
         tokenAddress,
-        parseUnits(quantity.toString(), decimals),
+        requiredUnits,
       );
 
       await tx.wait();
@@ -160,7 +166,7 @@ export default function SellPositionModal({
     } catch (err: any) {
       console.error("Submission Error:", err);
       alert(`Transaction Failed: ${err.message}`);
-      setStep("READY"); // Return to ready if signing fails
+      setStep("READY");
     }
   };
 
