@@ -27,6 +27,7 @@ export default function InvestmentPanel({
   const [amountInvested, setAmountInvested] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
+  const [treasuryAddress, setTreasuryAddress] = useState<string | null>(null);
   const [lastInvestmentId, setLastInvestmentId] = useState<string | null>(null);
 
   const { showAlert } = useAlert();
@@ -35,22 +36,35 @@ export default function InvestmentPanel({
   const projectedProfit = (min * (roi / 100) * (tenure / 12)).toFixed(0);
 
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(
+        // 1. Fetch User Balance
+        const balanceRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/wallet/me`,
           {
             credentials: "include",
           },
         );
-        const data = await res.json();
-        setUserBalance(data.availableBalance);
+        const balanceData = await balanceRes.json();
+        setUserBalance(balanceData.availableBalance);
+
+        // 2. Fetch Asset Details (to capture its specific deployment treasuryAddress)
+        const assetRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/assets/${assetId}`,
+          {
+            credentials: "include",
+          },
+        );
+        const assetData = await assetRes.json();
+        if (assetData && assetData.treasuryAddress) {
+          setTreasuryAddress(assetData.treasuryAddress);
+        }
       } catch (err) {
-        console.error("Balance fetch error:", err);
+        console.error("Data fetch error:", err);
       }
     };
-    fetchBalance();
-  }, []);
+    fetchData();
+  }, [assetId]);
 
   // Poll for status using the specific investment ID
   useEffect(() => {
@@ -94,8 +108,16 @@ export default function InvestmentPanel({
     return () => clearInterval(interval);
   }, [isProcessing, lastInvestmentId, showAlert, router]);
 
-  const handleInvestSubmit = async (amount: number) => {
-    if (userBalance !== null && amount > userBalance) {
+  const handleInvestSubmit = async (
+    amount: number,
+    settlementMode: "OFF_CHAIN" | "ON_CHAIN", // ✅ Updated parameter name matching backend DTO
+    txHash?: string,
+  ) => {
+    if (
+      settlementMode === "OFF_CHAIN" &&
+      userBalance !== null &&
+      amount > userBalance
+    ) {
       showAlert("error", "Insufficient funds in your Remzic wallet.");
       return;
     }
@@ -107,7 +129,12 @@ export default function InvestmentPanel({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ assetId, amount }),
+          body: JSON.stringify({
+            assetId,
+            amount,
+            settlementMode, // ✅ Updated property name sent to NestJS backend
+            txHash,
+          }),
           credentials: "include",
         },
       );
@@ -119,10 +146,12 @@ export default function InvestmentPanel({
       setLastInvestmentId(data.id); // Set the ID here to trigger the polling effect
       setShowModal(false);
       setIsProcessing(true);
-      showAlert("info", "Investment submitted. Syncing with blockchain...");
-      setTimeout(() => {
-        router.push("/investor/portfolio");
-      }, 2000);
+      showAlert(
+        "info",
+        settlementMode === "ON_CHAIN"
+          ? "On-chain transaction submitted. Verifying hash..."
+          : "Investment submitted. Syncing with blockchain...",
+      );
     } catch (err: any) {
       showAlert(
         "error",
@@ -262,7 +291,7 @@ export default function InvestmentPanel({
             className={styles.disclaimer}
             style={{ textAlign: "left", margin: 0 }}
           >
-            *Funds are securely locked in the Al-Mizan Vault. SAR{" "}
+            *Funds are securely locked in the Remzik Vault. SAR{" "}
             {min.toLocaleString()} is the fractional token baseline.
           </p>
         </div>
@@ -271,6 +300,7 @@ export default function InvestmentPanel({
       {showModal && (
         <InvestmentModal
           assetId={assetId}
+          treasuryAddress={treasuryAddress || ""}
           min={min}
           max={userBalance || 0}
           onClose={() => setShowModal(false)}

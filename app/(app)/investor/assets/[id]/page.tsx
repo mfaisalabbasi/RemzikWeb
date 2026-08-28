@@ -10,6 +10,7 @@ import AssetTabs from "../../components/assets/detail/AssetTabs";
 import InvestmentPanel from "../../components/assets/detail/InvestmentPanel";
 import TrustSignals from "../../components/assets/detail/TrustSignals";
 import Loading from "../../components/assets/detail/loading";
+import OnChainTelemetryBar from "../../components/assets/detail/OnChainTelemetryBar";
 
 type RiskLevel = "Low" | "Moderate" | "High";
 
@@ -28,9 +29,14 @@ interface ApiAsset {
   overview?: string;
   financials?: string;
   shariah?: string;
-  documents?: any[]; // Updated to any array
+  documents?: any[];
   funded?: number;
   investors?: number;
+  // 👇 Added on-chain telemetry fields from your backend
+  tokenAddress?: string;
+  governanceAddress?: string;
+  treasuryAddress?: string;
+  symbol?: string;
 }
 
 export default function AssetDetailPage() {
@@ -96,6 +102,13 @@ export default function AssetDetailPage() {
         title={uiData.title}
         location={uiData.location}
         image={uiData.image}
+      />
+
+      <OnChainTelemetryBar
+        tokenAddress={asset.tokenAddress}
+        governanceAddress={asset.governanceAddress}
+        treasuryAddress={asset.treasuryAddress}
+        symbol={asset.symbol || "REMZ"}
       />
 
       <div className={styles.metrics}>
