@@ -14,6 +14,44 @@ interface Props {
   onClose: () => void;
 }
 
+// 🛡️ Human-friendly error message translator for asset submission
+const getFriendlyErrorMessage = (rawMessage: string): string => {
+  const msg = rawMessage.toLowerCase();
+
+  if (
+    msg.includes("unauthorized") ||
+    msg.includes("session") ||
+    msg.includes("401")
+  ) {
+    return "Your session has expired. Please log in again to submit an asset.";
+  }
+  if (
+    msg.includes("forbidden") ||
+    msg.includes("role") ||
+    msg.includes("partner") ||
+    msg.includes("403")
+  ) {
+    return "You do not have the required partner permissions to submit assets.";
+  }
+  if (
+    msg.includes("file") ||
+    msg.includes("upload") ||
+    msg.includes("document") ||
+    msg.includes("size")
+  ) {
+    return "There was an issue with one or more uploaded files. Please check the file formats and sizes.";
+  }
+  if (msg.includes("network") || msg.includes("failed to fetch")) {
+    return "Connection error. Please check your internet connection and try again.";
+  }
+  if (msg.includes("server error") || msg.includes("500")) {
+    return "Our servers are experiencing a brief hiccup. Please try again shortly.";
+  }
+
+  // Fallback for custom or raw technical strings
+  return "Asset submission failed. Please check your details and try again.";
+};
+
 export default function SubmitAssetModal({ onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -39,9 +77,24 @@ export default function SubmitAssetModal({ onClose }: Props) {
   };
 
   const onSubmit = async (data: AssetFormData) => {
-    setSubmitting(true);
     setError("");
     setSuccess("");
+
+    // 🛡️ Enforce file upload validation before sending to the backend
+    if (!data.galleryImages || data.galleryImages.length === 0) {
+      setError("Please upload at least one gallery image.");
+      return;
+    }
+    if (!data.legalDocuments || data.legalDocuments.length === 0) {
+      setError("Please upload the required legal documents.");
+      return;
+    }
+    if (!data.financialDocuments || data.financialDocuments.length === 0) {
+      setError("Please upload the required financial documents.");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const formData = new FormData();
@@ -77,7 +130,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
       }
 
       if (!res.ok) {
-        setError(message);
+        setError(getFriendlyErrorMessage(message));
         return;
       }
 
@@ -87,7 +140,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
       }, 1200);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "An unexpected network error occurred");
+      setError(getFriendlyErrorMessage(err.message || ""));
     } finally {
       setSubmitting(false);
     }

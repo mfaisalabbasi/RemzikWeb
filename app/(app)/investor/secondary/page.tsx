@@ -34,6 +34,12 @@ export default function SecondaryMarketPage() {
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
 
   const [selectedSell, setSelectedSell] = useState<MarketPosition | null>(null);
+
+  // 🛡️ State to manage institutional settlement choice popup
+  const [orderToExecute, setOrderToExecute] = useState<ExtendedOrder | null>(
+    null,
+  );
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -174,122 +180,126 @@ export default function SecondaryMarketPage() {
     }
   };
 
-  const handleExecuteTrade = async (listingId: string) => {
+  const handleExecuteTrade = (listingId: string) => {
     const order = orders.find((o) => o.id === listingId);
     if (!order) return;
+    setOrderToExecute(order);
+  };
 
-    const useOnChain = window.confirm(
-      `Do you want to execute this trade ON-CHAIN atomically for ${order.assetTitle}?\n\n(Click Cancel for Off-Chain Escrow mode)`,
-    );
+  const confirmOnChainExecution = async () => {
+    if (!orderToExecute) return;
+    const listingId = orderToExecute.id;
+    const order = orderToExecute;
+    setOrderToExecute(null);
 
     setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      if (useOnChain) {
-        // --- 1. ON-CHAIN ATOMIC EXECUTION FLOW ---
-        const wallet = wallets[0];
-        if (!wallet) throw new Error("No connected wallet found.");
+      const wallet = wallets[0];
+      if (!wallet) throw new Error("No connected wallet found.");
 
-        const provider = new ethers.BrowserProvider(
-          await wallet.getEthereumProvider(),
-        );
-        const signer = await provider.getSigner();
-        const buyerAddress = await signer.getAddress();
+      const provider = new ethers.BrowserProvider(
+        await wallet.getEthereumProvider(),
+      );
+      const signer = await provider.getSigner();
+      const buyerAddress = await signer.getAddress();
 
-        const stablecoinAddress = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
-        const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
+      const stablecoinAddress = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
+      const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 
-        // MockUSDC uses 6 decimals
-        const totalPriceWei = ethers.parseUnits(
-          (order.quantity * order.price).toString(),
-          6,
-        );
+      const totalPriceWei = ethers.parseUnits(
+        (order.quantity * order.price).toString(),
+        6,
+      );
 
-        // Check and Approve MockUSDC allowance if needed
-        const tokenContract = new ethers.Contract(
-          stablecoinAddress!,
-          [
-            "function allowance(address owner, address spender) view returns (uint256)",
-            "function approve(address spender, uint256 amount) external returns (bool)",
-          ],
-          signer,
-        );
+      const tokenContract = new ethers.Contract(
+        stablecoinAddress!,
+        [
+          "function allowance(address owner, address spender) view returns (uint256)",
+          "function approve(address spender, uint256 amount) external returns (bool)",
+        ],
+        signer,
+      );
 
-        const currentAllowance = await tokenContract.allowance(
-          buyerAddress,
+      const currentAllowance = await tokenContract.allowance(
+        buyerAddress,
+        marketplaceAddress,
+      );
+      if (currentAllowance < totalPriceWei) {
+        showAlert("info", "Approving MockUSDC for marketplace settlement...");
+        const approveTx = await tokenContract.approve(
           marketplaceAddress,
-        );
-        if (currentAllowance < totalPriceWei) {
-          showAlert("info", "Approving MockUSDC for marketplace settlement...");
-          const approveTx = await tokenContract.approve(
-            marketplaceAddress,
-            totalPriceWei,
-          );
-          await approveTx.wait();
-        }
-
-        // Call Marketplace contract executeOnChainTrade
-        const marketplaceContract = new ethers.Contract(
-          marketplaceAddress!,
-          [
-            "function executeOnChainTrade(string calldata listingId, address paymentToken, uint256 paymentAmount) external",
-          ],
-          signer,
-        );
-
-        showAlert("info", "Submitting on-chain trade transaction...");
-        const tx = await marketplaceContract.executeOnChainTrade(
-          listingId,
-          stablecoinAddress!,
           totalPriceWei,
         );
-        await tx.wait();
-
-        // FIXED: Robust backend sync with retry loop passing settlementMode and txHash matching TradeController requirements
-        const syncBackendWithRetry = async (retries = 3) => {
-          for (let i = 0; i < retries; i++) {
-            try {
-              const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    settlementMode: "ON_CHAIN",
-                    txHash: tx.hash,
-                  }),
-                  credentials: "include",
-                },
-              );
-              if (res.ok) return true;
-            } catch (netErr) {
-              // Ignore network blip on current iteration and retry
-            }
-            await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
-          }
-          console.warn(
-            "On-chain trade settled, but backend sync database update missed retries.",
-          );
-          return false;
-        };
-
-        await syncBackendWithRetry();
-        setSuccessMessage("On-chain atomic trade settled successfully!");
-      } else {
-        // --- 2. EXISTING OFF-CHAIN ESCROW FLOW ---
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ settlementMode: "OFF_CHAIN" }),
-            credentials: "include",
-          },
-        );
-        if (!res.ok) throw new Error("Trade intent failed");
-
-        setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
+        await approveTx.wait();
       }
 
+      const marketplaceContract = new ethers.Contract(
+        marketplaceAddress!,
+        [
+          "function executeOnChainTrade(string calldata listingId, address paymentToken, uint256 paymentAmount) external",
+        ],
+        signer,
+      );
+
+      showAlert("info", "Submitting on-chain trade transaction...");
+      const tx = await marketplaceContract.executeOnChainTrade(
+        listingId,
+        stablecoinAddress!,
+        totalPriceWei,
+      );
+      await tx.wait();
+
+      const syncBackendWithRetry = async (retries = 3) => {
+        for (let i = 0; i < retries; i++) {
+          try {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  settlementMode: "ON_CHAIN",
+                  txHash: tx.hash,
+                }),
+                credentials: "include",
+              },
+            );
+            if (res.ok) return true;
+          } catch (netErr) {}
+          await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+        }
+        return false;
+      };
+
+      await syncBackendWithRetry();
+      setSuccessMessage("On-chain atomic trade settled successfully!");
+      await fetchMarketData();
+    } catch (err: any) {
+      showAlert("error", err.message);
+    } finally {
+      setLoadingIds((prev) => ({ ...prev, [listingId]: false }));
+    }
+  };
+
+  const confirmOffChainExecution = async () => {
+    if (!orderToExecute) return;
+    const listingId = orderToExecute.id;
+    setOrderToExecute(null);
+
+    setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ settlementMode: "OFF_CHAIN" }),
+          credentials: "include",
+        },
+      );
+      if (!res.ok) throw new Error("Trade intent failed");
+
+      setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
       await fetchMarketData();
     } catch (err: any) {
       showAlert("error", err.message);
@@ -491,6 +501,165 @@ export default function SecondaryMarketPage() {
           </div>
         </section>
       </main>
+
+      {/* 🛡️ Institutional-Grade Opaque Modal Backdrop & Container */}
+      {orderToExecute && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(5, 5, 8, 0.85)",
+            backdropFilter: "blur(8px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#12131a",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
+              borderRadius: "16px",
+              padding: "2rem",
+              width: "100%",
+              maxWidth: "440px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+            }}
+          >
+            <h3
+              style={{
+                color: "#ffffff",
+                fontSize: "1.25rem",
+                fontWeight: 600,
+                marginBottom: "0.5rem",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Select Settlement Routing
+            </h3>
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.875rem",
+                marginBottom: "1.75rem",
+                lineHeight: "1.5",
+              }}
+            >
+              Choose execution layer for acquiring shares of{" "}
+              <strong style={{ color: "#f8fafc" }}>
+                {orderToExecute.assetTitle}
+              </strong>
+              .
+            </p>
+
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <button
+                onClick={confirmOnChainExecution}
+                style={{
+                  backgroundColor: "#d4af37",
+                  color: "#0a0a0f",
+                  fontWeight: 600,
+                  padding: "14px 16px",
+                  borderRadius: "10px",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)",
+                }}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#e6be3e")
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#d4af37")
+                }
+              >
+                <span style={{ fontSize: "0.95rem" }}>
+                  ⚡ On-Chain Atomic Settlement
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    backgroundColor: "rgba(0,0,0,0.15)",
+                    padding: "3px 6px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  Trustless
+                </span>
+              </button>
+
+              <button
+                onClick={confirmOffChainExecution}
+                style={{
+                  backgroundColor: "#1e2029",
+                  color: "#f8fafc",
+                  fontWeight: 500,
+                  padding: "14px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#262936")
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#1e2029")
+                }
+              >
+                <span style={{ fontSize: "0.95rem" }}>
+                  🛡️ Off-Chain Escrow Vault
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#94a3b8",
+                  }}
+                >
+                  Managed
+                </span>
+              </button>
+
+              <button
+                onClick={() => setOrderToExecute(null)}
+                style={{
+                  backgroundColor: "transparent",
+                  color: "#64748b",
+                  fontWeight: 500,
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                  marginTop: "6px",
+                  fontSize: "0.875rem",
+                  transition: "color 0.2s ease",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "#cbd5e1")}
+                onMouseOut={(e) => (e.currentTarget.style.color = "#64748b")}
+              >
+                Cancel / Return to Order Book
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedSell && (
         <SellPositionModal

@@ -15,6 +15,36 @@ interface KYCProps {
   onComplete?: () => void;
 }
 
+// 🛡️ Human-friendly error message translator for KYC submission
+const getFriendlyErrorMessage = (rawMessage: string): string => {
+  const msg = rawMessage.toLowerCase();
+
+  if (
+    msg.includes("file") ||
+    msg.includes("upload") ||
+    msg.includes("document") ||
+    msg.includes("size")
+  ) {
+    return "There was an issue uploading your verification files. Please make sure they are valid image or PDF formats under the required size limit.";
+  }
+  if (
+    msg.includes("unauthorized") ||
+    msg.includes("session") ||
+    msg.includes("401")
+  ) {
+    return "Your session has expired. Please log in again to submit your verification.";
+  }
+  if (msg.includes("network") || msg.includes("failed to fetch")) {
+    return "Connection error. Please check your internet connection and try again.";
+  }
+  if (msg.includes("server error") || msg.includes("500")) {
+    return "Our servers are experiencing a brief hiccup. Please try again shortly.";
+  }
+
+  // Fallback for general or technical strings
+  return "KYC verification submission failed. Please check your details and try again.";
+};
+
 export default function KYCPage({ role, onComplete }: KYCProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -91,7 +121,7 @@ export default function KYCPage({ role, onComplete }: KYCProps) {
       router.refresh();
     } catch (err: any) {
       console.error("KYC submission failed:", err);
-      setServerError(err.message || "Unexpected server error");
+      setServerError(getFriendlyErrorMessage(err.message || ""));
     } finally {
       setSubmitting(false);
     }

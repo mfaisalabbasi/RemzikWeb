@@ -23,7 +23,6 @@ const fetcher = async (path: string) => {
  */
 
 export const getWalletData = async () => {
-  // Uses the specific timestamp logic you shared to bypass cache
   const res = await fetch(`${API_URL}/wallet/me?t=${Date.now()}`, {
     method: "GET",
     credentials: "include",
@@ -34,7 +33,14 @@ export const getWalletData = async () => {
     },
   });
 
-  if (!res.ok) throw new Error("Failed to fetch wallet summary");
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(`Backend wallet error [${res.status}]:`, errorText);
+    throw new Error(
+      `Failed to fetch wallet summary (${res.status}): ${errorText}`,
+    );
+  }
+
   return res.json();
 };
 

@@ -15,9 +15,9 @@ export const DistributionApprovalQueue = () => {
   const loadBatches = async () => {
     try {
       const data = await getPendingBatches();
-      setBatches(data);
+      setBatches(data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load distribution batches:", err);
     } finally {
       setLoading(false);
     }
@@ -28,9 +28,19 @@ export const DistributionApprovalQueue = () => {
   }, []);
 
   const handleApprove = async (batchId: string) => {
-    if (!confirm("Confirm payout to all investors?")) return;
-    await approveDistribution(batchId);
-    loadBatches();
+    if (
+      !confirm(
+        "Confirm and execute payout (Off-Chain & On-Chain Merkle root anchoring)?",
+      )
+    )
+      return;
+    try {
+      await approveDistribution(batchId);
+      loadBatches();
+    } catch (error) {
+      console.error("Approval failed:", error);
+      alert("Failed to process distribution batch.");
+    }
   };
 
   if (loading)
@@ -64,7 +74,6 @@ export const DistributionApprovalQueue = () => {
 
       <div className={styles.scrollArea}>
         {batches.length > 0 ? (
-          // Added 'index' as the second parameter in the map function
           batches.map((batch: any, index: number) => (
             <div
               key={`${batch.batchId}-${index}`}
@@ -87,7 +96,10 @@ export const DistributionApprovalQueue = () => {
                   {batch.assetTitle || "Jeddah Tower"}
                 </p>
                 <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-                  {batch.investorCount} Recipients • {batch.period}
+                  {batch.investorCount} Recipients •{" "}
+                  {batch.period
+                    ? new Date(batch.period).toLocaleDateString()
+                    : "Recent Cycle"}
                 </span>
               </div>
               <div style={{ textAlign: "right", marginRight: "12px" }}>
@@ -99,7 +111,7 @@ export const DistributionApprovalQueue = () => {
                     color: "#0f172a",
                   }}
                 >
-                  SAR {Number(batch.totalAmount).toLocaleString()}
+                  SAR {Number(batch.totalAmount || 0).toLocaleString()}
                 </p>
               </div>
               <button

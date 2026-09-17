@@ -110,7 +110,7 @@ export default function InvestmentPanel({
 
   const handleInvestSubmit = async (
     amount: number,
-    settlementMode: "OFF_CHAIN" | "ON_CHAIN", // ✅ Updated parameter name matching backend DTO
+    settlementMode: "OFF_CHAIN" | "ON_CHAIN",
     txHash?: string,
   ) => {
     if (
@@ -132,7 +132,7 @@ export default function InvestmentPanel({
           body: JSON.stringify({
             assetId,
             amount,
-            settlementMode, // ✅ Updated property name sent to NestJS backend
+            settlementMode,
             txHash,
           }),
           credentials: "include",
@@ -143,22 +143,28 @@ export default function InvestmentPanel({
       if (!response.ok) throw new Error(data.message || "Investment failed");
 
       setAmountInvested(amount);
-      setLastInvestmentId(data.id); // Set the ID here to trigger the polling effect
+      setLastInvestmentId(data.id);
       setShowModal(false);
-      setIsProcessing(true);
+      setLoading(false);
+
+      // ✅ Option A: Immediate visual success trigger & push
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/investor/portfolio");
+      }, 1500);
+
       showAlert(
         "info",
         settlementMode === "ON_CHAIN"
           ? "On-chain transaction submitted. Verifying hash..."
-          : "Investment submitted. Syncing with blockchain...",
+          : "Investment submitted. Redirecting to portfolio...",
       );
     } catch (err: any) {
+      setLoading(false);
       showAlert(
         "error",
         err.message || "Transaction failed. Please try again.",
       );
-    } finally {
-      setLoading(false);
     }
   };
 

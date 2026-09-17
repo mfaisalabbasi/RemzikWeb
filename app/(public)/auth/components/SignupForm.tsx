@@ -17,6 +17,40 @@ type AuthFormData = z.infer<typeof signupSchema>;
 type KYCFormData = z.infer<typeof kycSchema>;
 type Role = "INVESTOR" | "PARTNER" | null;
 
+// 🛡️ Human-friendly error message translator for registration and KYC
+const getFriendlyErrorMessage = (rawMessage: string): string => {
+  const msg = rawMessage.toLowerCase();
+
+  if (
+    msg.includes("email") &&
+    (msg.includes("exist") || msg.includes("already"))
+  ) {
+    return "An account with this email address already exists. Please try logging in instead.";
+  }
+  if (
+    msg.includes("phone") &&
+    (msg.includes("exist") || msg.includes("already"))
+  ) {
+    return "This phone number is already registered to another account.";
+  }
+  if (
+    msg.includes("file") ||
+    msg.includes("upload") ||
+    msg.includes("document")
+  ) {
+    return "There was an issue uploading your verification documents. Please ensure they are valid images or PDFs under the size limit.";
+  }
+  if (msg.includes("network") || msg.includes("failed to fetch")) {
+    return "Connection error. Please check your internet connection and try again.";
+  }
+  if (msg.includes("server error") || msg.includes("500")) {
+    return "Our servers are experiencing a brief hiccup. Please try again shortly.";
+  }
+
+  // Fallback for unexpected or raw technical strings
+  return "Registration or verification failed. Please check your details and try again.";
+};
+
 export default function SignupForm() {
   const router = useRouter();
 
@@ -112,7 +146,7 @@ export default function SignupForm() {
       }, 2000);
     } catch (err: any) {
       console.error("Signup/KYC Error:", err);
-      setError(err.message || "Server error. Please try again later.");
+      setError(getFriendlyErrorMessage(err.message || ""));
     } finally {
       setIsSubmitting(false);
     }

@@ -15,6 +15,34 @@ import Alert from "../../../integrations/Alert/Alert";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+// 🛡️ Human-friendly error message translator
+const getFriendlyErrorMessage = (rawMessage: string): string => {
+  const msg = rawMessage.toLowerCase();
+
+  if (
+    msg.includes("unauthorized") ||
+    msg.includes("invalid credentials") ||
+    msg.includes("401")
+  ) {
+    return "Invalid credentials. Please check and try again.";
+  }
+  if (msg.includes("not found") || msg.includes("404")) {
+    return "We couldn't find an account matching that email address.";
+  }
+  if (msg.includes("network") || msg.includes("failed to fetch")) {
+    return "Connection error. Please check your internet connection and try again.";
+  }
+  if (msg.includes("too many requests") || msg.includes("429")) {
+    return "Too many login attempts. Please wait a moment before trying again.";
+  }
+  if (msg.includes("server error") || msg.includes("500")) {
+    return "Our servers are experiencing a brief hiccup. Please try again shortly.";
+  }
+
+  // Fallback if it's already a clean string or unknown technical error
+  return "An unexpected error occurred during login. Please try again.";
+};
+
 export default function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -67,7 +95,7 @@ export default function LoginForm() {
       setSuccess("Login successful");
     } catch (err: any) {
       console.error("Login error:", err.message);
-      setError(err.message || "Authentication failed");
+      setError(getFriendlyErrorMessage(err.message || ""));
     } finally {
       setIsSubmitting(false);
     }
