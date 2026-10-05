@@ -8,19 +8,18 @@ import { Wallet, Cpu, Loader2 } from "lucide-react";
 
 interface ModalProps {
   assetId: string;
-  treasuryAddress: string;
   min: number;
-  max: number; // Max balance / allowance
+  max: number;
   onClose: () => void;
   onConfirm: (
     amount: number,
-    settlementMode: "OFF_CHAIN" | "ON_CHAIN", // ✅ Updated to match backend DTO
-    txHash?: string,
+    settlementMode: "OFF_CHAIN" | "ON_CHAIN",
+    investmentId?: string,
   ) => void;
 }
 
 export default function InvestmentModal({
-  treasuryAddress,
+  assetId,
   min,
   max,
   onClose,
@@ -39,90 +38,129 @@ export default function InvestmentModal({
 
   const handleAction = async () => {
     setErrorMsg(null);
+    setIsProcessing(true);
 
-    if (settlementMode === "ON_CHAIN") {
-      try {
-        setIsProcessing(true);
+    try {
+      if (settlementMode === "ON_CHAIN") {
+        // 1. Create Investment Intent on backend for ON_CHAIN
+        const intentRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/investments/intent`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              assetId,
+              amount,
+              settlementMode: "ON_CHAIN",
+            }),
+            credentials: "include",
+          },
+        );
+
+        const intentData = await intentRes.json();
+        if (!intentRes.ok)
+          throw new Error(
+            intentData.message || "Failed to create investment intent",
+          );
+
+        const investmentId = intentData.investmentId || intentData.id;
 
         const wallet = wallets[0];
         if (!wallet) {
-          throw new Error(
-            "No connected wallet found via Privy. Please connect a wallet.",
-          );
+          throw new Error("No connected wallet found via Privy.");
         }
 
-        // Check if provider can reach the network
         const provider = new ethers.BrowserProvider(
           await wallet.getEthereumProvider(),
         );
-
-        // Test connection first
-        try {
-          await provider.getBlockNumber();
-        } catch (e) {
-          throw new Error(
-            "Cannot connect to blockchain network. Is your local node (Hardhat) running?",
-          );
-        }
-
         const signer = await provider.getSigner();
 
-        if (!treasuryAddress) {
-          throw new Error(
-            "Invalid or missing Treasury Vault address for this asset.",
-          );
+        // 2. Execute ERC-20 Token Approval transaction first if provided by backend
+        if (
+          intentData.approvalPayload &&
+          intentData.approvalPayload.to &&
+          intentData.approvalPayload.data
+        ) {
+          const approvalTx = await signer.sendTransaction({
+            to: intentData.approvalPayload.to,
+            data: intentData.approvalPayload.data,
+            value: 0n,
+          });
+          // Wait for the approval transaction to clear on-chain
+          await provider.waitForTransaction(approvalTx.hash);
         }
 
-        // Use the whitelisted stablecoin contract address from environment variables
-        const acceptedStablecoinAddress =
-          "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        // 3. Extract vault address & calldata from backend's txPayload structure
+        const vaultAddress =
+          intentData.txPayload?.to ||
+          intentData.expectedVaultAddress ||
+          intentData.vaultAddress ||
+          intentData.to;
 
-        // Use 6 decimals matching the MockUSDC standard
-        const parsedAmount = ethers.parseUnits(amount.toString(), 6);
+        const calldata =
+          intentData.txPayload?.data ||
+          intentData.expectedCalldata ||
+          intentData.calldata ||
+          intentData.data;
 
-        // 1. APPROVE STEP: Grant allowance to the Treasury Vault contract first
-        const erc20Abi = [
-          "function approve(address spender, uint256 value) external returns (bool)",
-        ];
-        const stablecoinContract = new ethers.Contract(
-          acceptedStablecoinAddress,
-          erc20Abi,
-          signer,
+        if (!vaultAddress || !calldata) {
+          console.error("Received Intent Data from server:", intentData);
+          throw new Error("Invalid intent configuration received from server.");
+        }
+
+        // 4. Execute Vault Deposit Transaction via Privy using backend intent calldata
+        const tx = await signer.sendTransaction({
+          to: vaultAddress,
+          data: calldata,
+          value: 0n,
+        });
+
+        // 5. Submit Transaction Hash back to backend for verification
+        const submitRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/investments/${investmentId}/submit-tx`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ txHash: tx.hash }),
+            credentials: "include",
+          },
         );
 
-        const approveTx = await stablecoinContract.approve(
-          treasuryAddress,
-          parsedAmount,
-        );
-        await approveTx.wait();
-
-        // 2. DEPOSIT STEP: Call the vault deposit function after successful approval
-        const vaultAbi = [
-          "function deposit(address stablecoin, uint256 amount) external",
-        ];
-        const vaultContract = new ethers.Contract(
-          treasuryAddress,
-          vaultAbi,
-          signer,
-        );
-
-        const tx = await vaultContract.deposit(
-          acceptedStablecoinAddress,
-          parsedAmount,
-        );
+        if (!submitRes.ok) {
+          throw new Error("Transaction verification submission failed.");
+        }
 
         setIsProcessing(false);
-        onConfirm(amount, "ON_CHAIN", tx.hash);
-      } catch (err: any) {
-        setIsProcessing(false);
-        setErrorMsg(
-          err?.reason ||
-            err?.message ||
-            "Privy transaction popup failed or was rejected.",
+        onConfirm(amount, "ON_CHAIN", investmentId);
+      } else {
+        // OFF_CHAIN / Internal Wallet Route: directly call investment creation without intent endpoint
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/investments`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              assetId,
+              amount,
+              settlementMode: "OFF_CHAIN",
+            }),
+            credentials: "include",
+          },
         );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Investment failed");
+
+        setIsProcessing(false);
+        onConfirm(amount, "OFF_CHAIN", data.id);
       }
-    } else {
-      onConfirm(amount, "OFF_CHAIN");
+    } catch (err: any) {
+      setIsProcessing(false);
+      setErrorMsg(
+        err?.reason ||
+          err?.message ||
+          "Privy transaction popup failed or was rejected.",
+      );
     }
   };
 

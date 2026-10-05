@@ -128,7 +128,7 @@ export default function SignupForm() {
 
       // Using a unified endpoint for Atomic Transaction
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register-with-kyc`,
+        `${process.env.NEXT_PUBLIC_API_URL}/users/register-with-kyc`,
         {
           method: "POST",
           body: formData,

@@ -1,113 +1,9 @@
-// "use client";
-
-// import React, { useEffect, useState } from "react";
-// import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
-// import api from "@/app/integrations/lib/axios";
-
-// /**
-//  * Internal Sync Engine that links Privy to your custom NestJS session state
-//  * and anchors the resulting cryptographic wallet directly to Postgres.
-//  */
-// function WalletSyncEngine({ children }: { children: React.ReactNode }) {
-//   const { ready, authenticated } = usePrivy();
-//   const { wallets } = useWallets();
-//   const [isSyncing, setIsSyncing] = useState(false);
-
-//   useEffect(() => {
-//     async function syncWalletToDatabase() {
-//       // Once Privy syncs with your custom token and provisions a wallet, anchor it
-//       if (ready && authenticated && wallets.length > 0 && !isSyncing) {
-//         const activeWallet = wallets[0];
-//         const walletAddress = activeWallet.address;
-
-//         // OPTIMIZATION: Make the caching key user-specific by binding it to the active wallet address context.
-//         // This prevents profile cross-contamination if switching roles during testing.
-//         const cacheKey = `remzik_synced_wallet_${walletAddress.toLowerCase()}`;
-//         const isAlreadySynced = localStorage.getItem(cacheKey);
-
-//         if (isAlreadySynced === "true") return;
-
-//         try {
-//           setIsSyncing(true);
-//           console.log(
-//             "🚀 [Web3 Bridge] Anchoring invisible wallet address to backend profile:",
-//             walletAddress,
-//           );
-
-//           // Hits your NestJS wallet storage engine
-//           await api.post("/auth/sync-wallet", { walletAddress });
-
-//           localStorage.setItem(cacheKey, "true");
-//           console.log(
-//             "✅ [Web3 Bridge] Wallet successfully anchored to user record.",
-//           );
-//         } catch (error) {
-//           console.error(
-//             "❌ [Web3 Bridge] Error executing wallet background synchronization:",
-//             error,
-//           );
-//         } finally {
-//           setIsSyncing(false);
-//         }
-//       }
-//     }
-
-//     syncWalletToDatabase();
-//   }, [ready, authenticated, wallets, isSyncing]);
-
-//   return <>{children}</>;
-// }
-
-// export function PrivyDashboardWrapper({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   // Callback function Privy uses natively to pull your NestJS custom token
-//   async function fetchCustomToken(): Promise<string | undefined> {
-//     try {
-//       const res = await api.get("/auth/privy-token");
-//       return res.data?.privyCustomToken || undefined;
-//     } catch (err) {
-//       console.error(
-//         "❌ [Web3 Bridge] Custom Privy identity extraction bypassed:",
-//         err,
-//       );
-//       return undefined;
-//     }
-//   }
-
-//   return (
-//     <PrivyProvider
-//       appId={
-//         process.env.NEXT_PUBLIC_PRIVY_APP_ID || "clpispdty00ycl80fpueukbhl"
-//       }
-//       config={{
-//         embeddedWallets: {
-//           ethereum: {
-//             createOnLogin: "users-without-wallets",
-//           },
-//         },
-//         // Pass the explicit configuration flags to cleanly satisfy Privy's strict type schema
-//         customAuth: {
-//           enabled: true,
-//           isLoading: false,
-//           getCustomAccessToken: fetchCustomToken,
-//         },
-//       }}
-//     >
-//       <WalletSyncEngine>{children}</WalletSyncEngine>
-//     </PrivyProvider>
-//   );
-// }
-
-//New local blockchain connection for testing purposes, not to be used in production
-
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
 import { Chain } from "viem";
+import { polygonAmoy } from "viem/chains";
 import api from "@/app/integrations/lib/axios";
 
 /**
@@ -128,53 +24,64 @@ const hardhatLocal: Chain = {
  * and anchors the resulting cryptographic wallet directly to Postgres.
  */
 function WalletSyncEngine({ children }: { children: React.ReactNode }) {
-  const { ready, authenticated, user } = usePrivy(); // 👈 1. Pull 'user' from Privy
+  const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    async function syncWalletToDatabase() {
-      if (ready && authenticated && wallets.length > 0 && !isSyncing) {
-        const activeWallet = wallets[0];
-        const walletAddress = activeWallet.address;
-        const privyUserId = user?.id; // 👈 2. Extract the true global Privy DID
+    if (!ready || !authenticated || !user?.id || wallets.length === 0) {
+      return;
+    }
 
-        const cacheKey = `remzik_synced_wallet_${walletAddress.toLowerCase()}`;
-        const isAlreadySynced = localStorage.getItem(cacheKey);
+    const activeWallet = wallets[0];
 
-        if (isAlreadySynced === "true") return;
+    if (!activeWallet?.address || isSyncing) {
+      return;
+    }
 
-        try {
-          setIsSyncing(true);
+    let cancelled = false;
+
+    const sync = async () => {
+      try {
+        setIsSyncing(true);
+
+        await api.post(
+          "/auth/sync-wallet",
+          {
+            walletAddress: activeWallet.address,
+            privyUserId: user.id,
+          },
+          {
+            withCredentials: true,
+          },
+        );
+
+        if (!cancelled) {
           console.log(
-            "🚀 [Web3 Bridge] Anchoring wallet & Privy ID to backend profile:",
-            walletAddress,
-            privyUserId,
+            "✅ [Web3 Bridge] Privy wallet synchronized:",
+            activeWallet.address,
           );
-
-          // 3. Send both fields to match your updated backend DTO
-          await api.post("/auth/sync-wallet", {
-            walletAddress,
-            privyUserId,
-          });
-
-          localStorage.setItem(cacheKey, "true");
-          console.log(
-            "✅ [Web3 Bridge] Wallet and identity anchored successfully.",
-          );
-        } catch (error) {
+        }
+      } catch (error) {
+        if (!cancelled) {
           console.error(
-            "❌ [Web3 Bridge] Error executing wallet background synchronization:",
+            "❌ [Web3 Bridge] Wallet synchronization failed:",
             error,
           );
-        } finally {
+        }
+      } finally {
+        if (!cancelled) {
           setIsSyncing(false);
         }
       }
-    }
+    };
 
-    syncWalletToDatabase();
-  }, [ready, authenticated, wallets, isSyncing, user]); // 👈 Add user to dependency array
+    sync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, authenticated, user?.id, wallets, isSyncing]);
 
   return <>{children}</>;
 }
@@ -197,19 +104,36 @@ export function PrivyDashboardWrapper({
     }
   }
 
+  // 🛡️ Automatically pick the default chain based on your environment variables
+  const targetChainId = Number(
+    process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 80002,
+  );
+  const isLocalEnv =
+    process.env.NEXT_PUBLIC_USE_LOCAL_CHAIN === "true" ||
+    targetChainId === 31337;
+
+  const activeDefaultChain = isLocalEnv ? hardhatLocal : polygonAmoy;
+
   return (
     <PrivyProvider
       appId={
-        process.env.NEXT_PUBLIC_PRIVY_APP_ID || "clpispdty00ycl80fpueukbhl"
+        process.env.NEXT_PUBLIC_PRIVY_APP_ID || "cmphkt3un00gr0ejug58m3k7o"
       }
       config={{
+        appearance: {
+          theme: "dark", // 👈 Forces Privy modals into dark mode
+          accentColor: "#34D399", // 👈 Matches your emerald-400 theme
+          logo: undefined,
+        },
         embeddedWallets: {
           ethereum: {
             createOnLogin: "users-without-wallets",
           },
         },
-        defaultChain: hardhatLocal,
-        supportedChains: [hardhatLocal],
+        // Dynamically configures the default network based on your env setup
+        defaultChain: activeDefaultChain,
+        // Explicitly supports both Polygon Amoy (80002) and Hardhat (31337) to prevent runtime mismatch errors
+        supportedChains: [polygonAmoy, hardhatLocal],
         customAuth: {
           enabled: true,
           isLoading: false,

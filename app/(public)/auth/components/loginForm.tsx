@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { loginSchema } from "../../../integrations/validation/auth.schema";
 import { login, AuthLoginResponse } from "../../../integrations/api/auth";
+import { loginSchema } from "../../../integrations/validation/auth.schema";
 
 import { z } from "zod";
 import styles from "../styles/Auth.module.css";
@@ -15,7 +15,6 @@ import Alert from "../../../integrations/Alert/Alert";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-// 🛡️ Human-friendly error message translator
 const getFriendlyErrorMessage = (rawMessage: string): string => {
   const msg = rawMessage.toLowerCase();
 
@@ -26,29 +25,153 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
   ) {
     return "Invalid credentials. Please check and try again.";
   }
+
   if (msg.includes("not found") || msg.includes("404")) {
     return "We couldn't find an account matching that email address.";
   }
+
   if (msg.includes("network") || msg.includes("failed to fetch")) {
     return "Connection error. Please check your internet connection and try again.";
   }
+
   if (msg.includes("too many requests") || msg.includes("429")) {
     return "Too many login attempts. Please wait a moment before trying again.";
   }
+
   if (msg.includes("server error") || msg.includes("500")) {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
 
-  // Fallback if it's already a clean string or unknown technical error
   return "An unexpected error occurred during login. Please try again.";
 };
 
-export default function LoginForm() {
-  const router = useRouter();
+const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
+  if (!rawCallbackUrl) return null;
+
+  try {
+    // Decode recursively to handle double-encoding from WebViews/Next.js router
+    let decoded = rawCallbackUrl;
+    for (let i = 0; i < 2; i++) {
+      if (decoded.includes("%")) {
+        decoded = decodeURIComponent(decoded);
+      }
+    }
+
+    /**
+     * Only allow same-origin relative paths or absolute paths containing your domain/routes.
+     */
+    if (
+      (!decoded.startsWith("/") && !decoded.startsWith("http")) ||
+      (decoded.includes("//") && !decoded.includes(window.location.host)) ||
+      decoded.includes("\\") ||
+      decoded.includes("\r") ||
+      decoded.includes("\n")
+    ) {
+      // If it's a relative path starting with slash after decoding, accept it
+      if (decoded.startsWith("/")) {
+        return decoded;
+      }
+      return null;
+    }
+
+    // If it's a full URL, ensure it's same-origin
+    if (decoded.startsWith("http")) {
+      const url = new URL(decoded);
+      if (url.origin === window.location.origin) {
+        return url.pathname + url.search;
+      }
+      return null;
+    }
+
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
+function LoginFormContent() {
+  const searchParams = useSearchParams();
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * ---------------------------------------------------------
+   * Callback URL Resolution with Session Storage Fallback
+   * ---------------------------------------------------------
+   */
+  const getCallbackUrl = (): string | null => {
+    if (typeof window === "undefined") return null;
+
+    const fromHook = searchParams.get("callbackUrl");
+    if (fromHook) return fromHook;
+
+    const params = new URLSearchParams(window.location.search);
+    const cb = params.get("callbackUrl");
+    if (cb) return cb;
+
+    // Fallback to session storage if query param was dropped during navigation
+    return sessionStorage.getItem("persisted_callback_url");
+  };
+
+  /**
+   * ---------------------------------------------------------
+   * Preserve callback URL and investment context safely.
+   * ---------------------------------------------------------
+   */
+  useEffect(() => {
+    const rawCallback = getCallbackUrl();
+
+    if (!rawCallback) return;
+
+    try {
+      sessionStorage.setItem("persisted_callback_url", rawCallback);
+
+      const decodedUrl = decodeURIComponent(rawCallback);
+      const queryPart = decodedUrl.split("?")[1];
+
+      if (!queryPart) return;
+
+      const urlParams = new URLSearchParams(queryPart);
+      const walletAddressParam = urlParams.get("walletAddress");
+      const investmentIdParam = urlParams.get("investmentId");
+
+      if (typeof window !== "undefined") {
+        if (walletAddressParam) {
+          const cleanWallet = walletAddressParam.replace(/["']/g, "").trim();
+
+          if (/^0x[a-fA-F0-9]{40}$/.test(cleanWallet)) {
+            sessionStorage.setItem(
+              "target_wallet_address",
+              cleanWallet.toLowerCase(),
+            );
+            sessionStorage.setItem(
+              "cached_walletAddress",
+              cleanWallet.toLowerCase(),
+            );
+          }
+        }
+
+        if (investmentIdParam) {
+          const cleanInvestment = investmentIdParam.replace(/["']/g, "").trim();
+
+          if (/^[0-9a-fA-F-]{36}$/.test(cleanInvestment)) {
+            sessionStorage.setItem("active_investment_id", cleanInvestment);
+            sessionStorage.setItem("cached_investmentId", cleanInvestment);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to parse callback context:", err);
+    }
+  }, [searchParams]);
+
+  /**
+   * ---------------------------------------------------------
+   * Form
+   * ---------------------------------------------------------
+   */
   const {
     register,
     handleSubmit,
@@ -57,6 +180,11 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  /**
+   * ---------------------------------------------------------
+   * Login Submission & WebView Redirection Handler
+   * ---------------------------------------------------------
+   */
   const onSubmit = async (data: LoginFormData) => {
     setError("");
     setSuccess("");
@@ -65,38 +193,54 @@ export default function LoginForm() {
     try {
       const response: AuthLoginResponse = await login(data);
 
-      console.log("Backend login response:", response);
-
-      const user = response.user;
+      const user = response?.user;
 
       if (!user || !user.role) {
         setError("Invalid server response. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const rawCallbackUrl = getCallbackUrl();
+      const callbackUrl = getSafeCallbackUrl(rawCallbackUrl);
+
+      setSuccess("Login successful");
+
+      // Set cookie and webview authentication flags immediately
+      sessionStorage.setItem("webview_authenticated", "true");
+      if (callbackUrl) {
+        sessionStorage.setItem("persisted_callback_url", callbackUrl);
+      }
+
+      // Allow a brief moment for HTTP-only cookies to commit inside the WebView
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      if (callbackUrl) {
+        // Use replace to prevent the user from hitting back into the login screen
+        window.location.replace(callbackUrl);
         return;
       }
 
       switch (user.role) {
         case "INVESTOR":
-          router.push("/investor");
+          window.location.replace("/investor");
           break;
 
         case "PARTNER":
-          router.push("/partner");
+          window.location.replace("/partner");
           break;
 
         case "ADMIN":
-          router.push("/admin");
+          window.location.replace("/admin");
           break;
 
         default:
           setError("Unknown user role. Contact support.");
-          return;
+          setIsSubmitting(false);
       }
-
-      setSuccess("Login successful");
     } catch (err: any) {
-      console.error("Login error:", err.message);
-      setError(getFriendlyErrorMessage(err.message || ""));
-    } finally {
+      console.error("Login error:", err?.message || err);
+      setError(getFriendlyErrorMessage(err?.message || ""));
       setIsSubmitting(false);
     }
   };
@@ -129,6 +273,8 @@ export default function LoginForm() {
               type="email"
               placeholder="name@email.com"
               className={styles.fieldInput}
+              autoComplete="email"
+              disabled={isSubmitting}
             />
             {errors.email && (
               <span className={styles.error}>{errors.email.message}</span>
@@ -142,6 +288,8 @@ export default function LoginForm() {
               type="password"
               placeholder="Enter password"
               className={styles.fieldInput}
+              autoComplete="current-password"
+              disabled={isSubmitting}
             />
             {errors.password && (
               <span className={styles.error}>{errors.password.message}</span>
@@ -166,4 +314,8 @@ export default function LoginForm() {
       </div>
     </section>
   );
+}
+
+export default function LoginForm() {
+  return <LoginFormContent />;
 }

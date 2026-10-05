@@ -27,7 +27,6 @@ export default function InvestmentPanel({
   const [amountInvested, setAmountInvested] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
-  const [treasuryAddress, setTreasuryAddress] = useState<string | null>(null);
   const [lastInvestmentId, setLastInvestmentId] = useState<string | null>(null);
 
   const { showAlert } = useAlert();
@@ -38,7 +37,6 @@ export default function InvestmentPanel({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch User Balance
         const balanceRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/wallet/me`,
           {
@@ -47,18 +45,6 @@ export default function InvestmentPanel({
         );
         const balanceData = await balanceRes.json();
         setUserBalance(balanceData.availableBalance);
-
-        // 2. Fetch Asset Details (to capture its specific deployment treasuryAddress)
-        const assetRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/assets/${assetId}`,
-          {
-            credentials: "include",
-          },
-        );
-        const assetData = await assetRes.json();
-        if (assetData && assetData.treasuryAddress) {
-          setTreasuryAddress(assetData.treasuryAddress);
-        }
       } catch (err) {
         console.error("Data fetch error:", err);
       }
@@ -78,21 +64,14 @@ export default function InvestmentPanel({
         );
         const data = await res.json();
 
-        // 1. Success Case: Change to CONFIRMED
         if (data.status === "CONFIRMED") {
           setIsProcessing(false);
           clearInterval(interval);
-
-          // Trigger the success UI
           setShowSuccess(true);
-
-          // Auto-redirect to portfolio after a 2-second delay
           setTimeout(() => {
             router.push("/investor/portfolio");
           }, 2000);
-        }
-        // 2. Failure Case
-        else if (data.status === "FAILED") {
+        } else if (data.status === "FAILED") {
           setIsProcessing(false);
           showAlert(
             "error",
@@ -111,61 +90,28 @@ export default function InvestmentPanel({
   const handleInvestSubmit = async (
     amount: number,
     settlementMode: "OFF_CHAIN" | "ON_CHAIN",
-    txHash?: string,
+    investmentId?: string,
   ) => {
-    if (
-      settlementMode === "OFF_CHAIN" &&
-      userBalance !== null &&
-      amount > userBalance
-    ) {
-      showAlert("error", "Insufficient funds in your Remzic wallet.");
-      return;
+    setAmountInvested(amount);
+    if (investmentId) {
+      setLastInvestmentId(investmentId);
+      setIsProcessing(true);
     }
+    setShowModal(false);
 
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/investments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            assetId,
-            amount,
-            settlementMode,
-            txHash,
-          }),
-          credentials: "include",
-        },
-      );
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Investment failed");
-
-      setAmountInvested(amount);
-      setLastInvestmentId(data.id);
-      setShowModal(false);
-      setLoading(false);
-
-      // ✅ Option A: Immediate visual success trigger & push
+    if (settlementMode === "OFF_CHAIN") {
       setShowSuccess(true);
       setTimeout(() => {
         router.push("/investor/portfolio");
       }, 1500);
-
-      showAlert(
-        "info",
-        settlementMode === "ON_CHAIN"
-          ? "On-chain transaction submitted. Verifying hash..."
-          : "Investment submitted. Redirecting to portfolio...",
-      );
-    } catch (err: any) {
-      setLoading(false);
-      showAlert(
-        "error",
-        err.message || "Transaction failed. Please try again.",
-      );
     }
+
+    showAlert(
+      "info",
+      settlementMode === "ON_CHAIN"
+        ? "On-chain transaction submitted. Verifying hash..."
+        : "Investment submitted. Redirecting to portfolio...",
+    );
   };
 
   const isBalanceLow = userBalance !== null && userBalance < min;
@@ -306,7 +252,6 @@ export default function InvestmentPanel({
       {showModal && (
         <InvestmentModal
           assetId={assetId}
-          treasuryAddress={treasuryAddress || ""}
           min={min}
           max={userBalance || 0}
           onClose={() => setShowModal(false)}
