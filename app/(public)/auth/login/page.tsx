@@ -6,7 +6,7 @@ import LoginForm from "../components/loginForm"; // Adjust path if your loginFor
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#080C0A] flex items-center justify-center">
+    <main className="min-h-screen bg-[#f9fafb] flex items-center justify-center">
       <Suspense
         fallback={
           <div className="text-white text-xs tracking-wide">

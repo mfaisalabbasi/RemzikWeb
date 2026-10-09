@@ -26,6 +26,10 @@ const TARGET_CHAIN_ID = Number(
   process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337,
 );
 
+const DEFAULT_CLAIM_CONTRACT =
+  process.env.NEXT_PUBLIC_CLAIM_CONTRACT_ADDRESS ||
+  "0x0000000000000000000000000000000000000000";
+
 function normalizeAddress(address?: string | null): string {
   if (!address) {
     return "";
@@ -76,7 +80,6 @@ function decodePayload(encoded: string): MultiStepPayload {
     throw new Error("Invalid transaction payload.");
   }
 
-  // Handle backward compatibility if single txPayload is passed directly
   let txPayload: TransactionPayload;
   let approvalPayload: TransactionPayload | null = null;
   let expectedStablecoinAddress: string | undefined;
@@ -138,7 +141,7 @@ function SecureSignPageContent() {
 
   const [status, setStatus] = useState<SignStatus>("idle");
   const [statusMessage, setStatusMessage] = useState(
-    "Review your investment before authorizing.",
+    "Review your transaction before authorizing.",
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [parsedPayload, setParsedPayload] = useState<MultiStepPayload | null>(
@@ -156,9 +159,26 @@ function SecureSignPageContent() {
 
   const encodedPayload = searchParams.get("payload") || "";
   const investmentId = searchParams.get("investmentId") || "";
+  const claimId =
+    searchParams.get("claimId") || searchParams.get("batchId") || "";
+  const proposalId = searchParams.get("proposalId") || "";
+  const contractAddressParam = searchParams.get("contractAddress") || "";
   const expectedWalletFromUrl = searchParams.get("walletAddress") || "";
   const expectedWalletAddress = normalizeAddress(expectedWalletFromUrl);
   const autoAuth = searchParams.get("autoAuth") === "true";
+
+  // Flow detectors
+  const isClaimFlow =
+    Boolean(claimId) ||
+    searchParams.has("claimId") ||
+    searchParams.has("batchId");
+  const isVoteFlow = Boolean(proposalId) || searchParams.has("proposalId");
+
+  const sessionId = isVoteFlow
+    ? proposalId
+    : isClaimFlow
+      ? claimId
+      : investmentId;
 
   const isBypassedAuth = autoAuth && Boolean(expectedWalletAddress);
   const effectiveAuthenticated = authenticated || isBypassedAuth;
@@ -167,45 +187,80 @@ function SecureSignPageContent() {
     let cancelled = false;
     setIsLoadingPayload(true);
 
-    if (!encodedPayload) {
+    // 1. If an explicit encoded payload string is provided, decode and prioritize it (Supports Investment & Voting payloads)
+    if (encodedPayload) {
+      try {
+        const payload = decodePayload(encodedPayload);
+        if (!cancelled) {
+          setParsedPayload(payload);
+          setErrorMessage("");
+          setStatus("idle");
+          setIsLoadingPayload(false);
+        }
+        return () => {
+          cancelled = true;
+        };
+      } catch (error: unknown) {
+        if (!cancelled) {
+          console.error("[SecureSignPage] Transaction payload error:", error);
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Invalid transaction payload received.";
+          setParsedPayload(null);
+          setErrorMessage(message);
+          setStatus("error");
+          setIsLoadingPayload(false);
+        }
+        return () => {
+          cancelled = true;
+        };
+      }
+    }
+
+    // 2. Fallback for Claim flow
+    if (isClaimFlow && sessionId) {
       if (!cancelled) {
+        const resolvedContract = isValidEvmAddress(contractAddressParam)
+          ? contractAddressParam.trim()
+          : DEFAULT_CLAIM_CONTRACT;
+
+        const cleanSessionId = sessionId.startsWith("0x")
+          ? sessionId.slice(2)
+          : sessionId;
+        const paddedParam = cleanSessionId.padStart(64, "0");
+        const functionSelector = "4e71d92d";
+        const calldata = `0x${functionSelector}${paddedParam}`;
+
+        setParsedPayload({
+          approvalPayload: null,
+          txPayload: {
+            to: resolvedContract,
+            data: calldata,
+            chainId: TARGET_CHAIN_ID,
+            value: "0",
+          },
+        });
+        setErrorMessage("");
+        setStatus("idle");
         setIsLoadingPayload(false);
-        setErrorMessage("Missing transaction payload.");
-        setStatus("error");
       }
       return () => {
         cancelled = true;
       };
     }
 
-    try {
-      const payload = decodePayload(encodedPayload);
-      if (cancelled) return;
-
-      setParsedPayload(payload);
-      setErrorMessage("");
-      setStatus("idle");
-    } catch (error: unknown) {
-      if (cancelled) return;
-      console.error("[SecureSignPage] Transaction payload error:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Invalid transaction payload received from investment flow.";
-
-      setParsedPayload(null);
-      setErrorMessage(message);
+    // 3. Missing payloads error handler
+    if (!cancelled) {
+      setIsLoadingPayload(false);
+      setErrorMessage("Missing transaction payload.");
       setStatus("error");
-    } finally {
-      if (!cancelled) {
-        setIsLoadingPayload(false);
-      }
     }
 
     return () => {
       cancelled = true;
     };
-  }, [encodedPayload]);
+  }, [encodedPayload, isClaimFlow, sessionId, contractAddressParam]);
 
   const privyWallet = useMemo(() => {
     if (!wallets || wallets.length === 0) return null;
@@ -243,10 +298,14 @@ function SecureSignPageContent() {
       setErrorMessage("Please connect your Remzik wallet before signing.");
       return;
     }
-    if (!investmentId) {
+    if (!sessionId) {
       setStatus("error");
       setErrorMessage(
-        "Missing investment session. Please restart the investment.",
+        isVoteFlow
+          ? "Missing voting session. Please restart."
+          : isClaimFlow
+            ? "Missing claim session. Please restart the claim."
+            : "Missing investment session. Please restart the investment.",
       );
       return;
     }
@@ -265,7 +324,7 @@ function SecureSignPageContent() {
       actualSignerAddress !== expectedWalletAddress
     ) {
       setStatus("error");
-      setErrorMessage("The connected wallet does not match this investment.");
+      setErrorMessage("The connected wallet does not match this session.");
       return;
     }
 
@@ -286,16 +345,15 @@ function SecureSignPageContent() {
         expectedVaultAddress,
       } = parsedPayload;
 
-      // 1. Handle ERC-20 Allowance & Approval if present
+      // 1. Handle ERC-20 Allowance & Approval if present (Investment Flow logic)
       if (
         approvalPayload &&
         expectedStablecoinAddress &&
         expectedStablecoinAmount &&
         expectedVaultAddress
       ) {
-        setStatusMessage("Checking stablecoin allowance...");
+        setStatusMessage("Checking allowance...");
 
-        // Check allowance using eth_call
         const ownerHex = privyWallet.address
           .toLowerCase()
           .replace("0x", "")
@@ -304,7 +362,6 @@ function SecureSignPageContent() {
           .toLowerCase()
           .replace("0x", "")
           .padStart(64, "0");
-        // allowance(address,address) function selector is `dd62ed3e`
         const allowanceData = `0xdd62ed3e${ownerHex}${spenderHex}`;
 
         const allowanceResult = await provider.request({
@@ -325,7 +382,7 @@ function SecureSignPageContent() {
         const requiredAmount = BigInt(expectedStablecoinAmount);
 
         if (currentAllowance < requiredAmount) {
-          setStatusMessage("Approving stablecoin spend...");
+          setStatusMessage("Approving spend...");
 
           const approvalRequest: Record<string, string> = {
             from: privyWallet.address,
@@ -343,14 +400,11 @@ function SecureSignPageContent() {
           });
 
           if (!isValidTxHash(approvalTxHash)) {
-            throw new Error(
-              "Wallet returned an invalid approval transaction hash.",
-            );
+            throw new Error("Invalid approval transaction hash.");
           }
 
           setStatusMessage("Waiting for approval confirmation...");
 
-          // Poll transaction receipt for approval confirmation
           let receipt = null;
           while (!receipt) {
             await new Promise((r) => setTimeout(r, 2000));
@@ -362,8 +416,14 @@ function SecureSignPageContent() {
         }
       }
 
-      // 2. Proceed to send deposit transaction
-      setStatusMessage("Submitting deposit transaction...");
+      // 2. Proceed to send core transaction (Deposit, Claim, or DAO Vote)
+      setStatusMessage(
+        isVoteFlow
+          ? "Submitting DAO vote transaction..."
+          : isClaimFlow
+            ? "Submitting claim transaction..."
+            : "Submitting deposit transaction...",
+      );
       let valueHex: string | undefined;
 
       if (
@@ -399,10 +459,24 @@ function SecureSignPageContent() {
 
       setStatus("success");
       setStatusMessage("Transaction Submitted ✓");
+
+      // Post appropriate success type back to React Native
+      const successType = isVoteFlow
+        ? "VOTE_SUCCESS"
+        : isClaimFlow
+          ? "CLAIM_SUCCESS"
+          : "TX_SUCCESS";
+
+      const idKey = isVoteFlow
+        ? "proposalId"
+        : isClaimFlow
+          ? "claimId"
+          : "investmentId";
+
       postToNative({
-        type: "TX_SUCCESS",
+        type: successType,
         txHash,
-        investmentId,
+        [idKey]: sessionId,
         walletAddress: privyWallet.address,
       });
     } catch (error: unknown) {
@@ -414,9 +488,21 @@ function SecureSignPageContent() {
 
       setStatus("error");
       setErrorMessage(reason);
+
+      const failType = isVoteFlow
+        ? "VOTE_FAILED"
+        : isClaimFlow
+          ? "CLAIM_FAILED"
+          : "TX_FAILED";
+      const idKey = isVoteFlow
+        ? "proposalId"
+        : isClaimFlow
+          ? "claimId"
+          : "investmentId";
+
       postToNative({
-        type: "TX_FAILED",
-        investmentId,
+        type: failType,
+        [idKey]: sessionId,
         walletAddress: privyWallet?.address || "",
         error: reason,
       });
@@ -452,7 +538,11 @@ function SecureSignPageContent() {
               <span className="text-emerald-400 text-xl">🛡️</span>
             </div>
             <h1 className="text-base font-bold text-white">
-              Secure Investment Signing
+              {isVoteFlow
+                ? "DAO Vote Authorization"
+                : isClaimFlow
+                  ? "Secure Claim Authorization"
+                  : "Secure Investment Signing"}
             </h1>
             <p className="text-slate-400 text-xs mt-2 leading-5">
               Connect your Remzik wallet to review and authorize this
@@ -465,37 +555,14 @@ function SecureSignPageContent() {
             >
               Continue with Secure Wallet
             </button>
-            <p className="text-[9px] text-slate-600 mt-4">
-              Your private key never leaves the wallet.
-            </p>
           </div>
         </section>
 
         <footer className="w-full max-w-sm mx-auto text-center pb-2">
           <p className="text-[9px] text-slate-600">
-            Remzik Protocol · Secure investor transaction
+            Remzik Protocol · Secure transaction
           </p>
         </footer>
-      </main>
-    );
-  }
-
-  if (!privyWallet && !autoAuth) {
-    return (
-      <main className="min-h-screen bg-[#080C0A] text-slate-100 flex flex-col items-center justify-center p-5">
-        <div className="w-full max-w-sm bg-[#111816] border border-red-500/20 rounded-2xl p-5 text-center">
-          <div className="text-3xl mb-3">⚠️</div>
-          <h1 className="text-sm font-bold text-white">Wallet Unavailable</h1>
-          <p className="text-xs text-slate-400 mt-2 leading-5">
-            {expectedWalletAddress
-              ? "The expected investment wallet is not available in this session."
-              : "No usable Privy wallet is available for this signing session."}
-          </p>
-          <p className="text-[10px] text-slate-600 mt-4">
-            Please return to the investment flow and reopen the secure signing
-            session.
-          </p>
-        </div>
       </main>
     );
   }
@@ -517,10 +584,16 @@ function SecureSignPageContent() {
             <span className="text-emerald-400 text-lg">🛡️</span>
           </div>
           <h1 className="text-base font-bold text-white tracking-tight">
-            Web3 Transaction Signer
+            {isVoteFlow
+              ? "DAO Vote Signer"
+              : isClaimFlow
+                ? "Claim Yield Signer"
+                : "Web3 Transaction Signer"}
           </h1>
           <p className="text-slate-400 text-[11px] mt-1">
-            Review your investment before authorizing.
+            Review your{" "}
+            {isVoteFlow ? "DAO vote" : isClaimFlow ? "claim" : "investment"}{" "}
+            before authorizing.
           </p>
         </div>
 
@@ -562,7 +635,11 @@ function SecureSignPageContent() {
             disabled={!parsedPayload}
             className="w-full bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] text-slate-950 font-extrabold py-3.5 px-4 rounded-xl transition shadow-[0_4px_20px_rgba(52,211,153,0.3)] text-xs"
           >
-            Authorize & Sign Transaction
+            {isVoteFlow
+              ? "Authorize & Submit Vote"
+              : isClaimFlow
+                ? "Authorize & Claim Yield"
+                : "Authorize & Sign Transaction"}
           </button>
         )}
 
@@ -609,7 +686,7 @@ function SecureSignPageContent() {
 
       <footer className="w-full max-w-sm mx-auto text-center pb-2">
         <p className="text-[9px] text-slate-600">
-          Remzik Protocol · Secure investor transaction
+          Remzik Protocol · Secure transaction
         </p>
       </footer>
     </main>
