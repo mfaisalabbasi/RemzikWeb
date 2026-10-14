@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TradeInput, MarketPosition } from "./types";
 import styles from "./secondary.module.css";
 import { Contract, parseUnits } from "ethers";
 import { useAppWallet } from "../../../../integrations/context/WalletContext";
 
 const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
+const STABLECOIN_ADDRESS = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
 
 interface Props {
-  // Added reservedUnits to the interface to support the new safety logic
   position: MarketPosition & { reservedUnits?: number; walletAddress?: string };
   tokenAddress: string;
   onClose: () => void;
@@ -22,21 +22,61 @@ export default function SellPositionModal({
   onClose,
   onSell,
 }: Props) {
-  // Calculate available units based on total owned minus what is already tied up
   const reserved = position.reservedUnits || 0;
   const available = position.quantity - reserved;
 
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(position?.currentPrice ?? 0);
   const [step, setStep] = useState<
-    "INPUT" | "APPROVING" | "READY" | "SIGNING" | "CONFIRMING"
-  >("INPUT");
+    "CHECKING" | "INPUT" | "APPROVING" | "READY" | "SIGNING" | "CONFIRMING"
+  >("CHECKING");
 
-  // Use the global centralized wallet context hook
   const { getVerifiedSigner } = useAppWallet();
 
+  // 🛡️ Dynamically check on-chain allowance whenever quantity changes
+  useEffect(() => {
+    let isMounted = true;
+    const checkAllowance = async () => {
+      try {
+        const { signer } = await getVerifiedSigner();
+        const userAddress = await signer.getAddress();
+
+        const tokenContract = new Contract(
+          tokenAddress,
+          [
+            "function allowance(address owner, address spender) view returns (uint256)",
+          ],
+          signer,
+        );
+
+        // Asset tokens use whole integer units
+        const requiredUnits = BigInt(quantity);
+
+        const currentAllowance = await tokenContract.allowance(
+          userAddress,
+          MARKETPLACE_ADDRESS!,
+        );
+
+        if (!isMounted) return;
+
+        if (currentAllowance >= requiredUnits) {
+          setStep("READY"); // Already approved for this quantity!
+        } else {
+          setStep("INPUT"); // Needs approval
+        }
+      } catch (err) {
+        console.error("Allowance check error:", err);
+        if (isMounted) setStep("INPUT");
+      }
+    };
+
+    checkAllowance();
+    return () => {
+      isMounted = false;
+    };
+  }, [quantity, tokenAddress, getVerifiedSigner]);
+
   const handleApprove = async () => {
-    // Validate against available balance (not just total)
     if (quantity <= 0 || quantity > available) {
       alert(
         `Invalid quantity. You have ${available} units available. (${reserved} already listed)`,
@@ -46,41 +86,22 @@ export default function SellPositionModal({
 
     setStep("APPROVING");
     try {
-      // 🛡️ Fixed: Removed position.walletAddress to prevent forcing stale/pre-recovery wallets
-      const { signer, address: userAddress } = await getVerifiedSigner();
+      const { signer } = await getVerifiedSigner();
 
       const tokenContract = new Contract(
         tokenAddress,
         [
           "function approve(address spender, uint256 amount) external returns (bool)",
-          "function allowance(address owner, address spender) external view returns (uint256)",
         ],
         signer,
-      );
-
-      const currentAllowance = await tokenContract.allowance(
-        userAddress,
-        MARKETPLACE_ADDRESS!,
       );
 
       const MAX_UINT = BigInt(
         "115792089237316195423570985008687907853269984665640564039457584007913129639935",
       );
 
-      const requiredAmount = parseUnits(quantity.toString(), 18);
-
-      if (currentAllowance < requiredAmount) {
-        if (currentAllowance > BigInt(0)) {
-          const resetTx = await tokenContract.approve(
-            MARKETPLACE_ADDRESS!,
-            BigInt(0),
-          );
-          await resetTx.wait();
-        }
-
-        const tx = await tokenContract.approve(MARKETPLACE_ADDRESS!, MAX_UINT);
-        await tx.wait();
-      }
+      const tx = await tokenContract.approve(MARKETPLACE_ADDRESS!, MAX_UINT);
+      await tx.wait();
 
       setStep("READY");
     } catch (err: any) {
@@ -91,9 +112,14 @@ export default function SellPositionModal({
   };
 
   const handleSubmit = async () => {
+    if (price <= 0) {
+      alert("Please enter a valid price per unit greater than 0.");
+      return;
+    }
+
     setStep("SIGNING");
     try {
-      const { signer, address: userAddress } = await getVerifiedSigner();
+      const { signer } = await getVerifiedSigner();
 
       // 1. PREPARE: Get Listing ID from Backend
       const res = await fetch(
@@ -116,32 +142,25 @@ export default function SellPositionModal({
       }
       const { listingId } = await res.json();
 
-      // 2. CONTRACT INTERACTION VIA PROXY ADDRESS
-      const tokenContract = new Contract(
-        tokenAddress,
-        ["function decimals() view returns (uint8)"],
-        signer,
-      );
-      const decimals = await tokenContract.decimals().catch(() => 18);
-      const requiredUnits = parseUnits(quantity.toString(), decimals);
+      // 2. CONTRACT INTERACTION
+      const requiredUnits = BigInt(quantity);
+      const pricePerUnitWei = parseUnits(price.toFixed(2), 6); // MockUSDC uses 6 decimals
 
       const contract = new Contract(
         MARKETPLACE_ADDRESS!,
-        ["function createListing(string, address, uint256) external"],
+        [
+          "function createListing(string calldata listingId, address token, address paymentToken, uint256 amount, uint256 pricePerUnit) external",
+        ],
         signer,
-      );
-
-      // Estimate gas beforehand so any contract reverts surface immediately in console
-      await contract.createListing.estimateGas(
-        listingId,
-        tokenAddress,
-        requiredUnits,
       );
 
       const tx = await contract.createListing(
         listingId,
         tokenAddress,
+        STABLECOIN_ADDRESS!,
         requiredUnits,
+        pricePerUnitWei,
+        { gasLimit: BigInt(300000) },
       );
 
       await tx.wait();
@@ -175,6 +194,13 @@ export default function SellPositionModal({
       <div className={styles.modalPanel}>
         <div className={styles.modalTitle}>List {position.assetTitle}</div>
 
+        {step === "CHECKING" && (
+          <div className={styles.loadingState}>
+            <div className={styles.spinner}></div>
+            <p>Checking token allowances...</p>
+          </div>
+        )}
+
         {step === "INPUT" && (
           <>
             <div className={styles.field}>
@@ -182,6 +208,7 @@ export default function SellPositionModal({
               <input
                 type="number"
                 value={quantity}
+                min={1}
                 max={available}
                 onChange={(e) => setQuantity(Number(e.target.value))}
               />
@@ -196,6 +223,8 @@ export default function SellPositionModal({
               <input
                 type="number"
                 value={price}
+                min={0.01}
+                step={0.01}
                 onChange={(e) => setPrice(Number(e.target.value))}
               />
             </div>
@@ -204,7 +233,7 @@ export default function SellPositionModal({
                 Cancel
               </button>
               <button className={styles.ctaPrimary} onClick={handleApprove}>
-                Step 1: Approve
+                Step 1: Approve Tokens
               </button>
             </div>
           </>
@@ -213,16 +242,46 @@ export default function SellPositionModal({
         {step === "APPROVING" && (
           <div className={styles.loadingState}>
             <div className={styles.spinner}></div>
-            <p>Approving tokens for Remzik Marketplace...</p>
+            <p>Approving tokens for marketplace escrow...</p>
           </div>
         )}
 
         {step === "READY" && (
-          <div className={styles.modalActions}>
-            <button className={styles.ctaPrimary} onClick={handleSubmit}>
-              Step 2: Sign & List
-            </button>
-          </div>
+          <>
+            <div className={styles.field}>
+              <label>Quantity (Available: {available})</label>
+              <input
+                type="number"
+                value={quantity}
+                min={1}
+                max={available}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              />
+              {reserved > 0 && (
+                <small className={styles.hint}>
+                  ({reserved} units already listed)
+                </small>
+              )}
+            </div>
+            <div className={styles.field}>
+              <label>Price per unit (SAR)</label>
+              <input
+                type="number"
+                value={price}
+                min={0.01}
+                step={0.01}
+                onChange={(e) => setPrice(Number(e.target.value))}
+              />
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.ctaGhost} onClick={onClose}>
+                Cancel
+              </button>
+              <button className={styles.ctaPrimary} onClick={handleSubmit}>
+                Step 2: Sign & List
+              </button>
+            </div>
+          </>
         )}
 
         {step === "SIGNING" && (

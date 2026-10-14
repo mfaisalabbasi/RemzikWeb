@@ -30,18 +30,17 @@ export default function SecondaryMarketPage() {
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // FIXED: Track loading per-item to prevent global UI lock
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
-
   const [selectedSell, setSelectedSell] = useState<MarketPosition | null>(null);
-
-  // 🛡️ State to manage institutional settlement choice popup
   const [orderToExecute, setOrderToExecute] = useState<ExtendedOrder | null>(
     null,
   );
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserWallet, setCurrentUserWallet] = useState<string | null>(
+    null,
+  );
 
   const { showAlert } = useAlert();
   const { wallets } = useWallets();
@@ -73,7 +72,10 @@ export default function SecondaryMarketPage() {
         const tradesData = tradesRes.ok ? await tradesRes.json() : [];
         const userData = userRes.ok ? await userRes.json() : null;
 
-        if (userData) setCurrentUserId(userData.id);
+        if (userData) {
+          setCurrentUserId(userData.id);
+          setCurrentUserWallet(userData.walletAddress);
+        }
 
         setPositions(posData || []);
         setOrders(
@@ -109,6 +111,17 @@ export default function SecondaryMarketPage() {
   useEffect(() => {
     fetchMarketData();
   }, [fetchMarketData]);
+
+  // 🛡️ Helper to find the correct wallet matching the database user session
+  const getActiveWallet = () => {
+    if (currentUserWallet) {
+      const matched = wallets.find(
+        (w) => w.address.toLowerCase() === currentUserWallet.toLowerCase(),
+      );
+      if (matched) return matched;
+    }
+    return wallets[0];
+  };
 
   const visibleActiveTrades = useMemo(
     () =>
@@ -194,14 +207,37 @@ export default function SecondaryMarketPage() {
 
     setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      const wallet = wallets[0];
-      if (!wallet) throw new Error("No connected wallet found.");
+      const wallet = getActiveWallet();
+      if (!wallet)
+        throw new Error("No connected wallet found matching your account.");
 
       const provider = new ethers.BrowserProvider(
         await wallet.getEthereumProvider(),
       );
       const signer = await provider.getSigner();
       const buyerAddress = await signer.getAddress();
+
+      // 1. Create Trade Intent on Backend first (returns tradeId)
+      const intentRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/intent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            listingId,
+            settlementMode: "ON_CHAIN",
+          }),
+          credentials: "include",
+        },
+      );
+
+      if (!intentRes.ok) {
+        const errData = await intentRes.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to create trade intent.");
+      }
+
+      const intentData = await intentRes.json();
+      const tradeId = intentData.tradeId;
 
       const stablecoinAddress = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
       const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
@@ -236,42 +272,42 @@ export default function SecondaryMarketPage() {
       const marketplaceContract = new ethers.Contract(
         marketplaceAddress!,
         [
-          "function executeOnChainTrade(string calldata listingId, address paymentToken, uint256 paymentAmount) external",
+          "function executeOnChainTrade(string calldata listingId, uint256 purchaseAmount) external",
         ],
         signer,
       );
 
       showAlert("info", "Submitting on-chain trade transaction...");
+
       const tx = await marketplaceContract.executeOnChainTrade(
         listingId,
-        stablecoinAddress!,
-        totalPriceWei,
+        order.quantity,
+        {
+          gasLimit: BigInt(300000),
+        },
       );
       await tx.wait();
 
-      const syncBackendWithRetry = async (retries = 3) => {
-        for (let i = 0; i < retries; i++) {
-          try {
-            const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/execute/${listingId}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  settlementMode: "ON_CHAIN",
-                  txHash: tx.hash,
-                }),
-                credentials: "include",
-              },
-            );
-            if (res.ok) return true;
-          } catch (netErr) {}
-          await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
-        }
-        return false;
-      };
+      // 2. Submit Transaction Hash & Verify via Intent Pipeline
+      const submitRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/${tradeId}/submit-tx`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            txHash: tx.hash,
+          }),
+          credentials: "include",
+        },
+      );
 
-      await syncBackendWithRetry();
+      if (!submitRes.ok) {
+        const errData = await submitRes.json().catch(() => ({}));
+        throw new Error(
+          errData.message || "Failed to verify on-chain transaction.",
+        );
+      }
+
       setSuccessMessage("On-chain atomic trade settled successfully!");
       await fetchMarketData();
     } catch (err: any) {
@@ -314,7 +350,10 @@ export default function SecondaryMarketPage() {
 
     setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      const wallet = wallets[0];
+      const wallet = getActiveWallet();
+      if (!wallet)
+        throw new Error("No connected wallet found matching your account.");
+
       const provider = new ethers.BrowserProvider(
         await wallet.getEthereumProvider(),
       );
@@ -502,7 +541,7 @@ export default function SecondaryMarketPage() {
         </section>
       </main>
 
-      {/* 🛡️ Institutional-Grade Opaque Modal Backdrop & Container */}
+      {/* Institutional-Grade Opaque Modal Backdrop & Container */}
       {orderToExecute && (
         <div
           style={{
@@ -576,12 +615,6 @@ export default function SecondaryMarketPage() {
                   transition: "all 0.2s ease",
                   boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#e6be3e")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#d4af37")
-                }
               >
                 <span style={{ fontSize: "0.95rem" }}>
                   ⚡ On-Chain Atomic Settlement
@@ -615,12 +648,6 @@ export default function SecondaryMarketPage() {
                   alignItems: "center",
                   transition: "all 0.2s ease",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#262936")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#1e2029")
-                }
               >
                 <span style={{ fontSize: "0.95rem" }}>
                   🛡️ Off-Chain Escrow Vault
@@ -651,8 +678,6 @@ export default function SecondaryMarketPage() {
                   fontSize: "0.875rem",
                   transition: "color 0.2s ease",
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.color = "#cbd5e1")}
-                onMouseOut={(e) => (e.currentTarget.style.color = "#64748b")}
               >
                 Cancel / Return to Order Book
               </button>

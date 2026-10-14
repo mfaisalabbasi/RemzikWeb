@@ -162,6 +162,12 @@ function SecureSignPageContent() {
   const claimId =
     searchParams.get("claimId") || searchParams.get("batchId") || "";
   const proposalId = searchParams.get("proposalId") || "";
+
+  // Secondary Market Flow Detectors
+  const listingId = searchParams.get("listingId") || "";
+  const tradeId = searchParams.get("tradeId") || "";
+  const isCancellation = searchParams.get("cancel") === "true";
+
   const contractAddressParam = searchParams.get("contractAddress") || "";
   const expectedWalletFromUrl = searchParams.get("walletAddress") || "";
   const expectedWalletAddress = normalizeAddress(expectedWalletFromUrl);
@@ -173,12 +179,19 @@ function SecureSignPageContent() {
     searchParams.has("claimId") ||
     searchParams.has("batchId");
   const isVoteFlow = Boolean(proposalId) || searchParams.has("proposalId");
+  const isSecondaryListingFlow =
+    Boolean(listingId) || searchParams.has("listingId");
+  const isSecondaryTradeFlow = Boolean(tradeId) || searchParams.has("tradeId");
 
   const sessionId = isVoteFlow
     ? proposalId
     : isClaimFlow
       ? claimId
-      : investmentId;
+      : isSecondaryListingFlow
+        ? listingId
+        : isSecondaryTradeFlow
+          ? tradeId
+          : investmentId;
 
   const isBypassedAuth = autoAuth && Boolean(expectedWalletAddress);
   const effectiveAuthenticated = authenticated || isBypassedAuth;
@@ -187,7 +200,7 @@ function SecureSignPageContent() {
     let cancelled = false;
     setIsLoadingPayload(true);
 
-    // 1. If an explicit encoded payload string is provided, decode and prioritize it (Supports Investment & Voting payloads)
+    // 1. If an explicit encoded payload string is provided, decode and prioritize it
     if (encodedPayload) {
       try {
         const payload = decodePayload(encodedPayload);
@@ -305,7 +318,11 @@ function SecureSignPageContent() {
           ? "Missing voting session. Please restart."
           : isClaimFlow
             ? "Missing claim session. Please restart the claim."
-            : "Missing investment session. Please restart the investment.",
+            : isSecondaryListingFlow
+              ? "Missing listing session. Please restart."
+              : isSecondaryTradeFlow
+                ? "Missing trade session. Please restart."
+                : "Missing investment session. Please restart the investment.",
       );
       return;
     }
@@ -345,7 +362,7 @@ function SecureSignPageContent() {
         expectedVaultAddress,
       } = parsedPayload;
 
-      // 1. Handle ERC-20 Allowance & Approval if present (Investment Flow logic)
+      // 1. Handle ERC-20 Allowance & Approval if present (Investment or Secondary Trade Flow)
       if (
         approvalPayload &&
         expectedStablecoinAddress &&
@@ -416,13 +433,19 @@ function SecureSignPageContent() {
         }
       }
 
-      // 2. Proceed to send core transaction (Deposit, Claim, or DAO Vote)
+      // 2. Proceed to send core transaction
       setStatusMessage(
         isVoteFlow
           ? "Submitting DAO vote transaction..."
           : isClaimFlow
             ? "Submitting claim transaction..."
-            : "Submitting deposit transaction...",
+            : isSecondaryListingFlow
+              ? isCancellation
+                ? "Retracting asset listing on-chain..."
+                : "Submitting asset listing on-chain..."
+              : isSecondaryTradeFlow
+                ? "Submitting on-chain trade execution..."
+                : "Submitting deposit transaction...",
       );
       let valueHex: string | undefined;
 
@@ -460,24 +483,33 @@ function SecureSignPageContent() {
       setStatus("success");
       setStatusMessage("Transaction Submitted ✓");
 
-      // Post appropriate success type back to React Native
+      // Determine correct success bridge payload for React Native
       const successType = isVoteFlow
         ? "VOTE_SUCCESS"
         : isClaimFlow
           ? "CLAIM_SUCCESS"
-          : "TX_SUCCESS";
+          : isSecondaryListingFlow
+            ? "TX_SUCCESS"
+            : isSecondaryTradeFlow
+              ? "TRADE_SUCCESS"
+              : "TX_SUCCESS";
 
       const idKey = isVoteFlow
         ? "proposalId"
         : isClaimFlow
           ? "claimId"
-          : "investmentId";
+          : isSecondaryListingFlow
+            ? "listingId"
+            : isSecondaryTradeFlow
+              ? "tradeId"
+              : "investmentId";
 
       postToNative({
         type: successType,
         txHash,
         [idKey]: sessionId,
         walletAddress: privyWallet.address,
+        isCancellation,
       });
     } catch (error: unknown) {
       console.error("[SecureSignPage] Signing failed:", error);
@@ -493,18 +525,28 @@ function SecureSignPageContent() {
         ? "VOTE_FAILED"
         : isClaimFlow
           ? "CLAIM_FAILED"
-          : "TX_FAILED";
+          : isSecondaryListingFlow
+            ? "TX_FAILED"
+            : isSecondaryTradeFlow
+              ? "TRADE_FAILED"
+              : "TX_FAILED";
+
       const idKey = isVoteFlow
         ? "proposalId"
         : isClaimFlow
           ? "claimId"
-          : "investmentId";
+          : isSecondaryListingFlow
+            ? "listingId"
+            : isSecondaryTradeFlow
+              ? "tradeId"
+              : "investmentId";
 
       postToNative({
         type: failType,
         [idKey]: sessionId,
         walletAddress: privyWallet?.address || "",
         error: reason,
+        isCancellation,
       });
     }
   };
@@ -542,7 +584,13 @@ function SecureSignPageContent() {
                 ? "DAO Vote Authorization"
                 : isClaimFlow
                   ? "Secure Claim Authorization"
-                  : "Secure Investment Signing"}
+                  : isSecondaryListingFlow
+                    ? isCancellation
+                      ? "Retract Listing Authorization"
+                      : "Secondary Listing Authorization"
+                    : isSecondaryTradeFlow
+                      ? "On-Chain Trade Authorization"
+                      : "Secure Investment Signing"}
             </h1>
             <p className="text-slate-400 text-xs mt-2 leading-5">
               Connect your Remzik wallet to review and authorize this
@@ -588,11 +636,27 @@ function SecureSignPageContent() {
               ? "DAO Vote Signer"
               : isClaimFlow
                 ? "Claim Yield Signer"
-                : "Web3 Transaction Signer"}
+                : isSecondaryListingFlow
+                  ? isCancellation
+                    ? "Retract Listing Signer"
+                    : "Secondary Listing Signer"
+                  : isSecondaryTradeFlow
+                    ? "On-Chain Trade Signer"
+                    : "Web3 Transaction Signer"}
           </h1>
           <p className="text-slate-400 text-[11px] mt-1">
             Review your{" "}
-            {isVoteFlow ? "DAO vote" : isClaimFlow ? "claim" : "investment"}{" "}
+            {isVoteFlow
+              ? "DAO vote"
+              : isClaimFlow
+                ? "claim"
+                : isSecondaryListingFlow
+                  ? isCancellation
+                    ? "listing cancellation"
+                    : "listing"
+                  : isSecondaryTradeFlow
+                    ? "trade"
+                    : "investment"}{" "}
             before authorizing.
           </p>
         </div>
@@ -639,7 +703,13 @@ function SecureSignPageContent() {
               ? "Authorize & Submit Vote"
               : isClaimFlow
                 ? "Authorize & Claim Yield"
-                : "Authorize & Sign Transaction"}
+                : isSecondaryListingFlow
+                  ? isCancellation
+                    ? "Authorize & Retract Listing"
+                    : "Authorize & List Asset"
+                  : isSecondaryTradeFlow
+                    ? "Authorize & Execute Trade"
+                    : "Authorize & Sign Transaction"}
           </button>
         )}
 
