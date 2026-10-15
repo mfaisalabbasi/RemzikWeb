@@ -165,14 +165,17 @@ export default function SellPositionModal({
 
       await tx.wait();
 
-      // 3. CONFIRM: Finalize state
+      // 3. CONFIRM: Finalize state and persist txHash on backend
       setStep("CONFIRMING");
       const confirmRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/confirm`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listingId }),
+          body: JSON.stringify({
+            listingId,
+            txHash: tx.hash, // 👈 Added txHash here
+          }),
           credentials: "include",
         },
       );
