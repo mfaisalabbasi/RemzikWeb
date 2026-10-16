@@ -200,7 +200,6 @@ function SecureSignPageContent() {
     let cancelled = false;
     setIsLoadingPayload(true);
 
-    // 1. If an explicit encoded payload string is provided, decode and prioritize it
     if (encodedPayload) {
       try {
         const payload = decodePayload(encodedPayload);
@@ -231,7 +230,6 @@ function SecureSignPageContent() {
       }
     }
 
-    // 2. Fallback for Claim flow
     if (isClaimFlow && sessionId) {
       if (!cancelled) {
         const resolvedContract = isValidEvmAddress(contractAddressParam)
@@ -263,7 +261,6 @@ function SecureSignPageContent() {
       };
     }
 
-    // 3. Missing payloads error handler
     if (!cancelled) {
       setIsLoadingPayload(false);
       setErrorMessage("Missing transaction payload.");
@@ -281,9 +278,11 @@ function SecureSignPageContent() {
       const exactMatch = wallets.find(
         (wallet) => normalizeAddress(wallet.address) === expectedWalletAddress,
       );
-      return exactMatch || null;
+      if (exactMatch) return exactMatch;
     }
-    if (wallets.length === 1) return wallets[0];
+    if (wallets.length > 0) {
+      return wallets[0];
+    }
     return null;
   }, [wallets, expectedWalletAddress]);
 
@@ -313,17 +312,7 @@ function SecureSignPageContent() {
     }
     if (!sessionId) {
       setStatus("error");
-      setErrorMessage(
-        isVoteFlow
-          ? "Missing voting session. Please restart."
-          : isClaimFlow
-            ? "Missing claim session. Please restart the claim."
-            : isSecondaryListingFlow
-              ? "Missing listing session. Please restart."
-              : isSecondaryTradeFlow
-                ? "Missing trade session. Please restart."
-                : "Missing investment session. Please restart the investment.",
-      );
+      setErrorMessage("Missing session identifier.");
       return;
     }
     if (!parsedPayload) {
@@ -336,14 +325,6 @@ function SecureSignPageContent() {
       setErrorMessage("No valid Privy wallet is available for signing.");
       return;
     }
-    if (
-      expectedWalletAddress &&
-      actualSignerAddress !== expectedWalletAddress
-    ) {
-      setStatus("error");
-      setErrorMessage("The connected wallet does not match this session.");
-      return;
-    }
 
     try {
       setStatus("signing");
@@ -354,6 +335,8 @@ function SecureSignPageContent() {
         throw new Error("Privy wallet provider is unavailable.");
       }
 
+      const signerAddress = privyWallet.address;
+
       const {
         approvalPayload,
         txPayload,
@@ -362,20 +345,18 @@ function SecureSignPageContent() {
         expectedVaultAddress,
       } = parsedPayload;
 
-      // 1. Handle ERC-20 Allowance & Approval if present (Investment or Secondary Trade Flow)
-      if (
-        approvalPayload &&
-        expectedStablecoinAddress &&
-        expectedStablecoinAmount &&
-        expectedVaultAddress
-      ) {
-        setStatusMessage("Checking allowance...");
+      // Universal Allowance & Approval Check (handles Stablecoin and Security/Asset Token approvals)
+      if (approvalPayload) {
+        setStatusMessage("Checking token allowance...");
 
-        const ownerHex = privyWallet.address
+        const approveTarget = expectedStablecoinAddress || approvalPayload.to;
+        const spender = expectedVaultAddress || approvalPayload.to;
+
+        const ownerHex = signerAddress
           .toLowerCase()
           .replace("0x", "")
           .padStart(64, "0");
-        const spenderHex = expectedVaultAddress
+        const spenderHex = spender
           .toLowerCase()
           .replace("0x", "")
           .padStart(64, "0");
@@ -385,7 +366,8 @@ function SecureSignPageContent() {
           method: "eth_call",
           params: [
             {
-              to: expectedStablecoinAddress,
+              from: signerAddress,
+              to: approveTarget,
               data: allowanceData,
             },
             "latest",
@@ -396,13 +378,15 @@ function SecureSignPageContent() {
           allowanceResult && allowanceResult !== "0x"
             ? BigInt(allowanceResult)
             : 0n;
-        const requiredAmount = BigInt(expectedStablecoinAmount);
+        const requiredAmount = expectedStablecoinAmount
+          ? BigInt(expectedStablecoinAmount)
+          : 1n;
 
         if (currentAllowance < requiredAmount) {
-          setStatusMessage("Approving spend...");
+          setStatusMessage("Approving token spend...");
 
-          const approvalRequest: Record<string, string> = {
-            from: privyWallet.address,
+          const approvalRequest: Record<string, any> = {
+            from: signerAddress,
             to: approvalPayload.to,
             data:
               typeof approvalPayload.data === "string"
@@ -433,20 +417,7 @@ function SecureSignPageContent() {
         }
       }
 
-      // 2. Proceed to send core transaction
-      setStatusMessage(
-        isVoteFlow
-          ? "Submitting DAO vote transaction..."
-          : isClaimFlow
-            ? "Submitting claim transaction..."
-            : isSecondaryListingFlow
-              ? isCancellation
-                ? "Retracting asset listing on-chain..."
-                : "Submitting asset listing on-chain..."
-              : isSecondaryTradeFlow
-                ? "Submitting on-chain trade execution..."
-                : "Submitting deposit transaction...",
-      );
+      setStatusMessage("Submitting transaction...");
       let valueHex: string | undefined;
 
       if (
@@ -461,8 +432,8 @@ function SecureSignPageContent() {
         valueHex = "0x" + numericValue.toString(16);
       }
 
-      const transactionRequest: Record<string, string> = {
-        from: privyWallet.address,
+      const transactionRequest: Record<string, any> = {
+        from: signerAddress,
         to: txPayload.to,
         data: typeof txPayload.data === "string" ? txPayload.data : "0x",
       };
@@ -483,7 +454,6 @@ function SecureSignPageContent() {
       setStatus("success");
       setStatusMessage("Transaction Submitted ✓");
 
-      // Determine correct success bridge payload for React Native
       const successType = isVoteFlow
         ? "VOTE_SUCCESS"
         : isClaimFlow
@@ -508,7 +478,7 @@ function SecureSignPageContent() {
         type: successType,
         txHash,
         [idKey]: sessionId,
-        walletAddress: privyWallet.address,
+        walletAddress: signerAddress,
         isCancellation,
       });
     } catch (error: unknown) {
@@ -553,28 +523,42 @@ function SecureSignPageContent() {
 
   if ((!ready && !isReadyTimeout) || isLoadingPayload) {
     return (
-      <main className="min-h-screen bg-[#080C0A] text-slate-100 flex flex-col items-center justify-center p-5">
+      <div className="fixed inset-0 z-50 bg-[#080C0A] text-slate-100 flex flex-col items-center justify-center p-5">
+        <style jsx global>{`
+          header,
+          nav,
+          aside {
+            display: none !important;
+          }
+        `}</style>
         <div className="w-8 h-8 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-3" />
         <p className="text-xs text-emerald-400 font-semibold animate-pulse">
           Loading Secure Wallet...
         </p>
-      </main>
+      </div>
     );
   }
 
   if (!effectiveAuthenticated) {
     return (
-      <main className="min-h-screen bg-[#080C0A] text-slate-100 flex flex-col justify-between p-5">
-        <header className="w-full max-w-sm mx-auto flex items-center justify-between pt-2">
+      <div className="fixed inset-0 z-50 bg-[#080C0A] text-slate-100 flex flex-col justify-between p-5 overflow-y-auto">
+        <style jsx global>{`
+          header,
+          nav,
+          aside {
+            display: none !important;
+          }
+        `}</style>
+        <div className="w-full max-w-sm mx-auto flex items-center justify-between pt-2">
           <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[10px] font-extrabold tracking-widest text-emerald-400">
               SECURE SIGNING
             </span>
           </div>
-        </header>
+        </div>
 
-        <section className="w-full max-w-sm mx-auto bg-[#111816]/90 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+        <div className="w-full max-w-sm mx-auto bg-[#111816]/95 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.6)] my-auto">
           <div className="text-center">
             <div className="w-14 h-14 bg-gradient-to-b from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-emerald-400 text-xl">🛡️</span>
@@ -604,29 +588,36 @@ function SecureSignPageContent() {
               Continue with Secure Wallet
             </button>
           </div>
-        </section>
+        </div>
 
-        <footer className="w-full max-w-sm mx-auto text-center pb-2">
+        <div className="w-full max-w-sm mx-auto text-center pb-2">
           <p className="text-[9px] text-slate-600">
             Remzik Protocol · Secure transaction
           </p>
-        </footer>
-      </main>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#080C0A] text-slate-100 flex flex-col justify-between p-5 selection:bg-emerald-500 selection:text-black antialiased">
-      <header className="w-full max-w-sm mx-auto flex items-center justify-between pt-2">
+    <div className="fixed inset-0 z-50 bg-[#080C0A] text-slate-100 flex flex-col justify-between p-5 overflow-y-auto selection:bg-emerald-500 selection:text-black antialiased">
+      <style jsx global>{`
+        header,
+        nav,
+        aside {
+          display: none !important;
+        }
+      `}</style>
+      <div className="w-full max-w-sm mx-auto flex items-center justify-between pt-2">
         <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[10px] font-extrabold tracking-widest text-emerald-400">
             SECURE ENCLAVE ACTIVE
           </span>
         </div>
-      </header>
+      </div>
 
-      <section className="w-full max-w-sm mx-auto bg-[#111816]/90 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+      <div className="w-full max-w-sm mx-auto bg-[#111816]/95 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 shadow-[0_0_40px_rgba(0,0,0,0.6)] my-auto">
         <div className="text-center mb-5">
           <div className="w-12 h-12 bg-gradient-to-b from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <span className="text-emerald-400 text-lg">🛡️</span>
@@ -752,14 +743,14 @@ function SecureSignPageContent() {
             </button>
           </div>
         )}
-      </section>
+      </div>
 
-      <footer className="w-full max-w-sm mx-auto text-center pb-2">
+      <div className="w-full max-w-sm mx-auto text-center pb-2">
         <p className="text-[9px] text-slate-600">
           Remzik Protocol · Secure transaction
         </p>
-      </footer>
-    </main>
+      </div>
+    </div>
   );
 }
 
@@ -767,12 +758,19 @@ export default function SecureSignPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-[#080C0A] text-slate-100 flex flex-col items-center justify-center p-5">
+        <div className="fixed inset-0 z-50 bg-[#080C0A] text-slate-100 flex flex-col items-center justify-center p-5">
+          <style jsx global>{`
+            header,
+            nav,
+            aside {
+              display: none !important;
+            }
+          `}</style>
           <div className="w-8 h-8 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-3" />
           <p className="text-xs text-emerald-400 font-semibold animate-pulse">
             Loading Secure Wallet...
           </p>
-        </main>
+        </div>
       }
     >
       <SecureSignPageContent />
