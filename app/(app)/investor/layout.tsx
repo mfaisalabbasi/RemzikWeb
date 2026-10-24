@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/app/integrations/api/auth";
 import { useNotifications } from "@/app/integrations/hooks/useNotifications";
 import { PrivyDashboardWrapper } from "@/app/integrations/web3/PrivyDashboardWrapper";
-import { WalletProvider } from "../../integrations/context/WalletContext"; // 👈 Import your new global context
+import { WalletProvider } from "../../integrations/context/WalletContext";
 import Sidebar from "./components/layout/SideBar";
 import Topbar from "./components/layout/TopBar";
 import styles from "./styles/InvestorLayout.module.css";
@@ -25,19 +25,36 @@ export default function InvestorLayout({
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
-        setUser(data);
-        setLoading(false);
+        // 🛡️ Role Guard: Redirect non-investors to login
+        if (data?.role !== "INVESTOR") {
+          router.replace("/auth/login");
+        } else {
+          setUser(data);
+          setLoading(false);
+        }
       })
       .catch(() => router.replace("/auth/login"));
   }, [router]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        className={styles.container}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
+        <div>Loading Investor Portal...</div>
+      </div>
+    );
+  }
 
   return (
     <PrivyDashboardWrapper>
       <WalletProvider>
-        {" "}
-        {/* 👈 Wrapped here so all child views share the secure wallet context */}
         <div className={styles.container}>
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <div className={styles.main}>

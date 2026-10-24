@@ -3,7 +3,7 @@
 import styles from "@/app/(app)/investor/styles/Sidebar.module.css";
 import Link from "next/link";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { logout } from "@/app/integrations/api/auth";
 
 import {
@@ -13,6 +13,8 @@ import {
   FiLayers,
   FiUser,
   FiTrendingUp,
+  FiDollarSign,
+  FiLogOut,
 } from "react-icons/fi";
 
 const navItems = [
@@ -24,7 +26,11 @@ const navItems = [
     icon: FiTrendingUp,
   },
   { label: "Portfolio", href: "/investor/portfolio", icon: FiPieChart },
-
+  {
+    label: "Distributions",
+    href: "/investor/distributions",
+    icon: FiDollarSign,
+  },
   { label: "Wallet", href: "/investor/wallet", icon: FiCreditCard },
   { label: "Profile", href: "/investor/profile", icon: FiUser },
 ];
@@ -35,7 +41,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLinkClick = () => {
     if (open) onClose();
@@ -43,16 +49,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      // 1. Call the logout API to clear the server-side session/cookie
       await logout();
-
-      // 2. Perform a hard reload of the window.
-      // This is the ONLY way to ensure React memory is wiped,
-      // fixing the "old account notifications showing up" issue.
       window.location.href = "/auth/login";
     } catch (err) {
       console.error("Logout failed:", err);
-      // Fallback: reload anyway to be safe
       window.location.href = "/auth/login";
     }
   };
@@ -65,16 +65,20 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <nav className={styles.nav}>
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/investor" && pathname.startsWith(item.href));
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={styles.link}
+                className={clsx(styles.link, isActive && styles.activeLink)}
                 onClick={handleLinkClick}
               >
-                <Icon size={22} style={{ marginRight: 10 }} />
-                {item.label}
+                <Icon size={19} className={styles.navIcon} />
+                <span className={styles.label}>{item.label}</span>
+                {isActive && <div className={styles.activeIndicator} />}
               </Link>
             );
           })}
@@ -82,7 +86,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className={styles.footer}>
           <button className={styles.logout} onClick={handleLogout}>
-            Logout
+            <FiLogOut size={18} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>

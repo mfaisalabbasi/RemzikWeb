@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../integrations/validation/auth.schema";
 import { kycSchema } from "@/app/integrations/validation/kyc.schema";
-import { signup } from "../../../integrations/api/auth"; // You will update this API call to handle multipart
+import { login } from "../../../integrations/api/auth";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import styles from "../styles/Auth.module.css";
@@ -96,7 +96,7 @@ export default function SignupForm() {
     setError("");
   };
 
-  // Final Step: Atomic Registration + KYC Submission
+  // Final Step: Atomic Registration + KYC Submission & Server-Side Wallet Provisioning
   const onFinalSubmit = async (kycData: KYCFormData) => {
     if (!authData || !selectedRole) {
       setStep(1);
@@ -140,14 +140,43 @@ export default function SignupForm() {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      setSuccess("Account and KYC submitted for review!");
+      setSuccess("Account created! Provisioning secure vault wallet...");
+
+      // 🚀 Auto-authenticate and trigger server-side wallet provisioning immediately
+      try {
+        await login({ email: authData.email, password: authData.password });
+
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/provision-wallet`,
+          {
+            method: "POST",
+            credentials: "include",
+          },
+        );
+      } catch (provisionErr) {
+        console.warn(
+          "Wallet will auto-provision on session initialization:",
+          provisionErr,
+        );
+      }
+
+      setSuccess("Account and secure wallet initialized successfully!");
+
       setTimeout(() => {
-        router.push("/auth/login");
-      }, 2000);
+        switch (selectedRole) {
+          case "INVESTOR":
+            window.location.replace("/investor");
+            break;
+          case "PARTNER":
+            window.location.replace("/partner");
+            break;
+          default:
+            router.push("/auth/login");
+        }
+      }, 1500);
     } catch (err: any) {
       console.error("Signup/KYC Error:", err);
       setError(getFriendlyErrorMessage(err.message || ""));
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -368,7 +397,9 @@ export default function SignupForm() {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Securing Your Account..." : "Finalize & Submit"}
+              {isSubmitting
+                ? "Securing Your Account & Wallet..."
+                : "Finalize & Submit"}
             </button>
             <button
               className={styles.secondary}

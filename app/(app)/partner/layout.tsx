@@ -8,6 +8,8 @@ import PartnerSidebar from "./components/layout/PartnerSidebar";
 import PartnerTopbar from "./components/layout/PartnerTopbar";
 import styles from "./styles/PartnerLayout.module.css";
 import { PrivyDashboardWrapper } from "@/app/integrations/web3/PrivyDashboardWrapper";
+import { WalletProvider } from "@/app/integrations/context/WalletContext"; // 👈 Import global WalletProvider
+
 export default function PartnerLayout({
   children,
 }: {
@@ -38,19 +40,22 @@ export default function PartnerLayout({
 
   return (
     <PrivyDashboardWrapper>
-      <div className={styles.layout}>
-        <PartnerSidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
-        <div className={styles.main}>
-          <PartnerTopbar
-            onMenuClick={() => setSidebarOpen(true)}
-            notificationsCount={unreadCount}
+      <WalletProvider>
+        {/* 👈 Wrapped here so all Partner views share the secure, server-anchored wallet context */}
+        <div className={styles.layout}>
+          <PartnerSidebar
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
           />
-          <div className={styles.content}>{children}</div>
+          <div className={styles.main}>
+            <PartnerTopbar
+              onMenuClick={() => setSidebarOpen(true)}
+              notificationsCount={unreadCount}
+            />
+            <div className={styles.content}>{children}</div>
+          </div>
         </div>
-      </div>
+      </WalletProvider>
     </PrivyDashboardWrapper>
   );
 }

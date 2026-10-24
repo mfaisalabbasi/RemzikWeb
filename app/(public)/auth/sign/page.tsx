@@ -308,8 +308,12 @@ function SecureSignPageContent() {
   const isWalletReady =
     ready && effectiveAuthenticated && Boolean(displayAddress);
 
+  // 🚀 DUAL-BRIDGE: Supports Mobile Native WebView AND Web Dashboard Iframe
   const postToNative = (message: Record<string, unknown>) => {
     if (typeof window === "undefined") return;
+    const jsonString = JSON.stringify(message);
+
+    // 1. Mobile React Native WebView Bridge
     const bridge = (
       window as Window & {
         ReactNativeWebView?: {
@@ -318,8 +322,18 @@ function SecureSignPageContent() {
       }
     ).ReactNativeWebView;
 
-    if (!bridge) return;
-    bridge.postMessage(JSON.stringify(message));
+    if (bridge && typeof bridge.postMessage === "function") {
+      bridge.postMessage(jsonString);
+    }
+
+    // 2. Web Parent Iframe Bridge (Seamless Web Modal Auto-Close)
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(jsonString, "*");
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to post message to parent window:", e);
+    }
   };
 
   const handleSignTransaction = async () => {

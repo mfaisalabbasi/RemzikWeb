@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import { useWallets } from "@privy-io/react-auth";
+import { useRouter } from "next/navigation";
 import styles from "../components/secondary/secondary.module.css";
 import {
   MarketPosition,
@@ -19,12 +20,14 @@ import {
   ShieldAlert,
   Clock,
   CheckCircle,
+  X,
 } from "lucide-react";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
 
 export type ExtendedOrder = Order & { sellerId: string; tokenAddress: string };
 
 export default function SecondaryMarketPage() {
+  const router = useRouter();
   const [positions, setPositions] = useState<MarketPosition[]>([]);
   const [orders, setOrders] = useState<ExtendedOrder[]>([]);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
@@ -41,6 +44,12 @@ export default function SecondaryMarketPage() {
   const [currentUserWallet, setCurrentUserWallet] = useState<string | null>(
     null,
   );
+
+  // 🚀 Shared Secure Enclave Iframe Signer States
+  const [signUrl, setSignUrl] = useState<string | null>(null);
+  const [activeTradeId, setActiveTradeId] = useState<string | null>(null);
+  const [activeListingId, setActiveListingId] = useState<string | null>(null);
+  const [isCancellationFlow, setIsCancellationFlow] = useState(false);
 
   const { showAlert } = useAlert();
   const { wallets } = useWallets();
@@ -112,16 +121,86 @@ export default function SecondaryMarketPage() {
     fetchMarketData();
   }, [fetchMarketData]);
 
-  // 🛡️ Helper to find the correct wallet matching the database user session
-  const getActiveWallet = () => {
-    if (currentUserWallet) {
-      const matched = wallets.find(
-        (w) => w.address.toLowerCase() === currentUserWallet.toLowerCase(),
-      );
-      if (matched) return matched;
-    }
-    return wallets[0];
-  };
+  // 🚀 Listen for postMessage from /auth/sign iframe
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      try {
+        let data = event.data;
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch {
+            return;
+          }
+        }
+
+        if (!data || typeof data !== "object") return;
+
+        if (data.type === "TX_SUCCESS" || data.type === "TRADE_SUCCESS") {
+          const txHash = data.txHash;
+
+          if (isCancellationFlow && activeListingId) {
+            // Immediately remove cancelled listing from local UI state
+            setOrders((prev) => prev.filter((o) => o.id !== activeListingId));
+            try {
+              await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${activeListingId}`,
+                { method: "DELETE", credentials: "include" },
+              );
+            } catch (err) {
+              console.warn("⚠️ Listing delete sync notice:", err);
+            }
+            showAlert("success", "Listing successfully retracted.");
+          } else if (activeTradeId) {
+            // Trade Success Flow
+            try {
+              await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/${activeTradeId}/submit-tx`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ txHash }),
+                  credentials: "include",
+                },
+              );
+            } catch (err) {
+              console.warn("⚠️ Trade verification notice:", err);
+            }
+            setSuccessMessage("On-chain atomic trade settled successfully!");
+            // 🚀 STAYS ON MARKETPLACE PAGE (No router.push to portfolio)
+          }
+
+          setSignUrl(null);
+          setActiveListingId(null);
+          setActiveTradeId(null);
+          setIsCancellationFlow(false);
+          setLoadingIds({});
+          await fetchMarketData();
+        } else if (data.type === "TX_FAILED" || data.type === "TRADE_FAILED") {
+          setSignUrl(null);
+          setActiveListingId(null);
+          setActiveTradeId(null);
+          setIsCancellationFlow(false);
+          setLoadingIds({});
+          showAlert(
+            "error",
+            data.error || "Transaction failed or was rejected.",
+          );
+        }
+      } catch (err) {
+        // Ignore non-JSON messages
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [
+    activeTradeId,
+    activeListingId,
+    isCancellationFlow,
+    fetchMarketData,
+    showAlert,
+  ]);
 
   const visibleActiveTrades = useMemo(
     () =>
@@ -207,17 +286,6 @@ export default function SecondaryMarketPage() {
 
     setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      const wallet = getActiveWallet();
-      if (!wallet)
-        throw new Error("No connected wallet found matching your account.");
-
-      const provider = new ethers.BrowserProvider(
-        await wallet.getEthereumProvider(),
-      );
-      const signer = await provider.getSigner();
-      const buyerAddress = await signer.getAddress();
-
-      // 1. Create Trade Intent on Backend first (returns tradeId)
       const intentRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/intent`,
         {
@@ -238,81 +306,77 @@ export default function SecondaryMarketPage() {
 
       const intentData = await intentRes.json();
       const tradeId = intentData.tradeId;
+      setActiveTradeId(tradeId);
+
+      const tokenRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/privy-token`,
+        { credentials: "include" },
+      );
+      const tokenData = await tokenRes.json();
+      const token = tokenData?.privyCustomToken || tokenData?.token;
+
+      if (!token) {
+        throw new Error("Failed to authenticate secure signing session.");
+      }
+
+      const totalPriceWei = ethers
+        .parseUnits((order.quantity * order.price).toString(), 6)
+        .toString();
 
       const stablecoinAddress = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
       const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
-
-      const totalPriceWei = ethers.parseUnits(
-        (order.quantity * order.price).toString(),
-        6,
+      const targetChainId = Number(
+        process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337,
       );
 
-      const tokenContract = new ethers.Contract(
-        stablecoinAddress!,
-        [
-          "function allowance(address owner, address spender) view returns (uint256)",
-          "function approve(address spender, uint256 amount) external returns (bool)",
-        ],
-        signer,
-      );
-
-      const currentAllowance = await tokenContract.allowance(
-        buyerAddress,
+      const erc20Interface = new ethers.Interface([
+        "function approve(address spender, uint256 amount) external returns (bool)",
+      ]);
+      const approvalData = erc20Interface.encodeFunctionData("approve", [
         marketplaceAddress,
-      );
-      if (currentAllowance < totalPriceWei) {
-        showAlert("info", "Approving MockUSDC for marketplace settlement...");
-        const approveTx = await tokenContract.approve(
-          marketplaceAddress,
-          totalPriceWei,
-        );
-        await approveTx.wait();
-      }
+        totalPriceWei,
+      ]);
 
-      const marketplaceContract = new ethers.Contract(
-        marketplaceAddress!,
-        [
-          "function executeOnChainTrade(string calldata listingId, uint256 purchaseAmount) external",
-        ],
-        signer,
-      );
-
-      showAlert("info", "Submitting on-chain trade transaction...");
-
-      const tx = await marketplaceContract.executeOnChainTrade(
+      const marketInterface = new ethers.Interface([
+        "function executeOnChainTrade(string calldata listingId, uint256 purchaseAmount) external",
+      ]);
+      const txData = marketInterface.encodeFunctionData("executeOnChainTrade", [
         listingId,
         order.quantity,
-        {
-          gasLimit: BigInt(300000),
-        },
-      );
-      await tx.wait();
+      ]);
 
-      // 2. Submit Transaction Hash & Verify via Intent Pipeline
-      const submitRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/${tradeId}/submit-tx`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            txHash: tx.hash,
-          }),
-          credentials: "include",
+      const payload = {
+        approvalPayload: {
+          to: stablecoinAddress,
+          data: approvalData,
         },
-      );
+        txPayload: {
+          to: marketplaceAddress,
+          data: txData,
+          chainId: targetChainId,
+        },
+        expectedStablecoinAddress: stablecoinAddress,
+        expectedStablecoinAmount: totalPriceWei,
+        expectedVaultAddress: marketplaceAddress,
+      };
 
-      if (!submitRes.ok) {
-        const errData = await submitRes.json().catch(() => ({}));
-        throw new Error(
-          errData.message || "Failed to verify on-chain transaction.",
-        );
+      const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+      const expectedWallet = currentUserWallet || "";
+
+      let url = `/auth/sign?payload=${encodedPayload}&tradeId=${encodeURIComponent(
+        tradeId,
+      )}&autoAuth=true`;
+
+      if (expectedWallet) {
+        url += `&walletAddress=${encodeURIComponent(expectedWallet)}`;
+      }
+      if (token) {
+        url += `&token=${encodeURIComponent(token)}`;
       }
 
-      setSuccessMessage("On-chain atomic trade settled successfully!");
-      await fetchMarketData();
+      setSignUrl(url);
     } catch (err: any) {
       showAlert("error", err.message);
-    } finally {
       setLoadingIds((prev) => ({ ...prev, [listingId]: false }));
     }
   };
@@ -337,6 +401,7 @@ export default function SecondaryMarketPage() {
 
       setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
       await fetchMarketData();
+      // 🚀 STAYS ON MARKETPLACE PAGE
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -350,58 +415,58 @@ export default function SecondaryMarketPage() {
 
     setLoadingIds((prev) => ({ ...prev, [listingId]: true }));
     try {
-      const wallet = getActiveWallet();
-      if (!wallet)
-        throw new Error("No connected wallet found matching your account.");
-
-      const provider = new ethers.BrowserProvider(
-        await wallet.getEthereumProvider(),
-      );
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(
-        process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS!,
-        ["function cancelListing(string calldata listingId) external"],
-        signer,
+      const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS!;
+      const targetChainId = Number(
+        process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337,
       );
 
-      const tx = await contract.cancelListing(order.id);
-      await tx.wait();
+      const marketInterface = new ethers.Interface([
+        "function cancelListing(string calldata listingId) external",
+      ]);
+      const txData = marketInterface.encodeFunctionData("cancelListing", [
+        order.id,
+      ]);
 
-      const syncWithRetry = async (retries = 3) => {
-        for (let i = 0; i < retries; i++) {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/${listingId}`,
-            {
-              method: "DELETE",
-              credentials: "include",
-            },
-          );
-          if (res.ok) return true;
-          await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
-        }
-        throw new Error("Blockchain updated, but database failed to sync.");
+      const payload = {
+        txPayload: {
+          to: marketplaceAddress,
+          data: txData,
+          chainId: targetChainId,
+        },
       };
 
-      await syncWithRetry();
-      showAlert("success", "Listing successfully retracted.");
-      await fetchMarketData();
+      const tokenRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/privy-token`,
+        { credentials: "include" },
+      );
+      const tokenData = await tokenRes.json();
+      const token = tokenData?.privyCustomToken || tokenData?.token;
+
+      const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+      let url = `/auth/sign?payload=${encodedPayload}&listingId=${encodeURIComponent(
+        listingId,
+      )}&cancel=true&autoAuth=true`;
+
+      if (currentUserWallet) {
+        url += `&walletAddress=${encodeURIComponent(currentUserWallet)}`;
+      }
+      if (token) {
+        url += `&token=${encodeURIComponent(token)}`;
+      }
+
+      setActiveListingId(listingId);
+      setIsCancellationFlow(true);
+      setSignUrl(url);
     } catch (err: any) {
       showAlert("error", `Cancellation failed: ${err.message}`);
-    } finally {
       setLoadingIds((prev) => ({ ...prev, [listingId]: false }));
     }
   };
 
   const handleListingSuccess = async () => {
-    setSuccessMessage("Asset listed! Syncing with Remzik Ledger...");
+    setSuccessMessage("Asset listed successfully on order book!");
     setSelectedSell(null);
-
-    let attempts = 0;
-    const poll = setInterval(async () => {
-      attempts++;
-      await fetchMarketData();
-      if (attempts >= 5) clearInterval(poll);
-    }, 2000);
+    await fetchMarketData();
   };
 
   if (loading) {
@@ -541,7 +606,6 @@ export default function SecondaryMarketPage() {
         </section>
       </main>
 
-      {/* Institutional-Grade Opaque Modal Backdrop & Container */}
       {orderToExecute && (
         <div
           style={{
@@ -682,6 +746,104 @@ export default function SecondaryMarketPage() {
                 Cancel / Return to Order Book
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shared Secure Enclave Iframe Overlay */}
+      {signUrl && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              height: "640px",
+              backgroundColor: "#080C0A",
+              borderRadius: "24px",
+              border: "1px solid rgba(52, 211, 153, 0.2)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                borderBottom: "1px solid #111816",
+                backgroundColor: "#080C0A",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: "#34D399",
+                    boxShadow: "0 0 10px #34D399",
+                  }}
+                />
+                <span
+                  style={{
+                    color: "#34D399",
+                    fontSize: "11px",
+                    fontWeight: "800",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  SECURE ENCLAVE SIGNER
+                </span>
+              </div>
+              <button
+                onClick={() => setSignUrl(null)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#94A3B8",
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                <X size={14} /> Close
+              </button>
+            </div>
+
+            <iframe
+              src={signUrl}
+              style={{
+                flex: 1,
+                border: "none",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#080C0A",
+              }}
+              title="Secondary Market Signer"
+            />
           </div>
         </div>
       )}

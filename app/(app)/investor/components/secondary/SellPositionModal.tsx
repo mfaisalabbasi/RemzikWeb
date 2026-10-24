@@ -3,18 +3,26 @@
 import React, { useState, useEffect } from "react";
 import { TradeInput, MarketPosition } from "./types";
 import styles from "./secondary.module.css";
-import { Contract, parseUnits } from "ethers";
-import { useAppWallet } from "../../../../integrations/context/WalletContext";
+import { ethers } from "ethers";
+import { Loader2, X } from "lucide-react";
+import api from "@/app/integrations/lib/axios";
+import { useAppWallet } from "@/app/integrations/context/WalletContext";
 
-const MARKETPLACE_ADDRESS = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
-const STABLECOIN_ADDRESS = process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS;
+const CONFIG = {
+  MARKETPLACE_ADDRESS: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || "",
+  STABLECOIN_ADDRESS: process.env.NEXT_PUBLIC_STABLECOIN_ADDRESS || "",
+  TARGET_CHAIN_ID: Number(process.env.NEXT_PUBLIC_TARGET_CHAIN_ID || 31337),
+};
 
 interface Props {
-  position: MarketPosition & { reservedUnits?: number; walletAddress?: string };
+  position: MarketPosition & { reservedUnits?: number };
   tokenAddress: string;
   onClose: () => void;
   onSell: (trade: TradeInput) => void;
 }
+
+const isValidEvmAddress = (address?: string | null): boolean =>
+  Boolean(address && /^0x[a-fA-F0-9]{40}$/.test(address.trim()));
 
 export default function SellPositionModal({
   position,
@@ -27,280 +35,340 @@ export default function SellPositionModal({
 
   const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState<number>(position?.currentPrice ?? 0);
-  const [step, setStep] = useState<
-    "CHECKING" | "INPUT" | "APPROVING" | "READY" | "SIGNING" | "CONFIRMING"
-  >("CHECKING");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { getVerifiedSigner } = useAppWallet();
+  // 🚀 Secure Enclave Iframe State
+  const [signUrl, setSignUrl] = useState<string | null>(null);
+  const [activeListingId, setActiveListingId] = useState<string | null>(null);
 
-  // 🛡️ Dynamically check on-chain allowance whenever quantity changes
+  const { userWalletAddress } = useAppWallet();
+
+  // 🚀 Listen for postMessage from /auth/sign iframe
   useEffect(() => {
-    let isMounted = true;
-    const checkAllowance = async () => {
+    const handleMessage = async (event: MessageEvent) => {
       try {
-        const { signer } = await getVerifiedSigner();
-        const userAddress = await signer.getAddress();
+        let data = event.data;
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch {
+            return;
+          }
+        }
 
-        const tokenContract = new Contract(
-          tokenAddress,
-          [
-            "function allowance(address owner, address spender) view returns (uint256)",
-          ],
-          signer,
-        );
+        if (!data || typeof data !== "object") return;
 
-        // Asset tokens use whole integer units
-        const requiredUnits = BigInt(quantity);
+        if (data.type === "TX_SUCCESS" && data.txHash) {
+          const lId = activeListingId || data.listingId;
+          const txHash = data.txHash;
 
-        const currentAllowance = await tokenContract.allowance(
-          userAddress,
-          MARKETPLACE_ADDRESS!,
-        );
+          if (lId) {
+            try {
+              await api.post(`/secondary-market/listings/confirm`, {
+                listingId: lId,
+                txHash,
+              });
+            } catch (err) {
+              console.warn("⚠️ Secondary listing confirm notice:", err);
+            }
+          }
 
-        if (!isMounted) return;
-
-        if (currentAllowance >= requiredUnits) {
-          setStep("READY"); // Already approved for this quantity!
-        } else {
-          setStep("INPUT"); // Needs approval
+          setSignUrl(null);
+          setIsProcessing(false);
+          onSell({
+            assetId: position.assetId,
+            type: "sell",
+            quantity,
+            price,
+          });
+          onClose();
+        } else if (data.type === "TX_FAILED") {
+          setSignUrl(null);
+          setIsProcessing(false);
+          setErrorMsg(data.error || "Transaction was rejected or failed.");
         }
       } catch (err) {
-        console.error("Allowance check error:", err);
-        if (isMounted) setStep("INPUT");
+        // Ignore non-JSON messages
       }
     };
 
-    checkAllowance();
-    return () => {
-      isMounted = false;
-    };
-  }, [quantity, tokenAddress, getVerifiedSigner]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeListingId, onClose, onSell, position.assetId, price, quantity]);
 
-  const handleApprove = async () => {
+  const handleCreateListing = async () => {
     if (quantity <= 0 || quantity > available) {
-      alert(
+      setErrorMsg(
         `Invalid quantity. You have ${available} units available. (${reserved} already listed)`,
       );
       return;
     }
-
-    setStep("APPROVING");
-    try {
-      const { signer } = await getVerifiedSigner();
-
-      const tokenContract = new Contract(
-        tokenAddress,
-        [
-          "function approve(address spender, uint256 amount) external returns (bool)",
-        ],
-        signer,
-      );
-
-      const MAX_UINT = BigInt(
-        "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-      );
-
-      const tx = await tokenContract.approve(MARKETPLACE_ADDRESS!, MAX_UINT);
-      await tx.wait();
-
-      setStep("READY");
-    } catch (err: any) {
-      console.error("Approval Error:", err);
-      alert(`Approval failed: ${err.message}`);
-      setStep("INPUT");
-    }
-  };
-
-  const handleSubmit = async () => {
     if (price <= 0) {
-      alert("Please enter a valid price per unit greater than 0.");
+      setErrorMsg("Please enter a valid price per unit greater than 0.");
+      return;
+    }
+    if (!isValidEvmAddress(tokenAddress)) {
+      setErrorMsg("Invalid asset token contract address.");
       return;
     }
 
-    setStep("SIGNING");
+    setErrorMsg(null);
+    setIsProcessing(true);
+
     try {
-      const { signer } = await getVerifiedSigner();
-
       // 1. PREPARE: Get Listing ID from Backend
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/prepare`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            assetId: position.assetId,
-            unitsForSale: quantity,
-            pricePerUnit: price,
-          }),
-          credentials: "include",
-        },
-      );
+      const prepRes = await api.post("/secondary-market/listings/prepare", {
+        assetId: position.assetId,
+        unitsForSale: Number(quantity),
+        pricePerUnit: Number(price),
+      });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to prepare listing.");
+      const prepData = prepRes.data;
+      const listingId = prepData?.listingId || prepData?.id;
+      if (!listingId) {
+        throw new Error("Failed to obtain listing ID from preparation intent.");
       }
-      const { listingId } = await res.json();
+      setActiveListingId(listingId);
 
-      // 2. CONTRACT INTERACTION
-      const requiredUnits = BigInt(quantity);
-      const pricePerUnitWei = parseUnits(price.toFixed(2), 6); // MockUSDC uses 6 decimals
+      // 2. FETCH PRIVY CUSTOM TOKEN (Exact same endpoint as investment modal)
+      const tokenRes = await api.get("/auth/privy-token", {
+        withCredentials: true,
+      });
+      const token = tokenRes.data?.privyCustomToken || tokenRes.data?.token;
 
-      const contract = new Contract(
-        MARKETPLACE_ADDRESS!,
-        [
-          "function createListing(string calldata listingId, address token, address paymentToken, uint256 amount, uint256 pricePerUnit) external",
-        ],
-        signer,
-      );
+      if (!token) {
+        throw new Error("Failed to authenticate secure signing session.");
+      }
 
-      const tx = await contract.createListing(
+      // 3. CONSTRUCT PAYLOAD
+      const unitsToSellBigInt = BigInt(quantity);
+
+      const erc20Interface = new ethers.Interface([
+        "function approve(address spender, uint256 amount) external returns (bool)",
+      ]);
+      const approvalData = erc20Interface.encodeFunctionData("approve", [
+        CONFIG.MARKETPLACE_ADDRESS,
+        unitsToSellBigInt,
+      ]);
+
+      const marketInterface = new ethers.Interface([
+        "function createListing(string calldata listingId, address token, address paymentToken, uint256 amount, uint256 pricePerUnit) external",
+      ]);
+
+      const txData = marketInterface.encodeFunctionData("createListing", [
         listingId,
         tokenAddress,
-        STABLECOIN_ADDRESS!,
-        requiredUnits,
-        pricePerUnitWei,
-        { gasLimit: BigInt(300000) },
-      );
+        CONFIG.STABLECOIN_ADDRESS,
+        unitsToSellBigInt,
+        ethers.parseUnits(price.toString(), 6),
+      ]);
 
-      await tx.wait();
-
-      // 3. CONFIRM: Finalize state and persist txHash on backend
-      setStep("CONFIRMING");
-      const confirmRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/listings/confirm`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            listingId,
-            txHash: tx.hash, // 👈 Added txHash here
-          }),
-          credentials: "include",
+      const payload = {
+        approvalPayload: {
+          to: tokenAddress,
+          data: approvalData,
         },
-      );
+        txPayload: {
+          to: CONFIG.MARKETPLACE_ADDRESS,
+          data: txData,
+          chainId: CONFIG.TARGET_CHAIN_ID,
+        },
+        expectedStablecoinAddress: tokenAddress,
+        expectedStablecoinAmount: unitsToSellBigInt.toString(),
+        expectedVaultAddress: CONFIG.MARKETPLACE_ADDRESS,
+      };
 
-      if (!confirmRes.ok)
-        throw new Error("Listing on-chain, but ledger sync failed.");
+      const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+      const expectedWallet = userWalletAddress || "";
 
-      onSell({ assetId: position.assetId, type: "sell", quantity, price });
-      onClose();
+      // 4. Construct URL with all required authentication parameters
+      let url = `/auth/sign?payload=${encodedPayload}&listingId=${encodeURIComponent(
+        listingId,
+      )}&autoAuth=true`;
+
+      if (expectedWallet) {
+        url += `&walletAddress=${encodeURIComponent(expectedWallet)}`;
+      }
+      if (token) {
+        url += `&token=${encodeURIComponent(token)}`;
+      }
+
+      // 5. Open embedded iframe modal
+      setSignUrl(url);
+      setIsProcessing(false);
     } catch (err: any) {
-      console.error("Submission Error:", err);
-      alert(`Transaction Failed: ${err.message}`);
-      setStep("READY");
+      setIsProcessing(false);
+      setErrorMsg(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to prepare listing intent.",
+      );
     }
   };
 
   return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalPanel}>
-        <div className={styles.modalTitle}>List {position.assetTitle}</div>
+    <>
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalPanel}>
+          <div className={styles.modalTitle}>List {position.assetTitle}</div>
 
-        {step === "CHECKING" && (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner}></div>
-            <p>Checking token allowances...</p>
+          <div className={styles.field}>
+            <label>Quantity (Available: {available})</label>
+            <input
+              type="number"
+              value={quantity}
+              min={1}
+              max={available}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            />
+            {reserved > 0 && (
+              <small className={styles.hint}>
+                ({reserved} units already listed)
+              </small>
+            )}
           </div>
-        )}
 
-        {step === "INPUT" && (
-          <>
-            <div className={styles.field}>
-              <label>Quantity (Available: {available})</label>
-              <input
-                type="number"
-                value={quantity}
-                min={1}
-                max={available}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-              />
-              {reserved > 0 && (
-                <small className={styles.hint}>
-                  ({reserved} units already listed)
-                </small>
-              )}
-            </div>
-            <div className={styles.field}>
-              <label>Price per unit (SAR)</label>
-              <input
-                type="number"
-                value={price}
-                min={0.01}
-                step={0.01}
-                onChange={(e) => setPrice(Number(e.target.value))}
-              />
-            </div>
-            <div className={styles.modalActions}>
-              <button className={styles.ctaGhost} onClick={onClose}>
-                Cancel
-              </button>
-              <button className={styles.ctaPrimary} onClick={handleApprove}>
-                Step 1: Approve Tokens
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === "APPROVING" && (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner}></div>
-            <p>Approving tokens for marketplace escrow...</p>
+          <div className={styles.field}>
+            <label>Price per unit (SAR)</label>
+            <input
+              type="number"
+              value={price}
+              min={0.01}
+              step={0.01}
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
           </div>
-        )}
 
-        {step === "READY" && (
-          <>
-            <div className={styles.field}>
-              <label>Quantity (Available: {available})</label>
-              <input
-                type="number"
-                value={quantity}
-                min={1}
-                max={available}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-              />
-              {reserved > 0 && (
-                <small className={styles.hint}>
-                  ({reserved} units already listed)
-                </small>
-              )}
-            </div>
-            <div className={styles.field}>
-              <label>Price per unit (SAR)</label>
-              <input
-                type="number"
-                value={price}
-                min={0.01}
-                step={0.01}
-                onChange={(e) => setPrice(Number(e.target.value))}
-              />
-            </div>
-            <div className={styles.modalActions}>
-              <button className={styles.ctaGhost} onClick={onClose}>
-                Cancel
-              </button>
-              <button className={styles.ctaPrimary} onClick={handleSubmit}>
-                Step 2: Sign & List
-              </button>
-            </div>
-          </>
-        )}
+          {errorMsg && (
+            <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "8px" }}>
+              {errorMsg}
+            </p>
+          )}
 
-        {step === "SIGNING" && (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner}></div>
-            <p>Waiting for wallet signature...</p>
+          <div className={styles.modalActions}>
+            <button
+              className={styles.ctaGhost}
+              onClick={onClose}
+              disabled={isProcessing}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.ctaPrimary}
+              onClick={handleCreateListing}
+              disabled={isProcessing}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+              }}
+            >
+              {isProcessing && <Loader2 size={14} className="animate-spin" />}
+              {isProcessing ? "Preparing..." : "List On-Chain"}
+            </button>
           </div>
-        )}
-
-        {step === "CONFIRMING" && (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner}></div>
-            <p>Syncing with Remzik Ledger...</p>
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+
+      {/* Shared Secure Enclave Iframe Overlay */}
+      {signUrl && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              height: "640px",
+              backgroundColor: "#080C0A",
+              borderRadius: "24px",
+              border: "1px solid rgba(52, 211, 153, 0.2)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                borderBottom: "1px solid #111816",
+                backgroundColor: "#080C0A",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: "#34D399",
+                    boxShadow: "0 0 10px #34D399",
+                  }}
+                />
+                <span
+                  style={{
+                    color: "#34D399",
+                    fontSize: "11px",
+                    fontWeight: "800",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  SECURE ENCLAVE SIGNER
+                </span>
+              </div>
+              <button
+                onClick={() => setSignUrl(null)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#94A3B8",
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                <X size={14} /> Close
+              </button>
+            </div>
+
+            <iframe
+              src={signUrl}
+              style={{
+                flex: 1,
+                border: "none",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#080C0A",
+              }}
+              title="Secondary Listing Signer"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

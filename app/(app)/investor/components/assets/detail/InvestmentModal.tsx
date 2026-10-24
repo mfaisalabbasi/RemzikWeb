@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { ethers } from "ethers";
-import { useWallets } from "@privy-io/react-auth";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppWallet } from "@/app/integrations/context/WalletContext";
+import api from "@/app/integrations/lib/axios";
 import styles from "./Invest.module.css";
-import { Wallet, Cpu, Loader2 } from "lucide-react";
+import { Wallet, Cpu, Loader2, X } from "lucide-react";
 
 interface ModalProps {
   assetId: string;
@@ -25,6 +26,7 @@ export default function InvestmentModal({
   onClose,
   onConfirm,
 }: ModalProps) {
+  const router = useRouter();
   const [amount, setAmount] = useState<number>(min);
   const [settlementMode, setSettlementMode] = useState<
     "OFF_CHAIN" | "ON_CHAIN"
@@ -32,9 +34,72 @@ export default function InvestmentModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { wallets } = useWallets();
+  // Modal Signer Iframe State
+  const [signUrl, setSignUrl] = useState<string | null>(null);
+  const [activeInvestmentId, setActiveInvestmentId] = useState<string | null>(
+    null,
+  );
+
+  const { userWalletAddress } = useAppWallet();
+
   const isInvalid =
     amount < min || (settlementMode === "OFF_CHAIN" && amount > max);
+
+  // Listen for message from /auth/sign iframe
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      try {
+        let data = event.data;
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch {
+            return;
+          }
+        }
+
+        if (!data || typeof data !== "object") return;
+
+        if (data.type === "TX_SUCCESS" && data.txHash) {
+          const invId = activeInvestmentId || data.investmentId;
+          const txHash = data.txHash;
+
+          // Verify transaction with backend (identical to mobile flow)
+          if (invId) {
+            try {
+              await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/investments/${invId}/submit-tx`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ txHash }),
+                  credentials: "include",
+                },
+              );
+            } catch (err) {
+              console.warn("⚠️ Tx verification notice:", err);
+            }
+          }
+
+          setSignUrl(null);
+          setIsProcessing(false);
+          onConfirm(amount, "ON_CHAIN", invId || undefined);
+
+          // 🚀 Redirect to Portfolio on On-Chain Success
+          router.push("/investor/portfolio");
+        } else if (data.type === "TX_FAILED") {
+          setSignUrl(null);
+          setIsProcessing(false);
+          setErrorMsg(data.error || "Transaction was rejected or failed.");
+        }
+      } catch (err) {
+        // Ignore non-JSON postMessages
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeInvestmentId, amount, onConfirm, router]);
 
   const handleAction = async () => {
     setErrorMsg(null);
@@ -42,7 +107,7 @@ export default function InvestmentModal({
 
     try {
       if (settlementMode === "ON_CHAIN") {
-        // 1. Create Investment Intent on backend for ON_CHAIN
+        // 1. Create Investment Intent on backend
         const intentRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/investments/intent`,
           {
@@ -64,76 +129,46 @@ export default function InvestmentModal({
           );
 
         const investmentId = intentData.investmentId || intentData.id;
+        setActiveInvestmentId(investmentId);
 
-        const wallet = wallets[0];
-        if (!wallet) {
-          throw new Error("No connected wallet found via Privy.");
-        }
-
-        const provider = new ethers.BrowserProvider(
-          await wallet.getEthereumProvider(),
-        );
-        const signer = await provider.getSigner();
-
-        // 2. Execute ERC-20 Token Approval transaction first if provided by backend
-        if (
-          intentData.approvalPayload &&
-          intentData.approvalPayload.to &&
-          intentData.approvalPayload.data
-        ) {
-          const approvalTx = await signer.sendTransaction({
-            to: intentData.approvalPayload.to,
-            data: intentData.approvalPayload.data,
-            value: 0n,
-          });
-          // Wait for the approval transaction to clear on-chain
-          await provider.waitForTransaction(approvalTx.hash);
-        }
-
-        // 3. Extract vault address & calldata from backend's txPayload structure
-        const vaultAddress =
-          intentData.txPayload?.to ||
-          intentData.expectedVaultAddress ||
-          intentData.vaultAddress ||
-          intentData.to;
-
-        const calldata =
-          intentData.txPayload?.data ||
-          intentData.expectedCalldata ||
-          intentData.calldata ||
-          intentData.data;
-
-        if (!vaultAddress || !calldata) {
-          console.error("Received Intent Data from server:", intentData);
-          throw new Error("Invalid intent configuration received from server.");
-        }
-
-        // 4. Execute Vault Deposit Transaction via Privy using backend intent calldata
-        const tx = await signer.sendTransaction({
-          to: vaultAddress,
-          data: calldata,
-          value: 0n,
+        // 2. Fetch fresh Privy custom token from backend
+        const tokenRes = await api.get("/auth/privy-token", {
+          withCredentials: true,
         });
+        const token = tokenRes.data?.privyCustomToken || tokenRes.data?.token;
 
-        // 5. Submit Transaction Hash back to backend for verification
-        const submitRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/investments/${investmentId}/submit-tx`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ txHash: tx.hash }),
-            credentials: "include",
-          },
-        );
-
-        if (!submitRes.ok) {
-          throw new Error("Transaction verification submission failed.");
+        if (!token) {
+          throw new Error("Failed to authenticate secure signing session.");
         }
 
+        // 3. Construct payload matching mobile app
+        const payloadData = {
+          approvalPayload: intentData.approvalPayload || null,
+          txPayload: intentData.txPayload,
+          expectedStablecoinAddress: intentData.expectedStablecoinAddress,
+          expectedStablecoinAmount: intentData.expectedStablecoinAmount,
+          expectedVaultAddress: intentData.txPayload?.to,
+        };
+
+        const payload = encodeURIComponent(JSON.stringify(payloadData));
+        const expectedWallet = userWalletAddress || "";
+
+        let url = `/auth/sign?payload=${payload}&investmentId=${encodeURIComponent(
+          investmentId,
+        )}&autoAuth=true`;
+
+        if (expectedWallet) {
+          url += `&walletAddress=${encodeURIComponent(expectedWallet)}`;
+        }
+        if (token) {
+          url += `&token=${encodeURIComponent(token)}`;
+        }
+
+        // 4. Open embedded iframe
+        setSignUrl(url);
         setIsProcessing(false);
-        onConfirm(amount, "ON_CHAIN", investmentId);
       } else {
-        // OFF_CHAIN / Internal Wallet Route: directly call investment creation without intent endpoint
+        // OFF_CHAIN Route
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/investments`,
           {
@@ -153,152 +188,263 @@ export default function InvestmentModal({
 
         setIsProcessing(false);
         onConfirm(amount, "OFF_CHAIN", data.id);
+
+        // 🚀 Redirect to Portfolio on Off-Chain Success
+        router.push("/investor/portfolio");
       }
     } catch (err: any) {
       setIsProcessing(false);
       setErrorMsg(
         err?.reason ||
           err?.message ||
-          "Privy transaction popup failed or was rejected.",
+          "Transaction execution failed or was rejected.",
       );
     }
   };
 
   return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalPanel}>
-        <h3 className={styles.modalTitle}>Confirm Investment</h3>
+    <>
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalPanel}>
+          <h3 className={styles.modalTitle}>Confirm Investment</h3>
 
-        {/* Settlement Route Selector */}
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              fontSize: "12px",
-              color: "#64748b",
-              display: "block",
-              marginBottom: "8px",
-              fontWeight: 600,
-            }}
-          >
-            Select Settlement Route
-          </label>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
-            }}
-          >
-            <div
-              onClick={() => setSettlementMode("OFF_CHAIN")}
+          {/* Settlement Route Selector */}
+          <div style={{ marginBottom: "16px" }}>
+            <label
               style={{
-                background:
-                  settlementMode === "OFF_CHAIN" ? "#e8f5e9" : "#f8fafc",
-                border: `2px solid ${settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#e2e8f0"}`,
-                borderRadius: "10px",
-                padding: "10px",
-                cursor: "pointer",
+                fontSize: "12px",
+                color: "#64748b",
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: 600,
               }}
             >
-              <Wallet
-                size={16}
-                color={settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#64748b"}
-                style={{ marginBottom: "4px" }}
-              />
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  color: "#0f172a",
-                }}
-              >
-                Internal Wallet
-              </div>
-              <div style={{ fontSize: "10px", color: "#64748b" }}>
-                Instant off-chain escrow
-              </div>
-            </div>
-
+              Select Settlement Route
+            </label>
             <div
-              onClick={() => setSettlementMode("ON_CHAIN")}
               style={{
-                background:
-                  settlementMode === "ON_CHAIN" ? "#e0f2fe" : "#f8fafc",
-                border: `2px solid ${settlementMode === "ON_CHAIN" ? "#0284c7" : "#e2e8f0"}`,
-                borderRadius: "10px",
-                padding: "10px",
-                cursor: "pointer",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
               }}
             >
-              <Cpu
-                size={16}
-                color={settlementMode === "ON_CHAIN" ? "#0284c7" : "#64748b"}
-                style={{ marginBottom: "4px" }}
-              />
               <div
+                onClick={() => setSettlementMode("OFF_CHAIN")}
                 style={{
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  color: "#0f172a",
+                  background:
+                    settlementMode === "OFF_CHAIN" ? "#e8f5e9" : "#f8fafc",
+                  border: `2px solid ${
+                    settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#e2e8f0"
+                  }`,
+                  borderRadius: "10px",
+                  padding: "10px",
+                  cursor: "pointer",
                 }}
               >
-                Web3 On-Chain
+                <Wallet
+                  size={16}
+                  color={settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#64748b"}
+                  style={{ marginBottom: "4px" }}
+                />
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#0f172a",
+                  }}
+                >
+                  Internal Wallet
+                </div>
+                <div style={{ fontSize: "10px", color: "#64748b" }}>
+                  Instant off-chain escrow
+                </div>
               </div>
-              <div style={{ fontSize: "10px", color: "#64748b" }}>
-                Privy wallet popup
+
+              <div
+                onClick={() => setSettlementMode("ON_CHAIN")}
+                style={{
+                  background:
+                    settlementMode === "ON_CHAIN" ? "#e0f2fe" : "#f8fafc",
+                  border: `2px solid ${
+                    settlementMode === "ON_CHAIN" ? "#0284c7" : "#e2e8f0"
+                  }`,
+                  borderRadius: "10px",
+                  padding: "10px",
+                  cursor: "pointer",
+                }}
+              >
+                <Cpu
+                  size={16}
+                  color={settlementMode === "ON_CHAIN" ? "#0284c7" : "#64748b"}
+                  style={{ marginBottom: "4px" }}
+                />
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#0f172a",
+                  }}
+                >
+                  Web3 On-Chain
+                </div>
+                <div style={{ fontSize: "10px", color: "#64748b" }}>
+                  Privy Vault Settlement
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className={styles.modalField}>
-          <label>Amount (SAR)</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-            style={{ borderColor: isInvalid ? "#dc2626" : "#0f5f3a" }}
-          />
-          {settlementMode === "OFF_CHAIN" && amount > max && (
-            <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-              Exceeds available balance
-            </p>
-          )}
-          {errorMsg && (
-            <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-              {errorMsg}
-            </p>
-          )}
-        </div>
+          <div className={styles.modalField}>
+            <label>Amount (SAR)</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              style={{ borderColor: isInvalid ? "#dc2626" : "#0f5f3a" }}
+            />
+            {settlementMode === "OFF_CHAIN" && amount > max && (
+              <p
+                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
+              >
+                Exceeds available balance
+              </p>
+            )}
+            {errorMsg && (
+              <p
+                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
+              >
+                {errorMsg}
+              </p>
+            )}
+          </div>
 
-        <div className={styles.modalActions}>
-          <button
-            className={styles.btnCancel}
-            onClick={onClose}
-            disabled={isProcessing}
-          >
-            Cancel
-          </button>
-          <button
-            className={styles.btnConfirm}
-            disabled={isInvalid || isProcessing}
-            onClick={handleAction}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-            }}
-          >
-            {isProcessing && <Loader2 size={14} className="animate-spin" />}
-            {isProcessing
-              ? "Processing..."
-              : settlementMode === "ON_CHAIN"
-                ? "Open Privy Wallet"
-                : "Confirm & Invest"}
-          </button>
+          <div className={styles.modalActions}>
+            <button
+              className={styles.btnCancel}
+              onClick={onClose}
+              disabled={isProcessing}
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.btnConfirm}
+              disabled={isInvalid || isProcessing}
+              onClick={handleAction}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+              }}
+            >
+              {isProcessing && <Loader2 size={14} className="animate-spin" />}
+              {isProcessing
+                ? "Preparing Intent..."
+                : settlementMode === "ON_CHAIN"
+                  ? "Sign On-Chain Vault Tx"
+                  : "Confirm & Invest"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Embedded Secure Enclave Signer Overlay */}
+      {signUrl && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              height: "640px",
+              backgroundColor: "#080C0A",
+              borderRadius: "24px",
+              border: "1px solid rgba(52, 211, 153, 0.2)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                borderBottom: "1px solid #111816",
+                backgroundColor: "#080C0A",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: "#34D399",
+                    boxShadow: "0 0 10px #34D399",
+                  }}
+                />
+                <span
+                  style={{
+                    color: "#34D399",
+                    fontSize: "11px",
+                    fontWeight: "800",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  SECURE ENCLAVE SIGNER
+                </span>
+              </div>
+              <button
+                onClick={() => setSignUrl(null)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#94A3B8",
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                <X size={14} /> Close
+              </button>
+            </div>
+
+            <iframe
+              src={signUrl}
+              style={{
+                flex: 1,
+                border: "none",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#080C0A",
+              }}
+              title="Secure Transaction Signer"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
