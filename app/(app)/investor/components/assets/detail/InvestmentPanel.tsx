@@ -118,70 +118,75 @@ export default function InvestmentPanel({
 
   return (
     <>
-      <div className={styles.card}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "4px",
-          }}
-        >
-          <div className={styles.title}>Secure Investment</div>
+      <div className={styles.panelCard}>
+        <div className={styles.panelHeader}>
+          <div>
+            <div className={styles.panelTitle}>Secure Investment</div>
+            <div className={styles.panelSub}>Fractional Vault Entry</div>
+          </div>
           <div
             style={{
-              color: "#0f5f3a",
+              color: "#059669",
               display: "flex",
               alignItems: "center",
-              gap: "4px",
+              gap: "5px",
               fontSize: "0.7rem",
-              background: "#e8f5e9",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontWeight: "600",
+              background: "#ecfdf5",
+              border: "1px solid #a7f3d0",
+              padding: "3px 10px",
+              borderRadius: "9999px",
+              fontWeight: "700",
+              textTransform: "uppercase",
             }}
           >
             <span>●</span> ESCROW ACTIVE
           </div>
         </div>
 
-        <div className={styles.balanceStatus}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            padding: "10px 14px",
+            borderRadius: "12px",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Wallet size={14} color="#64748b" />
-            <span className={styles.label}>Available Balance</span>
+            <Wallet size={15} color="#64748b" />
+            <span
+              style={{
+                fontSize: "0.8rem",
+                color: "#64748b",
+                fontWeight: "600",
+              }}
+            >
+              Available Balance
+            </span>
           </div>
           <strong
             style={{
-              color: isBalanceLow ? "#ef4444" : "#0f172a",
+              color: isBalanceLow ? "#dc2626" : "#0f172a",
               fontWeight: "700",
+              fontSize: "0.95rem",
             }}
           >
             SAR {userBalance?.toLocaleString() ?? "---"}
           </strong>
         </div>
 
-        <div
-          style={{
-            background: "#f8fafc",
-            padding: "12px",
-            borderRadius: "12px",
-            border: "1px solid #edf2f7",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <div className={styles.field} style={{ border: "none", padding: 0 }}>
-            <span className={styles.label}>Minimum Entry </span>
-            <span className={styles.value} style={{ color: "#0f172a" }}>
-              SAR {min.toLocaleString()}
-            </span>
+        <div className={styles.summaryBox}>
+          <div className={styles.summaryRow}>
+            <span>Minimum Entry</span>
+            <strong>SAR {min.toLocaleString()}</strong>
           </div>
-          <div className={styles.field} style={{ border: "none", padding: 0 }}>
-            <span className={styles.label}>Expected Profit (Min) </span>
-            <span className={styles.value} style={{ color: "#0b3018" }}>
+          <div className={styles.summaryRow}>
+            <span>Expected Profit (Min)</span>
+            <strong style={{ color: "#059669" }}>
               +SAR {parseInt(projectedProfit).toLocaleString()}
-            </span>
+            </strong>
           </div>
         </div>
 
@@ -189,33 +194,29 @@ export default function InvestmentPanel({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: "8px",
             fontSize: "0.8rem",
-            color: "#64748b",
-            padding: "0 4px",
+            color: "#475569",
+            padding: "0 2px",
           }}
         >
-          <TrendingUp size={14} color="#16a34a" />
+          <TrendingUp size={15} color="#059669" />
           <span>
-            Projected ROI: <strong>{roi}% p.a.</strong> over {tenure} months
+            Target Yield:{" "}
+            <strong style={{ color: "#0f172a" }}>{roi}% p.a.</strong> over{" "}
+            {tenure} months
           </span>
         </div>
 
         <button
-          className={styles.cta}
+          className={styles.ctaBtn}
           onClick={() => setShowModal(true)}
           disabled={loading || isProcessing || isBalanceLow}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-          }}
         >
           {loading || isProcessing
             ? "Syncing with Chain..."
             : isBalanceLow
-              ? "Top up to Invest"
+              ? "Top up Wallet to Invest"
               : "Invest Now"}
         </button>
 
@@ -223,7 +224,7 @@ export default function InvestmentPanel({
           style={{
             borderTop: "1px solid #f1f5f9",
             paddingTop: "12px",
-            marginTop: "4px",
+            marginTop: "2px",
           }}
         >
           <div
@@ -232,19 +233,17 @@ export default function InvestmentPanel({
               alignItems: "center",
               gap: "6px",
               color: "#64748b",
-              fontSize: "0.7rem",
+              fontSize: "0.725rem",
               marginBottom: "6px",
+              fontWeight: "600",
             }}
           >
-            <ShieldCheck size={14} color="#0f5f3a" />
+            <ShieldCheck size={14} color="#059669" />
             <span>Encrypted Assets & Smart Contract Verification</span>
           </div>
-          <p
-            className={styles.disclaimer}
-            style={{ textAlign: "left", margin: 0 }}
-          >
+          <p className={styles.disclaimerText} style={{ textAlign: "left" }}>
             *Funds are securely locked in the Remzik Vault. SAR{" "}
-            {min.toLocaleString()} is the fractional token baseline.
+            {min.toLocaleString()} represents the fractional token baseline.
           </p>
         </div>
       </div>

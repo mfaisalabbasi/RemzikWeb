@@ -6,11 +6,8 @@ import AssetCard from "./AssetCard";
 import AssetsFilter from "./AssetFilter";
 import SubmitAssetModal from "./SubmitAssetModal";
 import { getPartnerAssets } from "@/app/integrations/api/asset";
+import { Layers, Plus } from "lucide-react";
 
-/**
- * ✅ Added Asset Interface
- * This defines the exact structure we expect from the backend
- */
 interface AssetData {
   id: string;
   name: string;
@@ -23,7 +20,6 @@ interface AssetData {
 }
 
 export default function PartnerAssetsPage() {
-  // ✅ Changed state from any[] to AssetData[]
   const [assets, setAssets] = useState<AssetData[]>([]);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("");
@@ -33,7 +29,6 @@ export default function PartnerAssetsPage() {
     const fetchAssets = async () => {
       try {
         const res = await getPartnerAssets();
-        // Ensure res is an array before setting state
         setAssets(Array.isArray(res) ? res : []);
       } catch (err) {
         console.error("Error fetching partner assets:", err);
@@ -43,10 +38,6 @@ export default function PartnerAssetsPage() {
     fetchAssets();
   }, []);
 
-  /**
-   * ✅ FIXED: TypeScript "possibly null" error
-   * Added checks to ensure 'a' and 'a.name' exist before calling .toLowerCase()
-   */
   const filteredAssets = assets.filter((a) => {
     if (!a || !a.name) return false;
 
@@ -60,12 +51,23 @@ export default function PartnerAssetsPage() {
     <div className={styles.wrapper}>
       {/* Header */}
       <div className={styles.headerWrapper}>
-        <h2 className={styles.pageTitle}>Assets</h2>
+        <div>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Partner Portal
+          </div>
+          <h1 className={styles.pageTitle}>
+            Managed <span style={{ color: "#059669" }}>Assets</span>
+          </h1>
+          <p className={styles.pageSubtitle}>
+            Monitor tokenized listings, capital raising stages, and investor
+            participation.
+          </p>
+        </div>
         <button
           className={styles.submitButton}
           onClick={() => setShowSubmitModal(true)}
         >
-          + Submit Asset
+          <Plus size={16} /> Submit New Asset
         </button>
       </div>
 
@@ -93,7 +95,10 @@ export default function PartnerAssetsPage() {
             />
           ))
         ) : (
-          <p className={styles.noData}>No assets found.</p>
+          <div className={styles.emptyState}>
+            <Layers size={32} color="#94a3b8" />
+            <p>No assets found matching your criteria.</p>
+          </div>
         )}
       </div>
 

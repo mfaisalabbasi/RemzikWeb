@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./styles/FundingCard.module.css";
+import { TrendingUp, Target, Wallet, Users } from "lucide-react";
 
 interface Props {
   asset: string;
@@ -25,34 +26,41 @@ export default function FundingCard({
     <div className={styles.card}>
       <div className={styles.header}>
         <h3 className={styles.asset}>{asset}</h3>
-        <span className={`${styles.stage} ${styles[stage.toLowerCase()]}`}>
+        <span
+          className={`${styles.stage} ${styles[stage.toLowerCase()] || styles.funding}`}
+        >
           {stage}
         </span>
       </div>
 
       <div className={styles.progressWrapper}>
+        <div className={styles.progressHeader}>
+          <span className={styles.progressLabel}>Subscription Rate</span>
+          <span className={styles.percent}>{progress}% Funded</span>
+        </div>
         <div className={styles.progressBar}>
           <div className={styles.progress} style={{ width: `${progress}%` }} />
         </div>
-        <span className={styles.percent}>{progress}% Funded</span>
       </div>
 
       <div className={styles.stats}>
-        <div>
-          <span className={styles.label}>Target</span>
-          <span>SAR {target.toLocaleString()}</span>
+        <div className={styles.statBox}>
+          <span className={styles.label}>Target Capital</span>
+          <span className={styles.val}>SAR {target.toLocaleString()}</span>
         </div>
-        <div>
-          <span className={styles.label}>Raised</span>
-          <span>SAR {raised.toLocaleString()}</span>
+        <div className={styles.statBox}>
+          <span className={styles.label}>Capital Raised</span>
+          <span className={styles.val} style={{ color: "#059669" }}>
+            SAR {raised.toLocaleString()}
+          </span>
         </div>
-        <div>
-          <span className={styles.label}>ROI</span>
-          <span>{roi}%</span>
+        <div className={styles.statBox}>
+          <span className={styles.label}>Projected ROI</span>
+          <span className={styles.val}>{roi}% APY</span>
         </div>
-        <div>
-          <span className={styles.label}>Investors</span>
-          <span>{investors}</span>
+        <div className={styles.statBox}>
+          <span className={styles.label}>Participants</span>
+          <span className={styles.val}>{investors} Investors</span>
         </div>
       </div>
     </div>

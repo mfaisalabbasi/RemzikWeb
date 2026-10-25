@@ -12,6 +12,7 @@ import { loginSchema } from "../../../integrations/validation/auth.schema";
 import { z } from "zod";
 import styles from "../styles/Auth.module.css";
 import Alert from "../../../integrations/Alert/Alert";
+import { ShieldCheck, ArrowRight } from "lucide-react";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -25,19 +26,15 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
   ) {
     return "Invalid credentials. Please check and try again.";
   }
-
   if (msg.includes("not found") || msg.includes("404")) {
     return "We couldn't find an account matching that email address.";
   }
-
   if (msg.includes("network") || msg.includes("failed to fetch")) {
     return "Connection error. Please check your internet connection and try again.";
   }
-
   if (msg.includes("too many requests") || msg.includes("429")) {
     return "Too many login attempts. Please wait a moment before trying again.";
   }
-
   if (msg.includes("server error") || msg.includes("500")) {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
@@ -49,7 +46,6 @@ const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
   if (!rawCallbackUrl) return null;
 
   try {
-    // Decode recursively to handle double-encoding from WebViews/Next.js router
     let decoded = rawCallbackUrl;
     for (let i = 0; i < 2; i++) {
       if (decoded.includes("%")) {
@@ -57,9 +53,6 @@ const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
       }
     }
 
-    /**
-     * Only allow same-origin relative paths or absolute paths containing your domain/routes.
-     */
     if (
       (!decoded.startsWith("/") && !decoded.startsWith("http")) ||
       (decoded.includes("//") && !decoded.includes(window.location.host)) ||
@@ -67,14 +60,12 @@ const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
       decoded.includes("\r") ||
       decoded.includes("\n")
     ) {
-      // If it's a relative path starting with slash after decoding, accept it
       if (decoded.startsWith("/")) {
         return decoded;
       }
       return null;
     }
 
-    // If it's a full URL, ensure it's same-origin
     if (decoded.startsWith("http")) {
       const url = new URL(decoded);
       if (url.origin === window.location.origin) {
@@ -96,11 +87,6 @@ function LoginFormContent() {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * ---------------------------------------------------------
-   * Callback URL Resolution with Session Storage Fallback
-   * ---------------------------------------------------------
-   */
   const getCallbackUrl = (): string | null => {
     if (typeof window === "undefined") return null;
 
@@ -111,18 +97,11 @@ function LoginFormContent() {
     const cb = params.get("callbackUrl");
     if (cb) return cb;
 
-    // Fallback to session storage if query param was dropped during navigation
     return sessionStorage.getItem("persisted_callback_url");
   };
 
-  /**
-   * ---------------------------------------------------------
-   * Preserve callback URL and investment context safely.
-   * ---------------------------------------------------------
-   */
   useEffect(() => {
     const rawCallback = getCallbackUrl();
-
     if (!rawCallback) return;
 
     try {
@@ -140,7 +119,6 @@ function LoginFormContent() {
       if (typeof window !== "undefined") {
         if (walletAddressParam) {
           const cleanWallet = walletAddressParam.replace(/["']/g, "").trim();
-
           if (/^0x[a-fA-F0-9]{40}$/.test(cleanWallet)) {
             sessionStorage.setItem(
               "target_wallet_address",
@@ -155,7 +133,6 @@ function LoginFormContent() {
 
         if (investmentIdParam) {
           const cleanInvestment = investmentIdParam.replace(/["']/g, "").trim();
-
           if (/^[0-9a-fA-F-]{36}$/.test(cleanInvestment)) {
             sessionStorage.setItem("active_investment_id", cleanInvestment);
             sessionStorage.setItem("cached_investmentId", cleanInvestment);
@@ -167,11 +144,6 @@ function LoginFormContent() {
     }
   }, [searchParams]);
 
-  /**
-   * ---------------------------------------------------------
-   * Form
-   * ---------------------------------------------------------
-   */
   const {
     register,
     handleSubmit,
@@ -180,11 +152,6 @@ function LoginFormContent() {
     resolver: zodResolver(loginSchema),
   });
 
-  /**
-   * ---------------------------------------------------------
-   * Login Submission & WebView Redirection Handler
-   * ---------------------------------------------------------
-   */
   const onSubmit = async (data: LoginFormData) => {
     setError("");
     setSuccess("");
@@ -192,7 +159,6 @@ function LoginFormContent() {
 
     try {
       const response: AuthLoginResponse = await login(data);
-
       const user = response?.user;
 
       if (!user || !user.role) {
@@ -206,17 +172,14 @@ function LoginFormContent() {
 
       setSuccess("Login successful");
 
-      // Set cookie and webview authentication flags immediately
       sessionStorage.setItem("webview_authenticated", "true");
       if (callbackUrl) {
         sessionStorage.setItem("persisted_callback_url", callbackUrl);
       }
 
-      // Allow a brief moment for HTTP-only cookies to commit inside the WebView
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       if (callbackUrl) {
-        // Use replace to prevent the user from hitting back into the login screen
         window.location.replace(callbackUrl);
         return;
       }
@@ -225,15 +188,12 @@ function LoginFormContent() {
         case "INVESTOR":
           window.location.replace("/investor");
           break;
-
         case "PARTNER":
           window.location.replace("/partner");
           break;
-
         case "ADMIN":
           window.location.replace("/admin");
           break;
-
         default:
           setError("Unknown user role. Contact support.");
           setIsSubmitting(false);
@@ -247,6 +207,11 @@ function LoginFormContent() {
 
   return (
     <section className={styles.authCard}>
+      <div className={styles.badge}>
+        <ShieldCheck size={13} color="#059669" />
+        <span>Secure Protocol Portal</span>
+      </div>
+
       <div className={styles.header}>
         <h1>Welcome Back</h1>
         <p>Authenticate to continue to Remzik Protocol</p>
@@ -256,7 +221,6 @@ function LoginFormContent() {
         {error && (
           <Alert type="error" message={error} onClose={() => setError("")} />
         )}
-
         {success && (
           <Alert
             type="success"
@@ -301,7 +265,14 @@ function LoginFormContent() {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Authenticating..." : "Login"}
+            {isSubmitting ? (
+              "Authenticating..."
+            ) : (
+              <>
+                <span>Login</span>
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
 
           <p className={styles.note}>

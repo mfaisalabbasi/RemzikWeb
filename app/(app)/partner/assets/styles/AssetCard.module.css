@@ -1,129 +1,135 @@
 .card {
   background: #ffffff;
-  border-radius: 18px;
-  padding: 20px;
-  border: 1px solid #eef2f7;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  gap: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-  border-color: #16a34a;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
+  border-color: #059669;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.stage {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 14px;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
-  text-align: center;
-}
-
-/* Stage Colors */
-.stage.funding {
-  background: #ecfdf5;
-  color: #047857;
-}
-.stage.approved {
-  background: #e0f2fe;
-  color: #0284c7;
-}
-.stage.completed {
-  background: #fef9c3;
-  color: #b45309;
+  align-items: flex-start;
 }
 
 .type {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.stage {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stage.funding {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.stage.approved {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.stage.completed {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .progressWrapper {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
 }
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.725rem;
+  font-weight: 700;
+}
+
+.progressLabel {
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.percent {
+  color: #059669;
+  font-family: "JetBrains Mono", monospace;
+}
+
 .progressBar {
-  flex: 1;
-  height: 10px;
-  background: #f3f4f6;
-  border-radius: 10px;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 9999px;
   overflow: hidden;
 }
+
 .progress {
   height: 100%;
-  background: linear-gradient(90deg, #16a34a, #22c55e);
-  border-radius: 10px;
-  transition: width 0.4s ease;
-}
-.percent {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #16a34a;
-  min-width: 50px;
-  text-align: right;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 9999px;
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-.statLabel {
-  font-weight: 500;
-  color: #9ca3af;
-  margin-right: 4px;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .card {
-    padding: 16px;
-  }
-  .name {
-    font-size: 1rem;
-  }
-  .stage {
-    font-size: 0.65rem;
-    padding: 3px 8px;
-  }
-  .type {
-    font-size: 0.8rem;
-  }
-  .percent {
-    font-size: 0.7rem;
-    min-width: 45px;
-  }
-  .stats {
-    gap: 8px;
-    font-size: 0.7rem;
-    grid-template-columns: 1fr 1fr;
-  }
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-@media (max-width: 480px) {
-  .stats {
-    grid-template-columns: 1fr;
-  }
+
+.statLabel {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statVal {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
 }

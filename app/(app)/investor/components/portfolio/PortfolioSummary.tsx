@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getDashboardStats } from "@/app/integrations/api/investor";
+import styles from "./Portfolio.module.css";
+import { TrendingUp, Wallet, PieChart } from "lucide-react";
 
 export default function PortfolioSummary() {
   const [data, setData] = useState<any>(null);
@@ -23,9 +25,7 @@ export default function PortfolioSummary() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", color: "#64748b", fontSize: "0.9rem" }}>
-        Syncing Portfolio Metrics...
-      </div>
+      <div className={styles.summarySkeleton}>Syncing Portfolio Metrics...</div>
     );
   }
   if (!data) return null;
@@ -39,92 +39,43 @@ export default function PortfolioSummary() {
     {
       label: "Total Invested",
       value: `SAR ${totalInvested.toLocaleString()}`,
+      icon: <Wallet size={16} color="#059669" />,
     },
     {
       label: "Current Value",
       value: `SAR ${currentValue.toLocaleString()}`,
+      icon: <PieChart size={16} color="#059669" />,
     },
     {
       label: "Profit / Loss",
       value: `${isPositive ? "+" : "-"} SAR ${Math.abs(profit).toLocaleString()}`,
       highlight: true,
       positive: isPositive,
+      icon: <TrendingUp size={16} color={isPositive ? "#059669" : "#dc2626"} />,
     },
   ];
 
   return (
-    <section
-      style={{
-        background: "#ffffff",
-        border: "1px solid #e2e8f0",
-        borderRadius: "16px",
-        padding: "24px",
-        marginBottom: "32px",
-        boxShadow:
-          "0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)",
-        fontFamily: "'Inter', -apple-system, sans-serif",
-      }}
-    >
-      <div style={{ marginBottom: "20px" }}>
-        <h3
-          style={{
-            fontSize: "1.1rem",
-            fontWeight: 700,
-            color: "#0f172a",
-            margin: 0,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Portfolio Summary
-        </h3>
-        <span
-          style={{
-            fontSize: "0.825rem",
-            color: "#64748b",
-            marginTop: "4px",
-            display: "block",
-          }}
-        >
-          Real-time snapshot of your capital performance & asset allocation
-        </span>
+    <section className={styles.summarySection}>
+      <div className={styles.summaryHeader}>
+        <div>
+          <h3 className={styles.summaryTitle}>Portfolio Summary</h3>
+          <span className={styles.summarySub}>
+            Real-time snapshot of your capital performance & asset allocation
+          </span>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: "20px",
-        }}
-      >
+      <div className={styles.metricsGrid}>
         {metrics.map((metric, i) => (
-          <div
-            key={i}
-            style={{
-              background: "#f8fafc",
-              border: "1px solid #f1f5f9",
-              borderRadius: "12px",
-              padding: "16px 20px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
+          <div key={i} className={styles.metricCard}>
+            <div className={styles.metricLabelRow}>
+              {metric.icon}
+              <span className={styles.metricLabel}>{metric.label}</span>
+            </div>
             <span
+              className={styles.metricValue}
               style={{
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#64748b",
-                marginBottom: "8px",
-              }}
-            >
-              {metric.label}
-            </span>
-            <span
-              style={{
-                fontSize: "1.25rem",
-                fontWeight: 700,
                 color: metric.highlight
                   ? metric.positive
                     ? "#059669"

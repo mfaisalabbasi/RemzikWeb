@@ -1,83 +1,132 @@
-/* ------------------------------
-   Header Container
-   ------------------------------ */
+/* -------------------------------------------------------------
+   COMPACT INSTITUTIONAL NAVBAR (FIXED HEIGHT 56px)
+------------------------------------------------------------- */
+
 .header {
+  height: 56px;
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 28, 21, 0.92) 0%,
+    rgba(6, 20, 15, 0.95) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
   position: fixed;
   top: 0;
-  z-index: 100;
-  height: 56px; /* ✅ Reduced from bulky height */
-  width: 100%;
-  background: #0b3d2a;
-  display: flex;
-  justify-content: center;
-  border-bottom: 0.5px solid rgb(58, 148, 91);
-  backdrop-filter: blur(6px); /* fintech glass feel */
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.12);
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
 }
 
-/* ------------------------------
-   Nav Inner Wrapper
-   ------------------------------ */
 .nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 100%; /* ✅ Prevents vertical stretch */
+  height: 100%;
   width: 100%;
-  padding: 0 20px; /* ✅ Reduced vertical padding */
+  padding: 0 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* ------------------------------
-   Logo
-   ------------------------------ */
-.logo {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ffffff;
-  text-decoration: none;
-  letter-spacing: 0.4px;
-}
-
-/* ------------------------------
-   Menu
-   ------------------------------ */
-.menu {
+.leftSection {
   display: flex;
   align-items: center;
-  gap: 16px; /* ✅ Reduced spacing */
+  gap: 14px;
 }
 
-/* ------------------------------
-   Nav Links
-   ------------------------------ */
-.link {
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #ffffff;
+/* Hamburger Button (Mobile) */
+.menuBtn {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  color: #34d399;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
-  padding: 6px 10px;
-  border-radius: 6px;
 }
 
-/* Hover */
-.link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #16a34a;
+.menuBtn:hover {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
 }
 
-/* ------------------------------
-   Responsive (Mobile)
-   ------------------------------ */
-@media (max-width: 768px) {
-  .menu {
-    gap: 10px;
+/* Brand / Logo */
+.brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logoImg {
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Center Links */
+.centerLinks {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navLink {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  color: #34d399;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+}
+
+/* Right Section */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.secureBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #34d399;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Responsive (Mobile) */
+@media (max-width: 900px) {
+  .nav {
+    padding: 0 16px;
   }
 
-  .logo {
-    font-size: 1.1rem;
+  .menuBtn {
+    display: flex;
   }
 
-  .link {
+  .centerLinks,
+  .secureBadge {
     display: none;
   }
 }

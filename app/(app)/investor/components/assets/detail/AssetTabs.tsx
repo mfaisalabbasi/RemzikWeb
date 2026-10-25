@@ -29,31 +29,40 @@ export default function AssetTabs({
 }: AssetTabsProps) {
   const [activeTab, setActiveTab] = useState<string>("Overview");
 
-  // Force-include the Governance tab so it always displays regardless of missing/unpopulated props
   const tabs = ["Overview", "Financials", "Shariah", "Documents", "Governance"];
 
   const renderContent = () => {
     switch (activeTab) {
       case "Overview":
-        return <div className={styles.tabBlock}>{overview}</div>;
+        return <div className={styles.tabContent}>{overview}</div>;
       case "Financials":
-        return <div className={styles.tabBlock}>{financials}</div>;
+        return <div className={styles.tabContent}>{financials}</div>;
       case "Shariah":
-        return <div className={styles.tabBlock}>{shariah}</div>;
+        return <div className={styles.tabContent}>{shariah}</div>;
       case "Documents":
         return (
-          <div className={styles.tabBlock}>
+          <div className={styles.tabContent}>
             {documents?.length > 0 ? (
               <div className={styles.documentList}>
                 {documents.map((doc, idx) => (
                   <div key={idx} className={styles.docItem}>
-                    <div className={styles.docInfo}>
-                      <FiFileText className={styles.docIcon} />
-                      <div className={styles.docMeta}>
+                    <div
+                      className={styles.docInfo}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <FiFileText size={20} style={{ color: "#059669" }} />
+                      <div
+                        className={styles.docMeta}
+                        style={{ display: "flex", flexDirection: "column" }}
+                      >
                         <span className={styles.docTitle}>
                           {doc.title || doc.name || "Untitled Document"}
                         </span>
-                        <span className={styles.docType}>
+                        <span style={{ fontSize: "12px", color: "#64748b" }}>
                           {doc.type || "PDF Document"}
                         </span>
                       </div>
@@ -64,7 +73,7 @@ export default function AssetTabs({
                       rel="noopener noreferrer"
                       className={styles.viewBtn}
                     >
-                      <FiDownload size={16} />
+                      <FiDownload size={14} />
                       View
                     </a>
                   </div>
@@ -72,7 +81,13 @@ export default function AssetTabs({
               </div>
             ) : (
               <div className={styles.emptyState}>
-                <p className={styles.emptyMsg}>
+                <p
+                  style={{
+                    color: "#64748b",
+                    textAlign: "center",
+                    padding: "20px 0",
+                  }}
+                >
                   No official documents available for this asset yet.
                 </p>
               </div>
@@ -81,7 +96,7 @@ export default function AssetTabs({
         );
       case "Governance":
         return (
-          <div className={styles.tabBlock}>
+          <div className={styles.tabContent}>
             <InvestorGovernanceView asset={asset} />
           </div>
         );
@@ -91,12 +106,16 @@ export default function AssetTabs({
   };
 
   return (
-    <div className={styles.tabs}>
+    <div className={styles.tabsContainer}>
       <nav className={styles.tabHeader} aria-label="Asset Details Navigation">
         {tabs.map((tab) => (
           <button
             key={tab}
-            className={activeTab === tab ? styles.activeTab : styles.tabButton}
+            className={
+              activeTab === tab
+                ? `${styles.tabBtn} ${styles.activeTab}`
+                : styles.tabBtn
+            }
             onClick={() => setActiveTab(tab)}
             aria-current={activeTab === tab ? "page" : undefined}
           >
@@ -104,7 +123,7 @@ export default function AssetTabs({
           </button>
         ))}
       </nav>
-      <div className={styles.tabContent}>{renderContent()}</div>
+      {renderContent()}
     </div>
   );
 }

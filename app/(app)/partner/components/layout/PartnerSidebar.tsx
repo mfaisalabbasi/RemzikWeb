@@ -1,9 +1,7 @@
 "use client";
 
-import Logo from "@/public/finalrem.png";
 import styles from "@/app/(app)/partner/styles/PartnerSidebar.module.css";
 import Link from "next/link";
-import Image from "next/image";
 import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/app/integrations/api/auth";
@@ -14,6 +12,7 @@ import {
   FiLayers,
   FiUser,
   FiUsers,
+  FiLogOut,
 } from "react-icons/fi";
 import { AiFillFund } from "react-icons/ai";
 import { HandCoins } from "lucide-react";
@@ -53,6 +52,7 @@ export default function PartnerSidebar({ open, onClose }: SidebarProps) {
       router.push("/auth/login");
     } catch (err) {
       console.error("Logout failed:", err);
+      router.push("/auth/login");
     }
   };
 
@@ -61,45 +61,32 @@ export default function PartnerSidebar({ open, onClose }: SidebarProps) {
       {open && <div className={styles.backdrop} onClick={onClose} />}
 
       <aside className={clsx(styles.sidebar, open && styles.open)}>
-        {/* Logo */}
-        <div className={styles.logoWrapper}>
-          <Link href="/partner" onClick={handleLinkClick}>
-            <Image
-              src={Logo}
-              alt="Remzik Partner Logo"
-              width={200}
-              height={20}
-              style={{ objectFit: "contain" }}
-              priority
-            />
-          </Link>
-        </div>
-
-        {/* Navigation */}
         <nav className={styles.nav}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+              pathname === item.href ||
+              (item.href !== "/partner" && pathname.startsWith(item.href));
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={clsx(styles.link, isActive && styles.active)}
+                className={clsx(styles.link, isActive && styles.activeLink)}
                 onClick={handleLinkClick}
               >
-                <Icon size={18} style={{ marginRight: 10 }} />
-                {item.label}
+                <Icon size={19} className={styles.navIcon} />
+                <span className={styles.label}>{item.label}</span>
+                {isActive && <div className={styles.activeIndicator} />}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
         <div className={styles.footer}>
           <button className={styles.logout} onClick={handleLogout}>
-            Logout
+            <FiLogOut size={18} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>

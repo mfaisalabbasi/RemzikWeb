@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./styles/DocumentsFilter.module.css";
+import { Search } from "lucide-react";
 
 interface Props {
   search: string;
@@ -17,23 +18,29 @@ export default function DocumentsFilter({
 }: Props) {
   return (
     <div className={styles.filterWrapper}>
-      <input
-        type="text"
-        placeholder="Search documents..."
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className={styles.searchInput}
-      />
-      <select
-        value={typeFilter}
-        onChange={(e) => onTypeChange(e.target.value)}
-        className={styles.typeSelect}
-      >
-        <option value="">All Types</option>
-        <option value="Agreement">Agreement</option>
-        <option value="Report">Report</option>
-        <option value="Certificate">Certificate</option>
-      </select>
+      <div className={styles.searchWrapper}>
+        <Search size={16} className={styles.searchIcon} />
+        <input
+          type="text"
+          placeholder="Search documents by title..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className={styles.searchInput}
+        />
+      </div>
+
+      <div className={styles.selectWrapper}>
+        <select
+          value={typeFilter}
+          onChange={(e) => onTypeChange(e.target.value)}
+          className={styles.typeSelect}
+        >
+          <option value="">All Document Categories</option>
+          <option value="Agreement">Agreement</option>
+          <option value="Report">Report</option>
+          <option value="Certificate">Certificate</option>
+        </select>
+      </div>
     </div>
   );
 }

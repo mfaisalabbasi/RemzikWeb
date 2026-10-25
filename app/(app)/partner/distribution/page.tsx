@@ -10,7 +10,7 @@ import {
   triggerDistributionFromIncome,
 } from "@/app/integrations/api/asset";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
-import { ArrowRight, X, ShieldCheck, Landmark } from "lucide-react";
+import { ArrowRight, X, ShieldCheck, Landmark, DollarSign } from "lucide-react";
 
 export default function PartnerDistributionPage() {
   const [distributions, setDistributions] = useState<any[]>([]);
@@ -49,9 +49,6 @@ export default function PartnerDistributionPage() {
   const platformFee = netProfit > 0 ? netProfit * 0.01 : 0;
   const finalPayout = netProfit - platformFee;
 
-  /**
-   * ✅ HARDENED TRANSACTION ENGINE PIPELINE
-   */
   const handleProcessDistribution = async () => {
     if (!selectedAsset || netProfit <= 0) {
       if (netProfit <= 0 && report.grossAmount)
@@ -61,7 +58,6 @@ export default function PartnerDistributionPage() {
 
     setIsLoading(true);
     try {
-      // 1. Register Asset Income Report
       const incomeRecord = await submitAssetIncome({
         assetId: selectedAsset.id,
         grossAmount: gross,
@@ -69,7 +65,6 @@ export default function PartnerDistributionPage() {
         period: report.period,
       });
 
-      // 🛡️ Safe Extraction: Handle case if backend wraps data inside a .data property
       const incomeId = incomeRecord?.id || incomeRecord?.data?.id;
 
       if (!incomeId) {
@@ -78,7 +73,6 @@ export default function PartnerDistributionPage() {
         );
       }
 
-      // 2. Authorize distribution batch ledger initialization
       await triggerDistributionFromIncome(incomeId);
 
       showAlert(
@@ -91,7 +85,6 @@ export default function PartnerDistributionPage() {
     } catch (err: any) {
       console.error("🔥 Distribution Pipeline Crash Error Context:", err);
 
-      // Extract the deep nested string message sent back by NestJS validation exceptions
       const backendMessage =
         err?.response?.data?.message || err.message || "Execution failed";
       showAlert(
@@ -106,12 +99,16 @@ export default function PartnerDistributionPage() {
   return (
     <div className={styles.mainContainer}>
       <div className={styles.contentWrapper}>
-        {/* TOP NAVIGATION / STATS BAR */}
         <header className={styles.topHeader}>
-          <div className={styles.titleArea}>
-            <h1 className={styles.titleMain}>Capital Distribution</h1>
+          <div>
+            <div className={styles.breadcrumb}>
+              Remzik Protocol / Partner Portal
+            </div>
+            <h1 className={styles.titleMain}>
+              Capital <span style={{ color: "#059669" }}>Distribution</span>
+            </h1>
             <p className={styles.titleSub}>
-              Institutional Yield Management Terminal
+              Institutional Yield Management & Settlement Terminal
             </p>
           </div>
           <div className={styles.statCards}>
@@ -131,7 +128,6 @@ export default function PartnerDistributionPage() {
           />
         </div>
 
-        {/* ASSET GRID */}
         <section className={styles.gridSection}>
           <div className={styles.distributionGrid}>
             {distributions
@@ -151,18 +147,17 @@ export default function PartnerDistributionPage() {
         </section>
       </div>
 
-      {/* INSTITUTIONAL OVERLAY MODAL */}
       {selectedAsset && (
         <div className={styles.modalOverlay}>
           <div className={styles.fintechModal}>
             <div className={styles.modalSidebar}>
               <div className={styles.sidebarIcon}>
-                <Landmark size={28} />
+                <Landmark size={26} color="#059669" />
               </div>
               <div className={styles.sidebarSteps}>
-                <div className={styles.stepActive}>01. Report</div>
+                <div className={styles.stepActive}>01. Report Income</div>
                 <div className={styles.stepLine} />
-                <div className={styles.stepPending}>02. Distribute</div>
+                <div className={styles.stepPending}>02. Batch Settlement</div>
               </div>
             </div>
 
@@ -171,13 +166,14 @@ export default function PartnerDistributionPage() {
                 className={styles.closeBtn}
                 onClick={() => setSelectedAsset(null)}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
 
               <div className={styles.modalContent}>
                 <h2 className={styles.modalTitle}>Revenue Settlement</h2>
                 <p className={styles.modalSubtitle}>
-                  Registering yield for <strong>{selectedAsset.name}</strong>
+                  Registering operating yield for{" "}
+                  <strong>{selectedAsset.name}</strong>
                 </p>
 
                 <div className={styles.inputStack}>

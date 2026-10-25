@@ -1,51 +1,80 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 /* ================================
    CARD CONTAINER
    ================================ */
 .authCard {
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 28px 24px;
+  max-width: 480px;
+  margin: 50px auto;
+  padding: 36px 32px;
 
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 24px;
 
   box-shadow:
-    0 24px 50px rgba(0, 0, 0, 0.08),
+    0 25px 50px -12px rgba(0, 0, 0, 0.12),
     0 4px 12px rgba(0, 0, 0, 0.05);
 
-  border: 1px solid #eef2f3;
+  border: 1px solid #e2e8f0;
 
   display: flex;
   flex-direction: column;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    sans-serif;
+}
+
+/* ================================
+   INSTITUTIONAL BADGE
+   ================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  font-size: 0.725rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: fit-content;
+  margin: 0 auto 16px auto;
 }
 
 /* ================================
    HEADER
    ================================ */
 .header {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
   text-align: center;
 }
 
 .header h1 {
-  font-size: 1.55rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #0f172a;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
 }
 
 .header p {
-  font-size: 0.9rem;
+  font-size: 0.925rem;
   color: #64748b;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 /* ================================
-   FORM WRAPPER (scrollable on mobile)
+   FORM WRAPPER
    ================================ */
 .formWrapper {
-  max-height: 75vh; /* limits height on mobile */
+  max-height: 75vh;
   overflow-y: auto;
-  padding-right: 4px; /* prevent scrollbar overlap */
+  padding-right: 4px;
 }
 
 /* ================================
@@ -54,250 +83,170 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 /* ================================
-   FIELD
+   FIELD & INPUT
    ================================ */
 .field {
   display: flex;
   flex-direction: column;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: #334155;
+  font-weight: 600;
 }
 
-/* ================================
-   INPUT
-   ================================ */
 .fieldInput {
-  margin-top: 4px;
-  padding: 10px 12px;
-
-  border-radius: 10px;
-  border: 1px solid #d7dee3;
-
-  font-size: 0.92rem;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
   outline: none;
-
-  transition:
-    border 0.15s ease,
-    box-shadow 0.15s ease;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: all 0.2s ease;
 }
 
 .fieldInput:focus {
-  border-color: #0f5f3a;
-  box-shadow: 0 0 0 2px rgba(15, 95, 58, 0.15);
-}
-
-/* ================================
-   PRIMARY BUTTON
-   ================================ */
-.primary {
-  margin-top: 8px;
-
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-
-  background: linear-gradient(135deg, #0f5f3a, #0c4b2e);
-
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 0.92rem;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(15, 95, 58, 0.25);
-}
-
-/* ================================
-   NOTE / LINK
-   ================================ */
-.note {
-  font-size: 0.88rem;
-  color: #64748b;
-  text-align: center;
-  margin-top: 12px;
-}
-
-.link {
-  margin-left: 6px;
-  color: #0f5f3a;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
-/* ================================
-   RESPONSIVE
-   ================================ */
-@media (max-width: 640px) {
-  .authCard {
-    margin: 20px 16px;
-    padding: 22px;
-  }
-
-  .header h1 {
-    font-size: 1.35rem;
-  }
-
-  .header p {
-    font-size: 0.85rem;
-  }
-
-  .formWrapper {
-    max-height: 70vh; /* scroll if form too tall */
-  }
-}
-
-/* profile creation */
-
-/* ===============================
-   PAGE CONTAINER
-   =============================== */
-.container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: #f9fafb;
-}
-
-/* ===============================
-   CARD
-   =============================== */
-.card {
-  max-width: 500px;
-  width: 100%;
+  border-color: #059669;
   background: #ffffff;
-  border-radius: 20px;
-  padding: 36px;
-  box-shadow:
-    0 30px 60px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eef2f3;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  box-sizing: border-box;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
 }
 
-/* ===============================
-   HEADINGS
-   =============================== */
-.heading {
-  font-size: 1.7rem;
-  font-weight: 600;
-  color: #0f172a;
-  text-align: center;
-}
-
-.subheading {
-  font-size: 0.95rem;
-  color: #64748b;
-  text-align: center;
-}
-
-/* ===============================
-   ROLE CARDS
-   =============================== */
+/* ================================
+   ROLE CARDS (Step 2)
+   ================================ */
 .roles {
   display: flex;
-  gap: 16px;
   flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .roleCard {
-  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
   border-radius: 16px;
-  border: 1px solid #e7ecef;
-  background: #fbfdfc;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
   cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .roleCard:hover {
-  transform: translateY(-3px);
-  border-color: #0f5f3a33;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: #059669;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.08);
+}
+
+.roleCard.active {
+  border-color: #059669;
+  background: #ecfdf5;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.12);
+}
+
+.roleIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .roleCard h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #0f5f3a;
-  margin-bottom: 6px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
 }
 
 .roleCard p {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #475569;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
 }
 
-/* ACTIVE ROLE */
-.roleCard.active {
-  border-color: #0f5f3a;
-  box-shadow: 0 16px 32px rgba(15, 95, 58, 0.15);
-  background: #ffffff;
-}
-
-/* ===============================
-   PRIMARY BUTTON
-   =============================== */
+/* ================================
+   PRIMARY & SECONDARY BUTTONS
+   ================================ */
 .primary {
-  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
   padding: 14px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #0f5f3a, #0c4b2e);
+  background: #059669;
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 0.925rem;
   cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
 }
 
-.primary:hover {
+.primary:hover:not(:disabled) {
+  background: #10b981;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
   transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(15, 95, 58, 0.25);
 }
 
 .primary:disabled {
-  background: #a0b3a1;
+  background: #cbd5e1;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-/* ===============================
-   NOTE / LINK
-   =============================== */
-.note {
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary:hover {
+  border-color: #059669;
+  color: #059669;
+  background: #ecfdf5;
+}
+
+/* ================================
+   NOTE & LINK
+   ================================ */
+.note {
+  font-size: 0.875rem;
   color: #64748b;
   text-align: center;
+  margin-top: 16px;
+  font-weight: 500;
 }
 
 .link {
   margin-left: 6px;
-  color: #0f5f3a;
-  font-weight: 600;
+  color: #059669;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -305,35 +254,30 @@
   text-decoration: underline;
 }
 
-/* ===============================
-   RESPONSIVE
-   =============================== */
-@media (max-width: 600px) {
-  .roles {
-    flex-direction: column;
+/* ================================
+   ERROR MESSAGE
+   ================================ */
+.error {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+@media (max-width: 640px) {
+  .authCard {
+    margin: 20px 16px;
+    padding: 28px 20px;
   }
 
-  .roleCard {
-    padding: 18px;
-  }
-
-  .card {
-    padding: 28px;
-  }
-
-  .heading {
+  .header h1 {
     font-size: 1.5rem;
   }
 
-  .subheading {
-    font-size: 0.85rem;
+  .header p {
+    font-size: 0.875rem;
   }
-}
-
-/* error */
-
-.error {
-  color: #ff4d4f;
-  font-size: 12px;
-  margin-top: 4px;
 }

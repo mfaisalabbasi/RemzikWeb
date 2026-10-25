@@ -1,7 +1,9 @@
 "use client";
+
 import { useState } from "react";
 import styles from "./Wallet.module.css";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
+import { ArrowUpRight, Plus } from "lucide-react";
 
 interface WalletActionsProps {
   onRefresh: () => void;
@@ -30,7 +32,7 @@ export default function WalletActions({
       );
 
       if (!res.ok) throw new Error("Deposit failed");
-      showAlert("success", "5,000 SAR added to ledger.");
+      showAlert("success", "5,000 SAR added to corporate ledger.");
       setTimeout(() => onRefresh(), 500);
     } catch (err) {
       showAlert("error", "Failed to process deposit.");
@@ -56,14 +58,13 @@ export default function WalletActions({
           onClick={handleDummyDeposit}
           disabled={loading}
         >
+          <Plus size={16} />
           {loading ? "Processing..." : "Deposit (Demo 5k)"}
         </button>
       )}
-      <button
-        className={isPartner ? styles.primary : styles.secondary}
-        onClick={handleWithdrawRequest}
-      >
-        {isPartner ? "Request Payout to Bank" : "Withdraw"}
+      <button className={styles.primary} onClick={handleWithdrawRequest}>
+        <ArrowUpRight size={16} />
+        {isPartner ? "Request Corporate Payout" : "Withdraw Funds"}
       </button>
     </div>
   );

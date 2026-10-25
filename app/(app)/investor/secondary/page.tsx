@@ -140,7 +140,6 @@ export default function SecondaryMarketPage() {
           const txHash = data.txHash;
 
           if (isCancellationFlow && activeListingId) {
-            // Immediately remove cancelled listing from local UI state
             setOrders((prev) => prev.filter((o) => o.id !== activeListingId));
             try {
               await fetch(
@@ -152,7 +151,6 @@ export default function SecondaryMarketPage() {
             }
             showAlert("success", "Listing successfully retracted.");
           } else if (activeTradeId) {
-            // Trade Success Flow
             try {
               await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/${activeTradeId}/submit-tx`,
@@ -167,7 +165,6 @@ export default function SecondaryMarketPage() {
               console.warn("⚠️ Trade verification notice:", err);
             }
             setSuccessMessage("On-chain atomic trade settled successfully!");
-            // 🚀 STAYS ON MARKETPLACE PAGE (No router.push to portfolio)
           }
 
           setSignUrl(null);
@@ -401,7 +398,6 @@ export default function SecondaryMarketPage() {
 
       setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
       await fetchMarketData();
-      // 🚀 STAYS ON MARKETPLACE PAGE
     } catch (err: any) {
       showAlert("error", err.message);
     } finally {
@@ -481,12 +477,14 @@ export default function SecondaryMarketPage() {
   return (
     <div className={styles.secondaryMarketPage}>
       <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <div className={styles.breadcrumb}>Remzik / Secondary Market</div>
+        <div>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Secondary Market
+          </div>
           <h1>
             Market <span className={styles.accent}>Liquidity</span>
           </h1>
-          <p>Institutional-grade P2P exchange for fractionalized RWA.</p>
+          <p>Institutional-grade P2P exchange for fractionalized RWA tokens.</p>
         </div>
         <div className={styles.headerRight}>
           <div className={styles.liveBadge}>
@@ -495,11 +493,11 @@ export default function SecondaryMarketPage() {
         </div>
       </header>
 
-      <main className={styles.marketLayout}>
+      <main className={styles.marketGrid}>
         <aside className={styles.sidebar}>
           <section className={styles.holdingsWrapper}>
             <div className={styles.columnHeader}>
-              <Wallet size={18} className={styles.iconGold} />
+              <Wallet size={16} className={styles.iconGold} />
               <h2>My Holdings</h2>
             </div>
             <div className={styles.cardsContainer}>
@@ -520,7 +518,7 @@ export default function SecondaryMarketPage() {
 
           <section className={styles.activeTradesWrapper}>
             <div className={styles.columnHeader}>
-              <Clock size={18} className={styles.iconGold} />
+              <Clock size={16} className={styles.iconGold} />
               <h2>Active Trades</h2>
             </div>
             <div className={styles.activeTradesContainer}>
@@ -529,25 +527,33 @@ export default function SecondaryMarketPage() {
                   const isBuyer = currentUserId === t.buyerId;
                   const isDisputed = t.status === "DISPUTED";
                   return (
-                    <div
-                      key={t.id}
-                      className={`${styles.fintechTradeCard} ${isDisputed ? styles.disputedCard : ""}`}
-                    >
+                    <div key={t.id} className={styles.fintechTradeCard}>
                       <div className={styles.tradeMain}>
                         <div className={styles.tradeLeft}>
                           <strong>{t.assetTitle}</strong>
                           <span>SAR {t.amount.toLocaleString()}</span>
                         </div>
                         <div
-                          className={`${styles.statusPill} ${styles[t.status.toLowerCase()] || styles.statusGeneric}`}
+                          className={`${styles.statusPill} ${
+                            styles[t.status.toLowerCase()] || styles.locked
+                          }`}
                         >
                           {t.status}
                         </div>
                       </div>
                       <div className={styles.tradeActions}>
                         {isDisputed ? (
-                          <div className={styles.disputeWarning}>
-                            <ShieldAlert size={14} /> Under Review
+                          <div
+                            style={{
+                              color: "#dc2626",
+                              fontSize: "0.725rem",
+                              fontWeight: "700",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <ShieldAlert size={13} /> Under Admin Review
                           </div>
                         ) : (
                           <>
@@ -567,7 +573,7 @@ export default function SecondaryMarketPage() {
                               </button>
                             ) : (
                               <div className={styles.waitingBadge}>
-                                Waiting for Release
+                                Waiting for Buyer Release
                               </div>
                             )}
                             <button
@@ -575,7 +581,7 @@ export default function SecondaryMarketPage() {
                               onClick={() => handleOpenDispute(t.id)}
                               className={styles.disputeAction}
                             >
-                              <ShieldAlert size={12} /> Raise Dispute
+                              <ShieldAlert size={12} /> Dispute
                             </button>
                           </>
                         )}
@@ -592,10 +598,10 @@ export default function SecondaryMarketPage() {
 
         <section className={styles.orderBookSection}>
           <div className={styles.columnHeader}>
-            <BarChart3 size={18} className={styles.iconGold} />
+            <BarChart3 size={16} className={styles.iconGold} />
             <h2>Order Book</h2>
           </div>
-          <div className={styles.tableCard}>
+          <div className={styles.tableContainer}>
             <OrderBookTable
               orders={orders}
               onBuyNow={handleExecuteTrade}
@@ -607,89 +613,36 @@ export default function SecondaryMarketPage() {
       </main>
 
       {orderToExecute && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(5, 5, 8, 0.85)",
-            backdropFilter: "blur(8px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1rem",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#12131a",
-              border: "1px solid rgba(212, 175, 55, 0.2)",
-              borderRadius: "16px",
-              padding: "2rem",
-              width: "100%",
-              maxWidth: "440px",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
-            }}
-          >
-            <h3
-              style={{
-                color: "#ffffff",
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                marginBottom: "0.5rem",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Select Settlement Routing
-            </h3>
-            <p
-              style={{
-                color: "#94a3b8",
-                fontSize: "0.875rem",
-                marginBottom: "1.75rem",
-                lineHeight: "1.5",
-              }}
-            >
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalPanel}>
+            <h3 className={styles.modalTitle}>Select Settlement Routing</h3>
+            <p className={styles.tradeSuccessMessage}>
               Choose execution layer for acquiring shares of{" "}
-              <strong style={{ color: "#f8fafc" }}>
+              <strong style={{ color: "#0f172a" }}>
                 {orderToExecute.assetTitle}
               </strong>
               .
             </p>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
             >
               <button
                 onClick={confirmOnChainExecution}
+                className={styles.ctaPrimary}
                 style={{
-                  backgroundColor: "#d4af37",
-                  color: "#0a0a0f",
-                  fontWeight: 600,
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)",
                 }}
               >
-                <span style={{ fontSize: "0.95rem" }}>
-                  ⚡ On-Chain Atomic Settlement
-                </span>
+                <span>⚡ On-Chain Atomic Settlement</span>
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.65rem",
                     textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    backgroundColor: "rgba(0,0,0,0.15)",
-                    padding: "3px 6px",
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    padding: "2px 6px",
                     borderRadius: "4px",
                   }}
                 >
@@ -699,29 +652,19 @@ export default function SecondaryMarketPage() {
 
               <button
                 onClick={confirmOffChainExecution}
+                className={styles.ctaGhost}
                 style={{
-                  backgroundColor: "#1e2029",
-                  color: "#f8fafc",
-                  fontWeight: 500,
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  cursor: "pointer",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  transition: "all 0.2s ease",
                 }}
               >
-                <span style={{ fontSize: "0.95rem" }}>
-                  🛡️ Off-Chain Escrow Vault
-                </span>
+                <span>🛡️ Off-Chain Escrow Vault</span>
                 <span
                   style={{
-                    fontSize: "0.7rem",
+                    fontSize: "0.65rem",
                     textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: "#94a3b8",
+                    color: "#64748b",
                   }}
                 >
                   Managed
@@ -731,19 +674,17 @@ export default function SecondaryMarketPage() {
               <button
                 onClick={() => setOrderToExecute(null)}
                 style={{
-                  backgroundColor: "transparent",
+                  background: "transparent",
                   color: "#64748b",
-                  fontWeight: 500,
-                  padding: "10px",
-                  borderRadius: "8px",
+                  fontWeight: 600,
+                  padding: "8px",
                   border: "none",
                   cursor: "pointer",
-                  marginTop: "6px",
-                  fontSize: "0.875rem",
-                  transition: "color 0.2s ease",
+                  fontSize: "0.825rem",
+                  marginTop: "4px",
                 }}
               >
-                Cancel / Return to Order Book
+                Cancel / Return
               </button>
             </div>
           </div>
@@ -757,8 +698,8 @@ export default function SecondaryMarketPage() {
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(6px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -770,10 +711,10 @@ export default function SecondaryMarketPage() {
               width: "100%",
               maxWidth: "460px",
               height: "640px",
-              backgroundColor: "#080C0A",
+              backgroundColor: "#ffffff",
               borderRadius: "24px",
-              border: "1px solid rgba(52, 211, 153, 0.2)",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -786,8 +727,8 @@ export default function SecondaryMarketPage() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 20px",
-                borderBottom: "1px solid #111816",
-                backgroundColor: "#080C0A",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#f8fafc",
               }}
             >
               <div
@@ -798,28 +739,29 @@ export default function SecondaryMarketPage() {
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    backgroundColor: "#34D399",
-                    boxShadow: "0 0 10px #34D399",
+                    backgroundColor: "#10b981",
+                    boxShadow: "0 0 8px rgba(16, 185, 129, 0.5)",
                   }}
                 />
                 <span
                   style={{
-                    color: "#34D399",
+                    color: "#0f172a",
                     fontSize: "11px",
                     fontWeight: "800",
                     letterSpacing: "0.5px",
+                    textTransform: "uppercase",
                   }}
                 >
-                  SECURE ENCLAVE SIGNER
+                  Secure Enclave Signer
                 </span>
               </div>
               <button
                 onClick={() => setSignUrl(null)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#94A3B8",
-                  padding: "6px 10px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  padding: "5px 10px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   display: "flex",
@@ -840,7 +782,7 @@ export default function SecondaryMarketPage() {
                 border: "none",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#080C0A",
+                backgroundColor: "#ffffff",
               }}
               title="Secondary Market Signer"
             />

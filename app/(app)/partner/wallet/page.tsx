@@ -20,7 +20,7 @@ interface WalletData {
 
 export default function PartnerWalletPage() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<any[]>([]); // ✅ Fixed type definition here
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -31,10 +31,27 @@ export default function PartnerWalletPage() {
         getWalletTransactions(),
       ]);
 
-      setWallet(walletRes);
-      setTransactions(transRes);
+      const safeWallet: WalletData = {
+        availableBalance: Number(
+          walletRes?.availableBalance ?? walletRes?.balance ?? 0,
+        ),
+        lockedBalance: Number(walletRes?.lockedBalance ?? 0),
+        pendingPayout: Number(walletRes?.pendingPayout ?? 0),
+        totalEarned: Number(walletRes?.totalEarned ?? 0),
+        balance: Number(walletRes?.balance ?? 0),
+      };
+
+      setWallet(safeWallet);
+      setTransactions(Array.isArray(transRes) ? transRes : []);
     } catch (err) {
       console.error("Ledger synchronization error:", err);
+      setWallet({
+        availableBalance: 0,
+        lockedBalance: 0,
+        pendingPayout: 0,
+        totalEarned: 0,
+        balance: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -59,6 +76,9 @@ export default function PartnerWalletPage() {
     <main className={styles.pageWrapper}>
       <header className={styles.pageHeader}>
         <div className={styles.headerTitle}>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Corporate Vault
+          </div>
           <h1>
             Financial <span className={styles.accent}>Dashboard</span>
           </h1>
@@ -67,7 +87,6 @@ export default function PartnerWalletPage() {
         <div className={styles.statusBadge}>Partner Account Active</div>
       </header>
 
-      {/* Pass 'PARTNER' role to customize labels */}
       {wallet && <WalletSummary data={wallet} role="PARTNER" />}
 
       <WalletActions onRefresh={loadData} role="PARTNER" />

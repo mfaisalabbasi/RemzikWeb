@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AssetCard from "./AssetCard";
+import { Loader2, AlertCircle } from "lucide-react";
 import styles from "./Asset.module.css";
 
 interface Asset {
@@ -44,7 +45,6 @@ export default function AssetGrid({ filters }: AssetGridProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter Logic: Happens on every render when filters change
   const filteredAssets = assets.filter((asset) => {
     const matchesType =
       filters.type === "All Asset Types" || asset.type === filters.type;
@@ -54,20 +54,32 @@ export default function AssetGrid({ filters }: AssetGridProps) {
       filters.roi === "Any ROI" ||
       (asset.expectedYield || 0) >= numericRoiFilter;
 
-    // Tenure logic is simulated as '12 Months' for now
     const matchesTenure =
       filters.tenure === "Any Tenure" || "12 Months".includes(filters.tenure);
 
     return matchesType && matchesRoi && matchesTenure;
   });
 
-  if (loading) return <p className={styles.loading}>Loading assets...</p>;
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <Loader2
+          size={28}
+          className="animate-spin"
+          style={{ color: "#059669" }}
+        />
+        <span>Synchronizing asset vaults with blockchain ledger...</span>
+      </div>
+    );
+  }
 
   if (filteredAssets.length === 0) {
     return (
-      <p className={styles.noResults}>
-        No assets found matching your criteria.
-      </p>
+      <div className={styles.noResultsContainer}>
+        <AlertCircle size={32} style={{ color: "#64748b" }} />
+        <h4>No Asset Vaults Found</h4>
+        <p>No tokenized assets match your selected filter criteria.</p>
+      </div>
     );
   }
 

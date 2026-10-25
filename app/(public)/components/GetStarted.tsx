@@ -1,8 +1,9 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+
+import React, { useState } from "react";
 import GetStartedModal from "./GetStartedModal";
 import styles from "@/app/(public)/styles/GetStartedCTA.module.css";
+import { ArrowRight } from "lucide-react";
 
 export default function GetStartedCTA() {
   const [open, setOpen] = useState(false);
@@ -10,7 +11,8 @@ export default function GetStartedCTA() {
   return (
     <>
       <button className={styles.button} onClick={() => setOpen(true)}>
-        Get Started
+        <span>Get Started</span>
+        {/* <ArrowRight size={15} className={styles.arrowIcon} /> */}
       </button>
 
       <GetStartedModal open={open} onClose={() => setOpen(false)} />

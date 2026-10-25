@@ -4,64 +4,123 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "@/app/(public)/styles/HeroSlider.module.css";
 import GetStartedCTA from "./GetStarted";
+import { ShieldCheck } from "lucide-react";
 
 const slides = [
   {
-    title: "Invest in Real Estate",
-    subtitle: "Shariah-compliant digital ownership",
+    title: "Invest in Prime Real Estate",
+    highlight: "Real Estate",
+    subtitle:
+      "Shariah-compliant digital ownership backed by audited physical assets.",
     image: "/slider/real-estate.jpg",
+    badge: "Shariah-Compliant Tokenization",
   },
   {
-    title: "Tokenized Global Assets",
-    subtitle: "Real value. Transparent structure.",
+    title: "Tokenized Institutional Assets",
+    highlight: "Institutional Assets",
+    subtitle:
+      "Real yield, transparent smart contracts, and fractionized liquidity.",
     image: "/slider/global-assets.jpg",
+    badge: "Audited Real-World Assets (RWA)",
   },
   {
-    title: "Secure & Trusted Platform",
-    subtitle: "Built for long-term investors",
+    title: "Secure & Compliant Vaults",
+    highlight: "Compliant Vaults",
+    subtitle:
+      "Built for long-term institutional and retail investors across KSA.",
     image: "/slider/secure.jpg",
+    badge: "Institutional Security Grade",
   },
 ];
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setCurrent((prev) => (prev + 1) % slides.length),
-      5000,
-    );
+    const interval = setInterval(() => {
+      handleNext();
+    }, 6000);
     return () => clearInterval(interval);
   }, []);
 
+  const handleNext = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const goToSlide = (idx: number) => {
+    if (idx === current) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrent(idx);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
   return (
     <section className={styles.hero}>
-      {/* Slider Image */}
+      {/* Background Images Layer */}
       <div className={styles.slider}>
-        <Image
-          src={slides[current].image}
-          alt={slides[current].title}
-          fill
-          priority
-          className={styles.image}
-        />
+        {slides.map((slide, idx) => (
+          <div
+            key={idx}
+            className={`${styles.slideWrapper} ${
+              idx === current ? styles.activeSlide : ""
+            }`}
+          >
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              fill
+              priority={idx === 0}
+              className={styles.image}
+            />
+          </div>
+        ))}
+        {/* Balanced neutral dark overlay so background images pop */}
         <div className={styles.overlay} />
       </div>
 
-      {/* Content Overlay */}
-      <div className={styles.content}>
-        <h1 className={styles.title}>{slides[current].title}</h1>
+      {/* Main Hero Content */}
+      <div
+        className={`${styles.content} ${isTransitioning ? styles.contentFadeOut : styles.contentFadeIn}`}
+      >
+        <div className={styles.badge}>
+          <span className={styles.pulseDot} />
+          <ShieldCheck size={14} color="#34d399" />
+          <span>{slides[current].badge}</span>
+        </div>
+
+        <h1 className={styles.title}>
+          {slides[current].title.split(slides[current].highlight)[0]}
+          <span className={styles.accentText}>{slides[current].highlight}</span>
+          {slides[current].title.split(slides[current].highlight)[1]}
+        </h1>
+
         <p className={styles.subtitle}>{slides[current].subtitle}</p>
-        <GetStartedCTA />
+
+        <div className={styles.ctaWrapper}>
+          <GetStartedCTA />
+        </div>
       </div>
 
-      {/* Dots */}
+      {/* Institutional Progress Indicators */}
       <div className={styles.dots}>
         {slides.map((_, idx) => (
-          <span
+          <button
             key={idx}
-            className={`${styles.dot} ${current === idx ? styles.active : ""}`}
-          />
+            onClick={() => goToSlide(idx)}
+            className={`${styles.dotContainer} ${current === idx ? styles.activeDotContainer : ""}`}
+            aria-label={`Go to slide ${idx + 1}`}
+          >
+            <span className={styles.dotBar}>
+              {current === idx && <span className={styles.progressBarFill} />}
+            </span>
+          </button>
         ))}
       </div>
     </section>

@@ -1,14 +1,40 @@
 .tableWrapper {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 18px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
-  overflow-x: auto;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.tableHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+}
+
+.tableHeaderRow h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.tableCount {
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
 }
 
 .tableScroll {
-  min-width: 600px;
+  overflow-x: auto;
 }
 
 .table {
@@ -17,63 +43,64 @@
 }
 
 .table th {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
   text-transform: uppercase;
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  letter-spacing: 0.05em;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
   text-align: left;
+  background: #f8fafc;
 }
 
 .table td {
-  font-size: 0.85rem;
-  padding: 12px 12px;
-  color: #111827;
-  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+  padding: 14px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.monoText {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .row {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .row:hover {
-  background: #f3f4f6;
+  background: #f8fafc;
 }
 
 .status {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   display: inline-block;
 }
 
-/* Status Colors */
-.status.active {
-  background: #dcfce7;
-  color: #15803d;
+.status.active,
+.status.completed {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
 }
 
 .status.pending {
   background: #fef3c7;
   color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .status.exited {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-/* Mobile */
-@media (max-width: 640px) {
-  .tableScroll {
-    min-width: 500px;
-  }
-  .table th,
-  .table td {
-    font-size: 0.75rem;
-    padding: 8px 10px;
-  }
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }

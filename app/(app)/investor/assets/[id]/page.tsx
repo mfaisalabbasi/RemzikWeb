@@ -32,7 +32,6 @@ interface ApiAsset {
   documents?: any[];
   funded?: number;
   investors?: number;
-  // 👇 Added on-chain telemetry fields from your backend
   tokenAddress?: string;
   governanceAddress?: string;
   treasuryAddress?: string;
@@ -68,7 +67,7 @@ export default function AssetDetailPage() {
   if (loading) return <Loading />;
 
   if (!asset) {
-    return <div className={styles.page}>Asset not found.</div>;
+    return <div className={styles.pageContainer}>Asset vault not found.</div>;
   }
 
   const totalVal = Number(asset.totalValue) || 0;
@@ -102,6 +101,7 @@ export default function AssetDetailPage() {
         title={uiData.title}
         location={uiData.location}
         image={uiData.image}
+        type={uiData.type}
       />
 
       <OnChainTelemetryBar
@@ -115,7 +115,10 @@ export default function AssetDetailPage() {
         <AssetStatsBar
           roi={`${uiData.roi}%`}
           tenure={`${uiData.tenure} Months`}
-          minInvest={`SAR ${uiData.minInvest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          minInvest={`SAR ${uiData.minInvest.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}
           type={uiData.type}
           risk={uiData.risk}
         />
@@ -131,7 +134,7 @@ export default function AssetDetailPage() {
       <div className={styles.mainGrid}>
         <div className={styles.left}>
           <AssetTabs
-            asset={asset} // 👈 Pass the full raw asset object here!
+            asset={asset}
             overview={uiData.overview}
             financials={uiData.financials}
             shariah={uiData.shariah}

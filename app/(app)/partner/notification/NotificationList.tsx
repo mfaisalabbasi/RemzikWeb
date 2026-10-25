@@ -4,6 +4,7 @@ import styles from "./notification.module.css";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { NotificationItem } from "@/app/integrations/types/notification";
+import { Building2, ArrowRight, BellRing } from "lucide-react";
 
 export default function NotificationList({
   notifications,
@@ -35,7 +36,10 @@ export default function NotificationList({
   return (
     <div className={styles.notificationWrapper}>
       {list.length === 0 && (
-        <div className={styles.empty}>No notifications yet</div>
+        <div className={styles.empty}>
+          <BellRing size={32} color="#94a3b8" />
+          <p>No partner notifications yet</p>
+        </div>
       )}
       {list.map((n) => (
         <div
@@ -43,15 +47,36 @@ export default function NotificationList({
           onClick={() => handleAction(n)}
           className={clsx(styles.notification, !n.read && styles.unread)}
         >
-          <div className={styles.content}>
-            <strong>{n.title}</strong>
-            <p>{n.message}</p>
+          <div className={styles.iconSection}>
+            <div
+              className={clsx(styles.iconBox, !n.read && styles.unreadIconBox)}
+            >
+              <Building2 size={16} />
+            </div>
           </div>
-          <span className={styles.date}>
-            {n.createdAt
-              ? new Date(n.createdAt).toLocaleDateString()
-              : "Just now"}
-          </span>
+
+          <div className={styles.content}>
+            <div className={styles.titleRow}>
+              <strong className={styles.title}>{n.title}</strong>
+              {!n.read && <span className={styles.unreadDot} />}
+            </div>
+            <p className={styles.message}>{n.message}</p>
+            <span className={styles.date}>
+              {n.createdAt
+                ? new Date(n.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "Just now"}
+            </span>
+          </div>
+
+          {n.actionUrl && (
+            <div className={styles.actionArrow}>
+              <ArrowRight size={16} />
+            </div>
+          )}
         </div>
       ))}
     </div>

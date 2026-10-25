@@ -1,11 +1,12 @@
 "use client";
+
 import {
-  FaArrowDown,
-  FaArrowUp,
-  FaCoins,
-  FaTools,
-  FaShoppingCart,
-} from "react-icons/fa";
+  ArrowDownLeft,
+  ArrowUpRight,
+  Coins,
+  Wrench,
+  ShoppingBag,
+} from "lucide-react";
 import styles from "./Wallet.module.css";
 
 interface LedgerEntry {
@@ -30,30 +31,48 @@ export default function TransactionHistory({
     switch (source) {
       case "SECONDARY_SALE":
       case "ASSET_REVENUE":
-        return { label: "Sale Proceeds", icon: <FaCoins />, color: "#008435" };
+        return {
+          label: "Sale Proceeds",
+          icon: <Coins size={15} color="#059669" />,
+        };
       case "DISTRIBUTION_ENGINE":
-        return { label: "Rental Yield", icon: <FaCoins />, color: "#008435" };
+        return {
+          label: "Rental Yield",
+          icon: <Coins size={15} color="#059669" />,
+        };
       case "WITHDRAWAL":
       case "PAYOUT_COMPLETED":
-        return { label: "Payout", icon: <FaArrowUp />, color: "#e74c3c" };
+        return {
+          label: "Payout",
+          icon: <ArrowUpRight size={15} color="#dc2626" />,
+        };
       case "WALLET_DEPOSIT":
-        return { label: "Deposit", icon: <FaArrowDown />, color: "#008435" };
+        return {
+          label: "Deposit",
+          icon: <ArrowDownLeft size={15} color="#059669" />,
+        };
       case "ASSET_INVESTMENT":
         return {
           label: "Investment",
-          icon: <FaShoppingCart />,
-          color: "#f39c12",
+          icon: <ShoppingBag size={15} color="#d97706" />,
         };
       default:
-        return { label: "Ledger Sync", icon: <FaTools />, color: "#95a5a6" };
+        return {
+          label: "Ledger Sync",
+          icon: <Wrench size={15} color="#64748b" />,
+        };
     }
   };
 
   return (
     <div className={styles.transactions}>
-      <h2 className={styles.sectionTitle}>
-        {isPartner ? "Financial Statement" : "Recent Transactions"}
-      </h2>
+      <div className={styles.tableHeaderRow}>
+        <h2 className={styles.sectionTitle}>
+          {isPartner ? "Financial Statement" : "Recent Transactions"}
+        </h2>
+        <span className={styles.tableCount}>{data.length} Entries</span>
+      </div>
+
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -72,11 +91,15 @@ export default function TransactionHistory({
                 const isNegative = Number(tx.amount) < 0;
                 return (
                   <tr key={tx.id}>
-                    <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(tx.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
                     <td className={styles.typeCell}>
-                      <span
-                        style={{ color: details.color, marginRight: "8px" }}
-                      >
+                      <span className={styles.txIconWrapper}>
                         {details.icon}
                       </span>
                       {details.label}
@@ -85,7 +108,7 @@ export default function TransactionHistory({
                     <td
                       className={isNegative ? styles.negative : styles.positive}
                     >
-                      {isNegative ? "-" : "+"}
+                      {isNegative ? "-" : "+"}{" "}
                       {Math.abs(Number(tx.amount)).toLocaleString()}
                     </td>
                     <td>
@@ -98,9 +121,13 @@ export default function TransactionHistory({
               <tr>
                 <td
                   colSpan={5}
-                  style={{ textAlign: "center", padding: "3rem" }}
+                  style={{
+                    textAlign: "center",
+                    padding: "3rem",
+                    color: "#64748b",
+                  }}
                 >
-                  No activity recorded on ledger.
+                  No financial activity recorded on ledger.
                 </td>
               </tr>
             )}

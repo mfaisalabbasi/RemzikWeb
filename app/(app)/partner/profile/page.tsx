@@ -6,6 +6,7 @@ import ProfileForm from "./ProfileForm";
 import ProfileStats from "./ProfileStats";
 import ProfileAvatar from "./ProfileAvatar";
 import { getProfile, getProfileStats } from "@/app/integrations/api/profile";
+import { UserCheck } from "lucide-react";
 
 export default function PartnerProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -40,19 +41,43 @@ export default function PartnerProfilePage() {
     };
   }, []);
 
-  if (loading) return <p className={styles.loading}>Loading...</p>;
+  if (loading) {
+    return (
+      <div className={styles.loadingState}>
+        <div className={styles.loaderSpinner}></div>
+        <span>Synchronizing Corporate Profile...</span>
+      </div>
+    );
+  }
+
   if (!profile) return <p className={styles.error}>Profile not found</p>;
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.pageTitle}>Partner Profile</h2>
+      <div className={styles.headerBlock}>
+        <div>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Partner Portal
+          </div>
+          <h2 className={styles.pageTitle}>
+            Profile & <span style={{ color: "#059669" }}>Telemetry</span>
+          </h2>
+          <p className={styles.pageSubtitle}>
+            Manage corporate identity, avatar asset records, and operational
+            statistics.
+          </p>
+        </div>
+      </div>
 
-      {/* Passing setProfile to allow child components to update state locally */}
-      <ProfileAvatar avatar={profile.avatar} setProfile={setProfile} />
-
-      {stats && <ProfileStats stats={stats} />}
-
-      <ProfileForm profile={profile} />
+      <div className={styles.profileLayoutGrid}>
+        <div className={styles.profileLeftCol}>
+          <ProfileAvatar avatar={profile.avatar} setProfile={setProfile} />
+          {stats && <ProfileStats stats={stats} />}
+        </div>
+        <div className={styles.profileRightCol}>
+          <ProfileForm profile={profile} />
+        </div>
+      </div>
     </div>
   );
 }

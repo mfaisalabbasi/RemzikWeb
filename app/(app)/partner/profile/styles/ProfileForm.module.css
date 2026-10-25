@@ -1,67 +1,105 @@
 .form {
   background: #ffffff;
-  padding: 20px;
-  border-radius: 16px;
+  padding: 1.5rem;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  gap: 1.25rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.formHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.formHeader h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.verifiedTag {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .inputGroup label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-weight: 500;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .inputGroup input {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
   font-size: 0.875rem;
+  color: #0f172a;
+  background: #f8fafc;
   outline: none;
+  font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .inputGroup input:focus {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 2px rgba(22, 163, 52, 0.15);
+  border-color: #059669;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.disabledInput {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+  border-color: #e2e8f0 !important;
 }
 
 .submitBtn {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 12px;
-  background: #16a34a;
+  background: #059669;
   color: #ffffff;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+  margin-top: 0.5rem;
 }
 
 .submitBtn:hover {
-  background: #22c55e;
+  background: #047857;
 }
 
-/* Mobile */
 @media (max-width: 640px) {
   .form {
-    padding: 16px;
-  }
-  .inputGroup input {
-    font-size: 0.85rem;
-    padding: 8px 10px;
-  }
-  .submitBtn {
-    font-size: 0.85rem;
-    padding: 8px 12px;
+    padding: 1.25rem;
   }
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "../components/profile/./Profile.module.css";
+import styles from "../components/profile/Profile.module.css";
 
-import { Investment, RiskLevel, KycStatus } from "../components/profile/types";
+import { Investment } from "../components/profile/types";
 import InvestmentCard from "../components/profile/InvestmentCard";
-import Sidebar from "../components/profile/./Sidebar";
-import EditProfileModal from "../components/profile/./EditProfileModal";
+import Sidebar from "../components/profile/Sidebar";
+import EditProfileModal from "../components/profile/EditProfileModal";
 import ProfileHero from "../components/profile/ProfileHero";
 import RecoveryCenter from "../components/profile/RecoveryCenter";
 
@@ -17,13 +17,11 @@ export default function ProfilePage() {
     "overview",
   );
 
-  // Temporary state for the preference selector before saving
   const [tempMode, setTempMode] = useState<"OFF_CHAIN" | "ON_CHAIN">(
     "OFF_CHAIN",
   );
   const [isSavingPref, setIsSavingPref] = useState(false);
 
-  // ✅ FETCH FROM BACKEND
   useEffect(() => {
     const load = async () => {
       try {
@@ -37,7 +35,6 @@ export default function ProfilePage() {
         if (!res.ok) throw new Error();
 
         setUser(data);
-        // Sync local temp state with fetched user preference
         if (data.distributionMode) {
           setTempMode(data.distributionMode);
         }
@@ -49,7 +46,6 @@ export default function ProfilePage() {
     load();
   }, []);
 
-  // ✅ SAVE PROFILE INFO (Name, Email)
   const handleSave = async (updated: { name: string; email: string }) => {
     try {
       const res = await fetch(
@@ -75,54 +71,33 @@ export default function ProfilePage() {
     }
   };
 
-  // ✅ SAVE DISTRIBUTION MODE PREFERENCE (Off-Chain vs On-Chain) via explicit button click
-  const handleDistributionModeChange = async (
-    newMode: "OFF_CHAIN" | "ON_CHAIN",
-  ) => {
-    setIsSavingPref(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/investors/profile`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ distributionMode: newMode }),
-        },
-      );
-
-      if (!res.ok) throw new Error();
-
-      setUser((prev: any) => ({
-        ...prev,
-        distributionMode: newMode,
-      }));
-
-      alert("Yield distribution preference updated successfully!");
-    } catch (err) {
-      console.error("Failed to update distribution mode", err);
-      alert("Failed to update preference. Please try again.");
-    } finally {
-      setIsSavingPref(false);
-    }
-  };
-
-  if (!user) return <div>Loading...</div>;
+  if (!user) {
+    return (
+      <div
+        style={{
+          color: "#059669",
+          padding: "6rem",
+          textAlign: "center",
+          fontWeight: 700,
+        }}
+      >
+        Synchronizing Profile Ledger...
+      </div>
+    );
+  }
 
   return (
     <div className={styles.profilePage}>
       <div className={styles.leftColumn}>
         <ProfileHero {...user} onEdit={() => setEditOpen(true)} />
 
-        {/* Tab Navigation for Profile vs Security/Recovery */}
+        {/* Tab Navigation */}
         <div
           style={{
             display: "flex",
-            gap: "16px",
-            marginTop: "24px",
-            borderBottom: "1px solid #1f2937",
+            gap: "20px",
+            marginTop: "8px",
+            borderBottom: "1px solid #e2e8f0",
             paddingBottom: "12px",
           }}
         >
@@ -131,10 +106,12 @@ export default function ProfilePage() {
             style={{
               background: "transparent",
               border: "none",
-              color: activeTab === "overview" ? "#10b981" : "#9ca3af",
-              fontWeight: 600,
+              color: activeTab === "overview" ? "#059669" : "#64748b",
+              fontWeight: 700,
               cursor: "pointer",
-              fontSize: "16px",
+              fontSize: "0.875rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
             }}
           >
             Overview & Investments
@@ -144,28 +121,27 @@ export default function ProfilePage() {
             style={{
               background: "transparent",
               border: "none",
-              color: activeTab === "security" ? "#10b981" : "#9ca3af",
-              fontWeight: 600,
+              color: activeTab === "security" ? "#059669" : "#64748b",
+              fontWeight: 700,
               cursor: "pointer",
-              fontSize: "16px",
+              fontSize: "0.875rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
             }}
           >
             Security & Recovery Center
           </button>
         </div>
 
-        {/* Conditional Tab Rendering */}
         {activeTab === "overview" ? (
           <div
             className={styles.investmentsSection}
-            style={{ marginTop: "24px" }}
+            style={{ marginTop: "1rem" }}
           >
-            {/* 👇 YIELD DISTRIBUTION PREFERENCE TOGGLE CARD WITH EXPLICIT SAVE BUTTON */}
-
-            <h2 style={{ fontSize: "30px", color: "#03563c" }}>Investments</h2>
+            <h2>Investments</h2>
             <div
               className={styles.investmentsList}
-              style={{ marginBottom: "32px" }}
+              style={{ marginBottom: "2rem" }}
             >
               {user.investments.map((inv: Investment) => (
                 <InvestmentCard key={inv.id} investment={inv} />
@@ -173,7 +149,7 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div style={{ marginTop: "24px" }}>
+          <div style={{ marginTop: "1rem" }}>
             <RecoveryCenter />
           </div>
         )}

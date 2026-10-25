@@ -24,8 +24,6 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
-    // ✅ THE FIX: Wipe old state immediately.
-    // This prevents Investor A's balance from showing up for Investor B.
     setLoading(true);
     setWallet(null);
     setTransactions([]);
@@ -52,8 +50,15 @@ export default function WalletPage() {
   if (loading) {
     return (
       <main className={styles.pageWrapper}>
-        <div style={{ color: "#aaa", padding: "3rem", textAlign: "center" }}>
-          Synchronizing Ledger...
+        <div
+          style={{
+            color: "#059669",
+            padding: "5rem",
+            textAlign: "center",
+            fontWeight: 700,
+          }}
+        >
+          Synchronizing Remzik Ledger...
         </div>
       </main>
     );
@@ -61,14 +66,33 @@ export default function WalletPage() {
 
   return (
     <main className={styles.pageWrapper}>
-      <header style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "2rem", color: "#090808" }}>My Wallet</h1>
-        <p style={{ color: "#888" }}>
-          Manage your funds and track investment returns.
+      <header style={{ marginBottom: "1.75rem" }}>
+        <div className={styles.breadcrumb}>
+          Remzik Protocol / Liquidity Vault
+        </div>
+        <h1
+          style={{
+            fontSize: "2rem",
+            fontWeight: 700,
+            color: "#0f172a",
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          My <span style={{ color: "#059669" }}>Wallet</span>
+        </h1>
+        <p
+          style={{
+            color: "#475569",
+            fontSize: "0.875rem",
+            marginTop: "0.25rem",
+          }}
+        >
+          Manage your liquid funds, escrow reserves, and track investment
+          returns.
         </p>
       </header>
 
-      {/* Render Summary only if we have data to prevent "Combined" balance UI glitches */}
       {wallet && <WalletSummary data={wallet} />}
 
       <WalletActions onRefresh={loadData} />

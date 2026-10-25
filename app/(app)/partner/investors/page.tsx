@@ -6,6 +6,7 @@ import InvestorsTable from "../components/investors/InvestorsTable";
 import InvestorDetailDrawer from "../components/investors/InvestorProfileDrawer";
 import InvestorLifecycle from "../components/investors/InvestorLifeCycle";
 import Withdrawals from "../components/investors/WithdrawelRequests";
+import InvestorKPI from "../components/investors/InvestorKPI";
 import { getPartnerInvestors } from "@/app/integrations/api/asset";
 
 export default function PartnerInvestorsPage() {
@@ -33,13 +34,38 @@ export default function PartnerInvestorsPage() {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.pageTitle}>Investors</h2>
+      <div className={styles.headerBlock}>
+        <div>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Partner Portal
+          </div>
+          <h2 className={styles.pageTitle}>
+            Investor <span style={{ color: "#059669" }}>Relations</span>
+          </h2>
+          <p className={styles.pageSubtitle}>
+            Monitor capital allocation, lifecycle progression, and withdrawal
+            requests.
+          </p>
+        </div>
+      </div>
 
-      <InvestorsTable investors={investors} onSelect={handleSelectInvestor} />
+      {/* KPI Metrics Row */}
+      <InvestorKPI />
 
+      {/* Active Lifecycle strip if selected */}
       {selectedInvestor && <InvestorLifecycle investor={selectedInvestor} />}
 
-      <Withdrawals />
+      <div className={styles.contentGrid}>
+        <div className={styles.mainTableSection}>
+          <InvestorsTable
+            investors={investors}
+            onSelect={handleSelectInvestor}
+          />
+        </div>
+        <div className={styles.sidebarWithdrawals}>
+          <Withdrawals />
+        </div>
+      </div>
 
       <InvestorDetailDrawer
         investor={selectedInvestor}
@@ -49,4 +75,3 @@ export default function PartnerInvestorsPage() {
     </div>
   );
 }
-

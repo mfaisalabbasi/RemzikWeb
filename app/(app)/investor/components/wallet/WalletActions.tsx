@@ -28,8 +28,6 @@ export default function WalletActions({ onRefresh }: WalletActionsProps) {
 
       showAlert("success", "5,000 SAR has been added to your Remzik wallet!");
 
-      // ✅ THE FIX: Wait 500ms before refreshing.
-      // This ensures the Backend has finished the Ledger entry before we fetch again.
       setTimeout(() => {
         onRefresh();
       }, 500);
@@ -47,13 +45,13 @@ export default function WalletActions({ onRefresh }: WalletActionsProps) {
         onClick={handleDummyDeposit}
         disabled={loading}
       >
-        {loading ? "Processing..." : "Deposit (Demo 5k)"}
+        {loading ? "Processing..." : "+ Deposit (Demo 5k SAR)"}
       </button>
       <button
         className={styles.secondary}
         onClick={() => showAlert("error", "Withdrawal feature coming soon!")}
       >
-        Withdraw
+        Withdraw Funds
       </button>
     </div>
   );

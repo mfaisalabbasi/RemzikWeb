@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./styles/DistributionFilter.module.css";
+import { Search } from "lucide-react";
 
 interface Props {
   search: string;
@@ -17,23 +18,29 @@ export default function DistributionFilter({
 }: Props) {
   return (
     <div className={styles.filterWrapper}>
-      <input
-        type="text"
-        placeholder="Search assets..."
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className={styles.searchInput}
-      />
-      <select
-        value={stageFilter}
-        onChange={(e) => onStageChange(e.target.value)}
-        className={styles.stageSelect}
-      >
-        <option value="">All Stages</option>
-        <option value="Funding">Funding</option>
-        <option value="Approved">Approved</option>
-        <option value="Completed">Completed</option>
-      </select>
+      <div className={styles.searchWrapper}>
+        <Search size={16} className={styles.searchIcon} />
+        <input
+          type="text"
+          placeholder="Search assets by title..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className={styles.searchInput}
+        />
+      </div>
+
+      <div className={styles.selectWrapper}>
+        <select
+          value={stageFilter}
+          onChange={(e) => onStageChange(e.target.value)}
+          className={styles.stageSelect}
+        >
+          <option value="">All Lifecycle Stages</option>
+          <option value="Funding">Funding Active</option>
+          <option value="Approved">Approved</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
     </div>
   );
 }

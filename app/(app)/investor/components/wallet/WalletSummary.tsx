@@ -1,17 +1,11 @@
 "use client";
-import {
-  FaWallet,
-  FaLock,
-  FaHourglassHalf,
-  FaChartLine,
-  FaShieldAlt,
-} from "react-icons/fa";
+import { FaWallet, FaLock, FaChartLine, FaShieldAlt } from "react-icons/fa";
 import styles from "./Wallet.module.css";
 
 interface WalletSummaryProps {
   data: {
     availableBalance: number;
-    lockedBalance: number; // Linked to Escrow Module
+    lockedBalance: number;
     pendingPayout: number;
     totalEarned: number;
     balance: number;
@@ -19,7 +13,6 @@ interface WalletSummaryProps {
 }
 
 export default function WalletSummary({ data }: WalletSummaryProps) {
-  // Logic: Total Portfolio = Liquid Cash + Locked Escrow
   const totalPortfolioValue = data.availableBalance + data.lockedBalance;
 
   const summaryCards = [
@@ -35,7 +28,7 @@ export default function WalletSummary({ data }: WalletSummaryProps) {
       value: `SAR ${data.lockedBalance.toLocaleString()}`,
       icon: <FaLock />,
       highlight: false,
-      isLocked: true, // For conditional styling
+      isLocked: true,
       description: "Secured in active trades",
     },
     {

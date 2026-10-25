@@ -10,8 +10,14 @@ import { login } from "../../../integrations/api/auth";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import styles from "../styles/Auth.module.css";
-import kycStyles from "../styles/kyc.module.css";
 import Alert from "../../../integrations/Alert/Alert";
+import {
+  ShieldCheck,
+  User,
+  Building2,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
 
 type AuthFormData = z.infer<typeof signupSchema>;
 type KYCFormData = z.infer<typeof kycSchema>;
@@ -47,24 +53,20 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
 
-  // Fallback for unexpected or raw technical strings
   return "Registration or verification failed. Please check your details and try again.";
 };
 
 export default function SignupForm() {
   const router = useRouter();
 
-  // Multi-step state
   const [step, setStep] = useState(1);
   const [authData, setAuthData] = useState<AuthFormData | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role>(null);
 
-  // UI State
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step 1 Form: Basic Auth
   const {
     register: regAuth,
     handleSubmit: handleAuthSubmit,
@@ -73,7 +75,6 @@ export default function SignupForm() {
     resolver: zodResolver(signupSchema),
   });
 
-  // Step 3 Form: KYC
   const {
     register: regKyc,
     handleSubmit: handleKycSubmit,
@@ -82,21 +83,18 @@ export default function SignupForm() {
     resolver: zodResolver(kycSchema),
   });
 
-  // Handle Step 1 -> 2
   const onAuthSubmit = (data: AuthFormData) => {
     setAuthData(data);
     setStep(2);
     setError("");
   };
 
-  // Handle Step 2 -> 3
   const onRoleSelect = (role: Role) => {
     setSelectedRole(role);
     setStep(3);
     setError("");
   };
 
-  // Final Step: Atomic Registration + KYC Submission & Server-Side Wallet Provisioning
   const onFinalSubmit = async (kycData: KYCFormData) => {
     if (!authData || !selectedRole) {
       setStep(1);
@@ -108,17 +106,14 @@ export default function SignupForm() {
     setIsSubmitting(true);
 
     try {
-      // Use FormData to support file uploads (ID and Address proof)
       const formData = new FormData();
 
-      // Auth Fields
       formData.append("name", authData.name);
       formData.append("email", authData.email);
       formData.append("phone", authData.phone);
       formData.append("password", authData.password);
       formData.append("role", selectedRole);
 
-      // KYC Fields
       formData.append("fullName", kycData.fullName);
       formData.append("dob", kycData.dob);
       if (kycData.idDocument?.[0])
@@ -126,7 +121,6 @@ export default function SignupForm() {
       if (kycData.addressProof?.[0])
         formData.append("addressProof", kycData.addressProof[0]);
 
-      // Using a unified endpoint for Atomic Transaction
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/register-with-kyc`,
         {
@@ -142,10 +136,8 @@ export default function SignupForm() {
 
       setSuccess("Account created! Provisioning secure vault wallet...");
 
-      // 🚀 Auto-authenticate and trigger server-side wallet provisioning immediately
       try {
         await login({ email: authData.email, password: authData.password });
-
         await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/provision-wallet`,
           {
@@ -183,12 +175,25 @@ export default function SignupForm() {
 
   return (
     <section className={styles.authCard}>
+      <div className={styles.badge}>
+        <ShieldCheck size={13} color="#059669" />
+        <span>Secure Protocol Portal</span>
+      </div>
+
       <div className={styles.header}>
-        <h1>{step === 3 ? "KYC Verification" : "Create Account"}</h1>
+        <h1>
+          {step === 3
+            ? "Identity Verification"
+            : step === 2
+              ? "Select Your Role"
+              : "Create Account"}
+        </h1>
         <p>
           {step === 3
-            ? "Complete identity verification to finalize registration."
-            : "Secure access to the Remzik Protocol platform"}
+            ? "Complete KYC compliance verification to finalize your registration."
+            : step === 2
+              ? "Choose how you want to participate in the Remzik Protocol ecosystem."
+              : "Enter your credentials to establish your institutional profile."}
         </p>
       </div>
 
@@ -280,8 +285,10 @@ export default function SignupForm() {
             </label>
 
             <button className={styles.primary} type="submit">
-              Next
+              <span>Next Step</span>
+              <ArrowRight size={16} />
             </button>
+
             <p className={styles.note}>
               Already registered?{" "}
               <Link href="/auth/login" className={styles.link}>
@@ -299,44 +306,58 @@ export default function SignupForm() {
                 className={`${styles.roleCard} ${selectedRole === "INVESTOR" ? styles.active : ""}`}
                 onClick={() => setSelectedRole("INVESTOR")}
               >
-                <h3>Investor</h3>
-                <p>Access assets, manage portfolio, and track ownership.</p>
+                <div className={styles.roleIconBox}>
+                  <User size={20} color="#059669" />
+                </div>
+                <div>
+                  <h3>Investor</h3>
+                  <p>
+                    Access tokenized asset vaults, manage portfolio holdings,
+                    and track halal yields.
+                  </p>
+                </div>
               </div>
 
               <div
                 className={`${styles.roleCard} ${selectedRole === "PARTNER" ? styles.active : ""}`}
                 onClick={() => setSelectedRole("PARTNER")}
               >
-                <h3>Partner</h3>
-                <p>Submit real-world assets and manage listings.</p>
+                <div className={styles.roleIconBox}>
+                  <Building2 size={20} color="#059669" />
+                </div>
+                <div>
+                  <h3>Issuer Partner</h3>
+                  <p>
+                    Submit real-world properties, structure vaults, and manage
+                    distributions.
+                  </p>
+                </div>
               </div>
             </div>
 
             <button
               className={styles.primary}
-              onClick={() => step === 2 && onRoleSelect(selectedRole)}
+              onClick={() => onRoleSelect(selectedRole)}
               disabled={!selectedRole}
             >
-              Next: Identity Verification
+              <span>Next: Identity Verification</span>
+              <ArrowRight size={16} />
             </button>
-            <button
-              className={styles.secondary}
-              onClick={() => setStep(1)}
-              style={{ marginTop: "10px" }}
-            >
-              Back
+            <button className={styles.secondary} onClick={() => setStep(1)}>
+              <ArrowLeft size={16} />
+              <span>Back</span>
             </button>
           </div>
         )}
 
-        {/* STEP 3: KYC Fields (Merged) */}
+        {/* STEP 3: KYC Fields */}
         {step === 3 && (
           <form
             className={styles.form}
             onSubmit={handleKycSubmit(onFinalSubmit)}
           >
             <label className={styles.field}>
-              Full Name (as per ID)
+              Full Name (As per official ID)
               <input
                 {...regKyc("fullName")}
                 type="text"
@@ -363,7 +384,7 @@ export default function SignupForm() {
             </label>
 
             <label className={styles.field}>
-              Identity Document (Passport/Iqama)
+              Identity Document (Passport / Iqama)
               <input
                 {...regKyc("idDocument")}
                 type="file"
@@ -378,7 +399,7 @@ export default function SignupForm() {
             </label>
 
             <label className={styles.field}>
-              Address Proof
+              Proof of Address
               <input
                 {...regKyc("addressProof")}
                 type="file"
@@ -405,9 +426,9 @@ export default function SignupForm() {
               className={styles.secondary}
               type="button"
               onClick={() => setStep(2)}
-              style={{ marginTop: "10px" }}
             >
-              Back
+              <ArrowLeft size={16} />
+              <span>Back</span>
             </button>
           </form>
         )}

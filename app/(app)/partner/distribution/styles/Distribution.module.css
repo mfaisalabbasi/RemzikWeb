@@ -1,12 +1,25 @@
 .mainContainer {
   min-height: 100vh;
-  background: #f8fafc; /* Professional off-white */
-  padding: 40px;
-  font-family: "Inter", sans-serif;
+  background: #f8fafc;
+  padding: 1.5rem 2rem 4rem 2rem;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    sans-serif;
+  color: #0f172a;
+}
+
+.breadcrumb {
+  font-size: 0.725rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
 }
 
 .contentWrapper {
-  max-width: 1400px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
@@ -14,52 +27,90 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 48px;
+  margin-bottom: 1.75rem;
   border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 24px;
+  padding-bottom: 1.25rem;
 }
 
 .titleMain {
-  font-size: 32px;
-  font-weight: 900;
+  font-size: 2rem;
+  font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .titleSub {
-  color: #64748b;
-  font-weight: 500;
+  color: #475569;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-/* MODAL ENGINE - FIXES THE HIDING ISSUE */
+.miniStat {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1.25rem;
+  border-radius: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.statLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.statValue {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #059669;
+}
+
+.actionRow {
+  margin-bottom: 1.5rem;
+}
+
+.distributionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+/* MODAL ENGINE */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(10px);
-  z-index: 9999; /* Ensure it's above everything */
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 1.5rem;
 }
 
 .fintechModal {
-  background: #fff;
+  background: #ffffff;
   width: 100%;
   max-width: 900px;
   height: 600px;
-  border-radius: 32px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr;
   overflow: hidden;
-  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.4);
-  animation: modalEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modalSidebar {
-  background: #0f172a; /* Deep Navy Institutional */
-  padding: 40px;
+  background: #0f172a;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
   color: white;
@@ -67,102 +118,119 @@
 
 .sidebarIcon {
   background: #1e293b;
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 60px;
+  margin-bottom: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stepActive {
   font-weight: 700;
-  font-size: 14px;
-  color: #10b981;
+  font-size: 0.85rem;
+  color: #34d399;
 }
 .stepPending {
-  font-weight: 500;
-  font-size: 14px;
-  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #64748b;
   margin-top: 20px;
 }
 .stepLine {
   width: 2px;
-  height: 40px;
+  height: 35px;
   background: #1e293b;
-  margin: 10px 0 0 10px;
+  margin: 8px 0 0 10px;
 }
 
 .modalMain {
-  padding: 60px;
+  padding: 2.5rem;
   position: relative;
   background: white;
+  overflow-y: auto;
 }
 
 .closeBtn {
   position: absolute;
-  top: 30px;
-  right: 30px;
+  top: 1.5rem;
+  right: 1.5rem;
   background: #f1f5f9;
-  border: none;
-  padding: 10px;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 8px;
   border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .modalTitle {
-  font-size: 28px;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .modalSubtitle {
   color: #64748b;
-  margin-bottom: 40px;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
 }
 
 .inputStack {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .finInputGroup label {
   display: block;
-  font-size: 12px;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: #64748b;
   text-transform: uppercase;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
 }
 
 .inputBox {
   display: flex;
   align-items: center;
   background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 12px 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 14px;
 }
 
 .inputBox:focus-within {
-  border-color: #0f172a;
+  border-color: #059669;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 .unit {
-  font-weight: 800;
-  color: #cbd5e1;
-  margin-right: 12px;
-  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-right: 10px;
+  font-size: 0.85rem;
 }
 .inputBox input {
   border: none;
   background: transparent;
   width: 100%;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 1.1rem;
+  font-family: "JetBrains Mono", monospace;
+  color: #0f172a;
   outline: none;
 }
 
@@ -170,17 +238,18 @@
 .ledgerCard {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 24px;
-  padding: 24px;
-  margin-bottom: 32px;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .ledgerRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
-  font-size: 14px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
   color: #475569;
+  font-weight: 500;
 }
 .monoValue {
   font-family: "JetBrains Mono", monospace;
@@ -190,22 +259,25 @@
 .feeValue {
   font-family: "JetBrains Mono", monospace;
   font-weight: 700;
-  color: #ef4444;
+  color: #dc2626;
 }
 .ledgerDivider {
   height: 1px;
   background: #e2e8f0;
-  margin: 16px 0;
+  margin: 12px 0;
 }
 .ledgerTotal {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
 }
 .payoutValue {
-  font-size: 24px;
+  font-size: 1.25rem;
   font-weight: 900;
-  color: #10b981;
+  color: #059669;
   font-family: "JetBrains Mono", monospace;
 }
 
@@ -213,43 +285,59 @@
   width: 100%;
   background: #0f172a;
   color: white;
-  padding: 20px;
-  border-radius: 18px;
+  padding: 14px;
+  border-radius: 12px;
   font-weight: 700;
+  font-size: 0.9rem;
   border: none;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .executeBtn:hover:not(:disabled) {
-  background: #1e293b;
-  transform: translateY(-2px);
+  background: #059669;
+  transform: translateY(-1px);
 }
 .executeBtn:disabled {
   background: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .complianceNote {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
-  font-size: 11px;
-  color: #94a3b8;
+  gap: 6px;
+  margin-top: 1rem;
+  font-size: 0.725rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 @keyframes modalEnter {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(30px);
+    transform: scale(0.95) translateY(10px);
   }
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 850px) {
+  .fintechModal {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: 90vh;
+  }
+  .modalSidebar {
+    display: none;
   }
 }

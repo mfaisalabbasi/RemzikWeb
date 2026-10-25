@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FaWallet, FaCoins, FaChartLine, FaChartPie } from "react-icons/fa";
 import styles from "./Dashboard.module.css";
 import { getDashboardStats } from "@/app/integrations/api/investor";
+import { Loader2 } from "lucide-react";
 
 export default function KPICards() {
   const [data, setData] = useState<any>(null);
@@ -21,45 +22,64 @@ export default function KPICards() {
     fetchStats();
   }, []);
 
-  if (!data) return <p className={styles.loading}>Loading Market Data...</p>;
+  if (!data) {
+    return (
+      <div className={styles.kpiLoading}>
+        <Loader2 className="animate-spin text-emerald-400" size={20} />
+        <span>Synchronizing Market Positions...</span>
+      </div>
+    );
+  }
 
-  // Mapping Backend Data to Premium Cards
   const cards = [
     {
-      title: "Wallet Balance",
-      value: `SAR ${Number(data.walletBalance).toLocaleString()}`,
+      title: "Wallet Liquidity",
+      value: `SAR ${Number(data.walletBalance || 0).toLocaleString()}`,
+      change: "Available for deployment",
       icon: <FaWallet />,
+      accent: "emerald",
     },
     {
-      title: "Portfolio Value",
-      value: `SAR ${Number(data.portfolioValue).toLocaleString()}`,
+      title: "Gross Portfolio Value",
+      value: `SAR ${Number(data.portfolioValue || 0).toLocaleString()}`,
+      change: "Tokenized RWA Assets",
       icon: <FaCoins />,
+      accent: "gold",
     },
     {
-      title: "Total Profit",
-      value: `SAR ${Number(data.totalProfit).toLocaleString()}`,
-      // Conditional styling for profit visibility
-      className: data.totalProfit > 0 ? styles.positiveProfit : "",
+      title: "Cumulative Yield Profit",
+      value: `SAR ${Number(data.totalProfit || 0).toLocaleString()}`,
+      change:
+        Number(data.totalProfit) >= 0 ? "+All-time Returns" : "Net Drawdown",
+      className:
+        Number(data.totalProfit) >= 0
+          ? styles.positiveProfit
+          : styles.negativeProfit,
       icon: <FaChartLine />,
+      accent: "blue",
     },
     {
-      title: "Active Investments",
-      value: data.activeInvestments,
+      title: "Active Asset Pods",
+      value: data.activeInvestments || 0,
+      change: "Diversified Holdings",
       icon: <FaChartPie />,
+      accent: "purple",
     },
   ];
 
   return (
     <div className={styles.kpiCards}>
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className={`${styles.kpiCard} ${card.className || ""}`}
-        >
-          <div className={styles.icon}>{card.icon}</div>
-          <div className={styles.kpiText}>
-            <h3>{card.title}</h3>
-            <p>{card.value}</p>
+      {cards.map((card, idx) => (
+        <div key={idx} className={`${styles.kpiCard} ${card.className || ""}`}>
+          <div className={styles.kpiHeaderRow}>
+            <span className={styles.kpiTitle}>{card.title}</span>
+            <div className={`${styles.iconBox} ${styles[card.accent]}`}>
+              {card.icon}
+            </div>
+          </div>
+          <div className={styles.kpiBody}>
+            <h2 className={styles.kpiValue}>{card.value}</h2>
+            <span className={styles.kpiSubtext}>{card.change}</span>
           </div>
         </div>
       ))}

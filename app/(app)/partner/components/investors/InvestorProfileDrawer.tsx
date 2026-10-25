@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./styles/Drawer.module.css";
-import { FiX } from "react-icons/fi";
+import { X, ShieldCheck, ExternalLink } from "lucide-react";
 
 interface Investor {
   name: string;
@@ -30,31 +30,42 @@ export default function InvestorDetailDrawer({
 
       <aside className={`${styles.drawer} ${open ? styles.open : ""}`}>
         <div className={styles.header}>
-          <h3>{investor.name}</h3>
-          <button onClick={onClose}>
-            <FiX size={18} />
+          <div>
+            <h3>{investor.name}</h3>
+            <span className={styles.drawerSub}>
+              Verified Participant Profile
+            </span>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <X size={16} />
           </button>
         </div>
 
         <div className={styles.body}>
           <div className={styles.section}>
-            <span className={styles.label}>Asset</span>
-            <p>{investor.asset}</p>
+            <span className={styles.label}>Associated Asset Vault</span>
+            <p className={styles.val}>{investor.asset}</p>
           </div>
 
           <div className={styles.section}>
-            <span className={styles.label}>Invested Amount</span>
-            <p>SAR {investor.invested.toLocaleString()}</p>
+            <span className={styles.label}>Invested Principal</span>
+            <p className={styles.monoVal}>
+              SAR {investor.invested.toLocaleString()}
+            </p>
           </div>
 
           <div className={styles.section}>
-            <span className={styles.label}>Ownership</span>
-            <p>{investor.ownership}</p>
+            <span className={styles.label}>Protocol Ownership Share</span>
+            <p className={styles.monoVal}>{investor.ownership}</p>
           </div>
 
           <div className={styles.section}>
-            <span className={styles.label}>Status</span>
-            <p className={styles.status}>{investor.status}</p>
+            <span className={styles.label}>Participation Status</span>
+            <span
+              className={`${styles.statusPill} ${styles[investor.status.toLowerCase()]}`}
+            >
+              {investor.status}
+            </span>
           </div>
         </div>
       </aside>

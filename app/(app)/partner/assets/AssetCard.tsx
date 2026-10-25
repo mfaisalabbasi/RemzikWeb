@@ -1,6 +1,13 @@
 "use client";
 
 import styles from "./styles/AssetCard.module.css";
+import {
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Target,
+  CheckCircle2,
+} from "lucide-react";
 
 interface AssetProps {
   name: string;
@@ -27,40 +34,45 @@ export default function AssetCard({
     <div className={styles.card}>
       {/* Header: Asset Name + Stage */}
       <div className={styles.header}>
-        <h3 className={styles.name}>{name}</h3>
+        <div>
+          <span className={styles.type}>{type}</span>
+          <h3 className={styles.name}>{name}</h3>
+        </div>
         <span className={`${styles.stage} ${styles[stage.toLowerCase()]}`}>
           {stage}
         </span>
       </div>
 
-      {/* Type */}
-      <p className={styles.type}>{type}</p>
-
       {/* Progress */}
       <div className={styles.progressWrapper}>
+        <div className={styles.progressHeader}>
+          <span className={styles.progressLabel}>Funding Progress</span>
+          <span className={styles.percent}>{progress}%</span>
+        </div>
         <div className={styles.progressBar}>
           <div className={styles.progress} style={{ width: `${progress}%` }} />
         </div>
-        <span className={styles.percent}>{progress}% Funded</span>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className={styles.stats}>
-        <div>
-          <span className={styles.statLabel}>Target</span>
-          <span>SAR {target.toLocaleString()}</span>
+        <div className={styles.statBox}>
+          <span className={styles.statLabel}>Target Capital</span>
+          <span className={styles.statVal}>SAR {target.toLocaleString()}</span>
         </div>
-        <div>
-          <span className={styles.statLabel}>Raised</span>
-          <span>SAR {raised.toLocaleString()}</span>
+        <div className={styles.statBox}>
+          <span className={styles.statLabel}>Raised Capital</span>
+          <span className={styles.statVal} style={{ color: "#059669" }}>
+            SAR {raised.toLocaleString()}
+          </span>
         </div>
-        <div>
-          <span className={styles.statLabel}>ROI</span>
-          <span>{roi}%</span>
+        <div className={styles.statBox}>
+          <span className={styles.statLabel}>Expected ROI</span>
+          <span className={styles.statVal}>{roi}% APY</span>
         </div>
-        <div>
-          <span className={styles.statLabel}>Investors</span>
-          <span>{investors}</span>
+        <div className={styles.statBox}>
+          <span className={styles.statLabel}>Participants</span>
+          <span className={styles.statVal}>{investors} Investors</span>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import styles from "./styles/Funding.module.css";
 import FundingCard from "./FundingCard";
 import FundingFilter from "./FundingFilter";
 import { getPartnerFunding } from "@/app/integrations/api/asset";
+import { TrendingUp, Layers } from "lucide-react";
 
 export default function PartnerFundingPage() {
   const [funding, setFunding] = useState<any[]>([]);
@@ -32,7 +33,20 @@ export default function PartnerFundingPage() {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.pageTitle}>Funding Progress</h2>
+      <div className={styles.headerBlock}>
+        <div>
+          <div className={styles.breadcrumb}>
+            Remzik Protocol / Partner Portal
+          </div>
+          <h2 className={styles.pageTitle}>
+            Funding <span style={{ color: "#059669" }}>Progress</span>
+          </h2>
+          <p className={styles.pageSubtitle}>
+            Track real-time capital formation and subscription metrics across
+            asset vaults.
+          </p>
+        </div>
+      </div>
 
       <FundingFilter
         search={search}
@@ -45,7 +59,12 @@ export default function PartnerFundingPage() {
         {filteredFunding.length > 0 ? (
           filteredFunding.map((f) => <FundingCard key={f.id} {...f} />)
         ) : (
-          <p className={styles.noData}>No funding records found.</p>
+          <div className={styles.emptyState}>
+            <Layers size={32} color="#94a3b8" />
+            <p className={styles.noData}>
+              No funding records found matching your criteria.
+            </p>
+          </div>
         )}
       </div>
     </div>

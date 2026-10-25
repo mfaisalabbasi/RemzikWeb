@@ -16,27 +16,40 @@ export default function AssetStatsBar({
   type,
   risk,
 }: AssetStatsBarProps) {
+  const getRiskClass = (r: string) => {
+    switch (r) {
+      case "Low":
+        return styles.riskLow;
+      case "High":
+        return styles.riskHigh;
+      default:
+        return styles.riskModerate;
+    }
+  };
+
   return (
-    <div className={styles.bar}>
-      <div className={styles.stat}>
-        <span className={styles.label}>ROI</span>
-        <span className={styles.value}>{roi}</span>
+    <div className={styles.statsBar}>
+      <div className={styles.statItem}>
+        <span className={styles.statLabel}>Target APY</span>
+        <span className={`${styles.statValue} ${styles.goldValue}`}>{roi}</span>
       </div>
-      <div className={styles.stat}>
-        <span className={styles.label}>Tenure</span>
-        <span className={styles.value}>{tenure}</span>
+      <div className={styles.statItem}>
+        <span className={styles.statLabel}>Tenure</span>
+        <span className={styles.statValue}>{tenure}</span>
       </div>
-      <div className={styles.stat}>
-        <span className={styles.label}>Minimum Investment</span>
-        <span className={styles.value}>{minInvest}</span>
+      <div className={styles.statItem}>
+        <span className={styles.statLabel}>Minimum Investment</span>
+        <span className={styles.statValue}>{minInvest}</span>
       </div>
-      <div className={styles.stat}>
-        <span className={styles.label}>Type</span>
-        <span className={styles.value}>{type}</span>
+      <div className={styles.statItem}>
+        <span className={styles.statLabel}>Asset Class</span>
+        <span className={styles.statValue}>{type}</span>
       </div>
-      <div className={styles.stat}>
-        <span className={styles.label}>Risk</span>
-        <span className={styles.value}>{risk}</span>
+      <div className={styles.statItem}>
+        <span className={styles.statLabel}>Risk Profile</span>
+        <span className={`${styles.statValue} ${getRiskClass(risk)}`}>
+          {risk}
+        </span>
       </div>
     </div>
   );

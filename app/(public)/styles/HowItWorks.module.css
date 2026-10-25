@@ -1,102 +1,223 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap");
+
 .section {
-  padding: 100px 20px;
-  background-color: #ffffff;
+  padding: 80px 24px 40px 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+  overflow: hidden;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    sans-serif;
+  color: #0f172a;
 }
 
+/* SECTION HEADER */
 .header {
-  max-width: 720px;
-  margin: 0 auto 70px;
+  max-width: 780px;
+  margin: 0 auto 70px auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.header h2 {
-  font-size: 2.6rem;
-  color: #14532d;
-  margin-bottom: 12px;
+.complianceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  font-size: 0.725rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.header p {
-  font-size: 1.1rem;
-  color: #6b7280;
+.pulseDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #059669;
+  box-shadow: 0 0 8px #059669;
+}
+
+.heading {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subheading {
+  font-size: 1.05rem;
+  color: #475569;
   line-height: 1.6;
+  font-weight: 500;
+  margin: 0;
 }
 
-/* Timeline */
-.timeline {
-  max-width: 1200px;
+/* TIMELINE CONTAINER & CONNECTOR */
+.timelineWrapper {
+  max-width: 1320px;
   margin: 0 auto;
+  position: relative;
+}
+
+.timelineLine {
+  position: absolute;
+  top: 36px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #059669 50%, #e2e8f0 100%);
+  z-index: 1;
+}
+
+/* GRID LAYOUT */
+.timeline {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
+  gap: 1.5rem;
   position: relative;
+  z-index: 2;
 }
 
-/* Connecting line */
-.timeline::before {
-  content: "";
-  position: absolute;
-  top: 34px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #e5e7eb;
-  z-index: 0;
+/* STEP CARD */
+.stepCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-/* Step */
-.step {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 0 10px;
+.stepCard:hover {
+  transform: translateY(-6px);
+  border-color: #059669;
+  box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.12);
 }
 
-.badge {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background-color: #16a34a;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 1.1rem;
+/* CARD HEADER */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.iconBox {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 18px;
-  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.35);
+  transition: all 0.3s ease;
 }
 
-.step h3 {
-  font-size: 1.3rem;
-  color: #111827;
-  margin-bottom: 10px;
+.stepCard:hover .iconBox {
+  background: #059669;
 }
 
-.step p {
-  font-size: 0.95rem;
-  color: #6b7280;
-  line-height: 1.5;
+.stepCard:hover .iconBox svg {
+  color: #ffffff !important;
 }
 
-/* Tablet */
+.stepNumber {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  transition: color 0.3s ease;
+}
+
+.stepCard:hover .stepNumber {
+  color: #059669;
+}
+
+/* CARD BODY */
+.stepTitle {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.stepDesc {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+/* CARD FOOTER */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.stepStage {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.arrowIcon {
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.stepCard:hover .arrowIcon {
+  color: #059669;
+  transform: translateX(4px);
+}
+
+/* RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
   .timeline {
     grid-template-columns: repeat(2, 1fr);
-    row-gap: 60px;
+    gap: 1.5rem;
   }
 
-  .timeline::before {
+  .timelineLine {
     display: none;
   }
 }
 
-/* Mobile */
 @media (max-width: 640px) {
+  .section {
+    padding: 70px 16px;
+  }
+
+  .heading {
+    font-size: 1.85rem;
+  }
+
   .timeline {
     grid-template-columns: 1fr;
   }
 
-  .badge {
-    margin-bottom: 14px;
+  .stepCard {
+    padding: 1.25rem;
   }
 }

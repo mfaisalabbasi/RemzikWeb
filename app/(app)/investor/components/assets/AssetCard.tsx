@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import {
-  FaChartLine,
-  FaRegCalendar,
-  FaMoneyBillWave,
-  FaBuilding,
-} from "react-icons/fa";
+  TrendingUp,
+  Calendar,
+  Wallet,
+  Building2,
+  ArrowUpRight,
+  ShieldCheck,
+  CheckCircle2,
+} from "lucide-react";
 import styles from "./Asset.module.css";
 
 interface AssetCardProps {
@@ -32,47 +35,58 @@ export default function AssetCard({
 }: AssetCardProps) {
   return (
     <div className={styles.card}>
+      {/* Asset Image Banner */}
       <div className={styles.imageWrapper}>
         <img src={image} alt={title} className={styles.assetImage} />
+        <div className={styles.imageGradientOverlay} />
+
+        <div className={styles.imageBadgeOverlay}>
+          <span className={styles.assetTypeBadge}>{type}</span>
+          <span className={styles.statusBadge}>
+            <CheckCircle2 size={11} /> Tokenized
+          </span>
+        </div>
       </div>
 
-      <div className={styles.content}>
-        <h3>{title}</h3>
-        <p className={styles.subtitle}>{subtitle}</p>
+      {/* Card Content Container */}
+      <div className={styles.cardContent}>
+        {/* Title & Description Header */}
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle}>{title}</h3>
+          <p className={styles.cardSubtitle}>{subtitle}</p>
+        </div>
 
-        <ul className={styles.metrics}>
-          <li className={styles.metric}>
-            <FaChartLine className={styles.metricIcon} />
-            <div>
-              <span>ROI</span>
-              <strong>{roi}</strong>
-            </div>
-          </li>
-          <li className={styles.metric}>
-            <FaRegCalendar className={styles.metricIcon} />
-            <div>
-              <span>Tenure</span>
-              <strong>{tenure}</strong>
-            </div>
-          </li>
-          <li className={styles.metric}>
-            <FaMoneyBillWave className={styles.metricIcon} />
-            <div>
-              <span>Min Invest</span>
-              <strong>{minInvest}</strong>
-            </div>
-          </li>
-          <li className={styles.metric}>
-            <FaBuilding className={styles.metricIcon} />
-            <div>
-              <span>Type</span>
-              <strong>{type}</strong>
-            </div>
-          </li>
-        </ul>
+        {/* Highlight Yield Banner */}
+        <div className={styles.yieldBanner}>
+          <div className={styles.yieldHeader}>
+            <TrendingUp size={13} className={styles.goldIcon} />
+            <span>Target Annualized Yield</span>
+          </div>
+          <div className={styles.yieldValue}>{roi} APY</div>
+        </div>
 
-        <Link href={href} className={styles.cta}>
-          View Details
+        {/* Secondary Financial Metrics Bar */}
+        <div className={styles.secondaryMetrics}>
+          <div className={styles.metricItem}>
+            <span className={styles.metricLabel}>Tenure</span>
+            <span className={styles.metricValue}>{tenure}</span>
+          </div>
+          <div className={styles.metricDivider} />
+          <div className={styles.metricItem}>
+            <span className={styles.metricLabel}>Min. Unit</span>
+            <span className={styles.metricValue}>{minInvest}</span>
+          </div>
+          <div className={styles.metricDivider} />
+          <div className={styles.metricItem}>
+            <span className={styles.metricLabel}>Security</span>
+            <span className={styles.metricValue}>ERC-3643</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <Link href={href} className={styles.actionBtn}>
+          <span>Inspect Vault Details</span>
+          <ArrowUpRight size={15} />
         </Link>
       </div>
     </div>

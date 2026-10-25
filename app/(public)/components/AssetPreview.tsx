@@ -1,5 +1,8 @@
+"use client";
+
 import AssetPreviewCard from "@/app/(public)/components/AssetPreviewCard";
 import styles from "@/app/(public)/styles/AssetsPreview.module.css";
+import { Layers } from "lucide-react";
 
 interface Asset {
   title: string;
@@ -25,7 +28,7 @@ const assets: Asset[] = [
     image: "/assets/riyadh.jpg",
   },
   {
-    title: "Commercial Plaza",
+    title: "Commercial Logistics Plaza",
     location: "Karachi, Pakistan",
     yieldRange: "8–10% p.a.",
     status: "Coming Soon",
@@ -35,12 +38,16 @@ const assets: Asset[] = [
 
 export default function AssetsPreview() {
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="marketplace">
       <div className={styles.header}>
-        <h2>Asset Opportunities</h2>
-        <p>
-          Explore a preview of high-quality, Shariah-compliant real-world assets
-          available on Remzik.
+        <div className={styles.complianceBadge}>
+          <Layers size={13} color="#059669" />
+          <span>Institutional Vault Preview</span>
+        </div>
+        <h2 className={styles.heading}>Curated Real-World Assets</h2>
+        <p className={styles.subheading}>
+          Explore high-yield, Shariah-compliant real estate and commercial
+          assets structured for institutional and retail investors.
         </p>
       </div>
 

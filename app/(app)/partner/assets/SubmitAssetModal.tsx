@@ -7,6 +7,7 @@ import { assetSchema } from "@/app/integrations/validation/asset-schema";
 import { z } from "zod";
 import styles from "./styles/SubmitAssetModal.module.css";
 import Alert from "@/app/integrations/Alert/Alert";
+import { X, UploadCloud, CheckCircle2 } from "lucide-react";
 
 type AssetFormData = z.infer<typeof assetSchema>;
 
@@ -14,10 +15,8 @@ interface Props {
   onClose: () => void;
 }
 
-// 🛡️ Human-friendly error message translator for asset submission
 const getFriendlyErrorMessage = (rawMessage: string): string => {
   const msg = rawMessage.toLowerCase();
-
   if (
     msg.includes("unauthorized") ||
     msg.includes("session") ||
@@ -39,16 +38,11 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
     msg.includes("document") ||
     msg.includes("size")
   ) {
-    return "There was an issue with one or more uploaded files. Please check the file formats and sizes.";
+    return "There was an issue with one or more uploaded files. Please check the formats and sizes.";
   }
   if (msg.includes("network") || msg.includes("failed to fetch")) {
     return "Connection error. Please check your internet connection and try again.";
   }
-  if (msg.includes("server error") || msg.includes("500")) {
-    return "Our servers are experiencing a brief hiccup. Please try again shortly.";
-  }
-
-  // Fallback for custom or raw technical strings
   return "Asset submission failed. Please check your details and try again.";
 };
 
@@ -80,7 +74,6 @@ export default function SubmitAssetModal({ onClose }: Props) {
     setError("");
     setSuccess("");
 
-    // 🛡️ Enforce file upload validation before sending to the backend
     if (!data.galleryImages || data.galleryImages.length === 0) {
       setError("Please upload at least one gallery image.");
       return;
@@ -134,7 +127,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
         return;
       }
 
-      setSuccess("Asset submitted successfully");
+      setSuccess("Asset submitted successfully to institutional queue.");
       setTimeout(() => {
         onClose();
       }, 1200);
@@ -149,15 +142,20 @@ export default function SubmitAssetModal({ onClose }: Props) {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        {/* 1. STICKY HEADER */}
+        {/* STICKY HEADER */}
         <div className={styles.header}>
-          <h3>Submit New Asset</h3>
+          <div>
+            <h3>Submit New Asset Vault</h3>
+            <span className={styles.modalSub}>
+              Configure tokenized real-world asset parameters
+            </span>
+          </div>
           <button className={styles.closeBtn} onClick={onClose}>
-            &times;
+            <X size={18} />
           </button>
         </div>
 
-        {/* 2. STICKY ALERT CONTAINER (Offset below header) */}
+        {/* STICKY ALERT CONTAINER */}
         <div className={styles.stickyAlertContainer}>
           {error && (
             <Alert type="error" message={error} onClose={() => setError("")} />
@@ -172,113 +170,159 @@ export default function SubmitAssetModal({ onClose }: Props) {
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-          <label>
-            Asset Title
-            <input {...register("title")} />
-            {errors.title && (
-              <span className={styles.error}>{errors.title.message}</span>
-            )}
-          </label>
+          <div className={styles.formGrid}>
+            <label>
+              Asset Title
+              <input
+                {...register("title")}
+                placeholder="e.g. Al-Olaya Commercial Tower"
+              />
+              {errors.title && (
+                <span className={styles.error}>{errors.title.message}</span>
+              )}
+            </label>
+
+            <label>
+              Asset Type
+              <select {...register("type")}>
+                <option value="">Select Category</option>
+                <option value="RESIDENTIAL">Residential</option>
+                <option value="COMMERCIAL">Commercial</option>
+                <option value="INDUSTRIAL">Industrial</option>
+              </select>
+              {errors.type && (
+                <span className={styles.error}>{errors.type.message}</span>
+              )}
+            </label>
+          </div>
 
           <label>
-            Asset Type
-            <select {...register("type")}>
-              <option value="">Select</option>
-              <option value="RESIDENTIAL">Residential</option>
-              <option value="COMMERCIAL">Commercial</option>
-              <option value="INDUSTRIAL">Industrial</option>
-            </select>
-            {errors.type && (
-              <span className={styles.error}>{errors.type.message}</span>
-            )}
-          </label>
-
-          <label>
-            Description
-            <textarea {...register("description")} />
+            Description & Highlights
+            <textarea
+              {...register("description")}
+              placeholder="Provide institutional summary of the asset..."
+            />
             {errors.description && (
               <span className={styles.error}>{errors.description.message}</span>
             )}
           </label>
 
-          <label>
-            Asset Value
-            <input type="number" {...register("totalValue")} />
-            {errors.totalValue && (
-              <span className={styles.error}>{errors.totalValue.message}</span>
-            )}
-          </label>
+          <div className={styles.formGrid}>
+            <label>
+              Total Asset Value (SAR)
+              <input
+                type="number"
+                {...register("totalValue")}
+                placeholder="5000000"
+              />
+              {errors.totalValue && (
+                <span className={styles.error}>
+                  {errors.totalValue.message}
+                </span>
+              )}
+            </label>
 
-          <label>
-            Location
-            <input {...register("location")} />
-            {errors.location && (
-              <span className={styles.error}>{errors.location.message}</span>
-            )}
-          </label>
+            <label>
+              Location
+              <input
+                {...register("location")}
+                placeholder="Riyadh, Saudi Arabia"
+              />
+              {errors.location && (
+                <span className={styles.error}>{errors.location.message}</span>
+              )}
+            </label>
+          </div>
 
-          <label>
-            Expected Yield %
-            <input type="number" step="0.1" {...register("expectedYield")} />
-            {errors.expectedYield && (
-              <span className={styles.error}>
-                {errors.expectedYield.message}
-              </span>
-            )}
-          </label>
+          <div className={styles.formGridTriple}>
+            <label>
+              Expected Yield %
+              <input
+                type="number"
+                step="0.1"
+                {...register("expectedYield")}
+                placeholder="12.5"
+              />
+              {errors.expectedYield && (
+                <span className={styles.error}>
+                  {errors.expectedYield.message}
+                </span>
+              )}
+            </label>
 
-          <label>
-            Rental Income (Annual)
-            <input type="number" {...register("rentalIncome")} />
-            {errors.rentalIncome && (
-              <span className={styles.error}>
-                {errors.rentalIncome.message}
-              </span>
-            )}
-          </label>
+            <label>
+              Annual Rental Income
+              <input
+                type="number"
+                {...register("rentalIncome")}
+                placeholder="350000"
+              />
+              {errors.rentalIncome && (
+                <span className={styles.error}>
+                  {errors.rentalIncome.message}
+                </span>
+              )}
+            </label>
 
-          <label>
-            Asset Size (sqft)
-            <input type="number" {...register("assetSize")} />
-            {errors.assetSize && (
-              <span className={styles.error}>{errors.assetSize.message}</span>
-            )}
-          </label>
+            <label>
+              Asset Size (sqft)
+              <input
+                type="number"
+                {...register("assetSize")}
+                placeholder="12500"
+              />
+              {errors.assetSize && (
+                <span className={styles.error}>{errors.assetSize.message}</span>
+              )}
+            </label>
+          </div>
 
           <label>
             Token Supply
-            <input type="number" {...register("tokenSupply")} />
+            <input
+              type="number"
+              {...register("tokenSupply")}
+              placeholder="500000"
+            />
             {errors.tokenSupply && (
               <span className={styles.error}>{errors.tokenSupply.message}</span>
             )}
           </label>
 
-          <label>
-            Gallery Images
-            <input type="file" multiple {...register("galleryImages")} />
-          </label>
+          <div className={styles.fileSectionTitle}>
+            Required Verification Documentation
+          </div>
 
-          <label>
-            Legal Documents
-            <input type="file" multiple {...register("legalDocuments")} />
-          </label>
+          <div className={styles.fileGrid}>
+            <label className={styles.fileBox}>
+              <span>Gallery Images *</span>
+              <input type="file" multiple {...register("galleryImages")} />
+            </label>
 
-          <label>
-            Financial Documents
-            <input type="file" multiple {...register("financialDocuments")} />
-          </label>
+            <label className={styles.fileBox}>
+              <span>Legal Documents *</span>
+              <input type="file" multiple {...register("legalDocuments")} />
+            </label>
 
-          <label>
-            Other Documents
-            <input type="file" multiple {...register("otherDocuments")} />
-          </label>
+            <label className={styles.fileBox}>
+              <span>Financial Documents *</span>
+              <input type="file" multiple {...register("financialDocuments")} />
+            </label>
+
+            <label className={styles.fileBox}>
+              <span>Other Supporting Docs</span>
+              <input type="file" multiple {...register("otherDocuments")} />
+            </label>
+          </div>
 
           <button
             type="submit"
             className={styles.submitBtn}
             disabled={submitting}
           >
-            {submitting ? "Submitting..." : "Submit Asset"}
+            {submitting
+              ? "Securing & Submitting..."
+              : "Submit Asset for Approval"}
           </button>
         </form>
       </div>

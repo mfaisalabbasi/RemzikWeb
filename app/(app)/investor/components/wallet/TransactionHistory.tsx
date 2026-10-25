@@ -5,7 +5,6 @@ import {
   FaCoins,
   FaTools,
   FaShoppingCart,
-  FaWallet,
 } from "react-icons/fa";
 import styles from "./Wallet.module.css";
 
@@ -23,40 +22,47 @@ export default function TransactionHistory({
 }: {
   data: LedgerEntry[];
 }) {
-  // Updated mapping to match our new Backend LedgerSources
   const getTxDetails = (source: string) => {
     switch (source) {
       case "DISTRIBUTION_ENGINE":
         return {
           label: "Profit",
-          icon: <FaCoins className={styles.txIconProfit} />,
-          color: "#008435",
+          icon: <FaCoins style={{ color: "#059669" }} />,
+          color: "#059669",
         };
       case "PAYOUT_REQUEST":
       case "PAYOUT_COMPLETED":
       case "WITHDRAWAL":
         return {
           label: "Withdrawal",
-          icon: <FaArrowUp className={styles.txIconWithdraw} />,
-          color: "#e74c3c",
+          icon: <FaArrowUp style={{ color: "#dc2626" }} />,
+          color: "#dc2626",
         };
       case "INVESTMENT_CONFIRMATION":
-      case "WALLET_DEPOSIT": // Our new dummy top-up source
+      case "WALLET_DEPOSIT":
         return {
           label: "Deposit",
-          icon: <FaArrowDown className={styles.txIconDeposit} />,
-          color: "#008435",
+          icon: <FaArrowDown style={{ color: "#059669" }} />,
+          color: "#059669",
         };
-      case "ASSET_INVESTMENT": // Our new purchase source
+      case "ASSET_INVESTMENT":
         return {
           label: "Investment",
-          icon: <FaShoppingCart />,
-          color: "#f39c12",
+          icon: <FaShoppingCart style={{ color: "#d97706" }} />,
+          color: "#d97706",
         };
       case "ESCROW_LOCK":
-        return { label: "Escrow Lock", icon: <FaTools />, color: "#95a5a6" };
+        return {
+          label: "Escrow Lock",
+          icon: <FaTools style={{ color: "#64748b" }} />,
+          color: "#64748b",
+        };
       default:
-        return { label: "Adjustment", icon: <FaTools />, color: "#95a5a6" };
+        return {
+          label: "Adjustment",
+          icon: <FaTools style={{ color: "#64748b" }} />,
+          color: "#64748b",
+        };
     }
   };
 
@@ -92,11 +98,7 @@ export default function TransactionHistory({
                   <tr key={tx.id}>
                     <td>{formatDate(tx.createdAt)}</td>
                     <td className={styles.typeCell}>
-                      <span
-                        style={{ color: details.color, marginRight: "8px" }}
-                      >
-                        {details.icon}
-                      </span>
+                      <span style={{ marginRight: "4px" }}>{details.icon}</span>
                       {details.label}
                     </td>
                     <td className={styles.noteCell}>{tx.note || "-"}</td>
@@ -119,7 +121,7 @@ export default function TransactionHistory({
                   style={{
                     textAlign: "center",
                     padding: "3rem",
-                    color: "#888",
+                    color: "#64748b",
                   }}
                 >
                   No transactions found in your Remzic ledger.

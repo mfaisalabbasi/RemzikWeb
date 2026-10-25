@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./styles/DistributionCard.module.css";
-import { Timer, Unlock, CircleDollarSign } from "lucide-react";
+import { Timer, Unlock, DollarSign, Users, Wallet } from "lucide-react";
 
 interface Props {
   id: string;
@@ -11,7 +11,7 @@ interface Props {
   totalRaised: number;
   investors: number;
   nextPayout: string;
-  releaseAt?: string; // New: ISO string for capital release
+  releaseAt?: string;
   onDistribute: (assetId: string, assetName: string) => void;
 }
 
@@ -56,41 +56,45 @@ export default function DistributionCard({
     <div className={styles.card}>
       <div className={styles.header}>
         <h3 className={styles.name}>{asset}</h3>
-        <span className={`${styles.stage} ${styles[stage.toLowerCase()]}`}>
+        <span
+          className={`${styles.stage} ${styles[stage.toLowerCase()] || styles.funding}`}
+        >
           {stage}
         </span>
       </div>
 
       <div className={styles.stats}>
-        <div>
+        <div className={styles.statBox}>
           <span className={styles.label}>Total Raised</span>
-          <p>SAR {totalRaised.toLocaleString()}</p>
+          <span className={styles.val}>SAR {totalRaised.toLocaleString()}</span>
         </div>
-        <div>
-          <span className={styles.label}>Investors</span>
-          <p>{investors}</p>
+        <div className={styles.statBox}>
+          <span className={styles.label}>Participants</span>
+          <span className={styles.val}>{investors} Investors</span>
         </div>
-        <div>
+        <div className={styles.statBox}>
           <span className={styles.label}>
-            {isCapitalReleased ? "Capital Status" : "Release In"}
+            {isCapitalReleased ? "Capital Status" : "Release Window"}
           </span>
-          <p className="flex items-center gap-1">
+          <span
+            className={styles.val}
+            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+          >
             {isCapitalReleased ? (
-              <Unlock size={14} className="text-green-500" />
+              <Unlock size={13} color="#059669" />
             ) : (
-              <Timer size={14} className="text-amber-500" />
+              <Timer size={13} color="#d97706" />
             )}
             {timeLeft || nextPayout}
-          </p>
+          </span>
         </div>
       </div>
 
-      {/* Trigger Button: Only for active/completed assets */}
       <button
         onClick={() => onDistribute(id, asset)}
         className={styles.distributeBtn}
       >
-        <CircleDollarSign size={16} />
+        <DollarSign size={15} />
         Distribute Yield
       </button>
     </div>

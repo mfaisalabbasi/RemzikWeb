@@ -39,14 +39,12 @@ export default function KycAlert({ user }: { user: any }) {
     setIsUploading(true);
     const formData = new FormData();
 
-    // MUST match your SubmitKycDto requirements
     formData.append("fullName", user.fullName || "User");
     formData.append("dob", user.dob || "1990-01-01");
     formData.append("idDocument", files.idDocument);
     formData.append("addressProof", files.addressProof);
 
     try {
-      // POST /kyc/submit as per your KycController
       await api.post("/kyc/submit", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -68,17 +66,21 @@ export default function KycAlert({ user }: { user: any }) {
         <div className={styles.accentLine} />
         <div className={styles.contentWrapper}>
           <div className={styles.infoSection}>
-            <div className={styles.iconBox}>
-              <ShieldAlert size={28} strokeWidth={2.5} />
+            <div className={styles.iconBoxAlert}>
+              <ShieldAlert size={24} strokeWidth={2.5} />
             </div>
             <div className={styles.textStack}>
-              <span className={styles.statusLabel}>Compliance Notice</span>
-              <h3 className={styles.title}>Identity Verification Failed</h3>
+              <span className={styles.statusLabel}>
+                Compliance Action Required
+              </span>
+              <h3 className={styles.title}>
+                Identity Verification Unsuccessful
+              </h3>
               <div className={styles.reasonText}>
                 <Info size={14} />
                 <span>
                   {kyc.rejectionReason ||
-                    "Documents provided do not meet standards."}
+                    "Submitted credentials failed automated verification standards."}
                 </span>
               </div>
             </div>
@@ -89,7 +91,7 @@ export default function KycAlert({ user }: { user: any }) {
               onClick={() => setIsModalOpen(true)}
               className={styles.reverifyBtn}
             >
-              Re-verify Account <ArrowRight size={18} />
+              Re-verify Account <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -108,9 +110,11 @@ export default function KycAlert({ user }: { user: any }) {
             >
               <div className={styles.modalHeader}>
                 <div>
-                  <h2 className={styles.modalTitle}>Secure Vault</h2>
+                  <h2 className={styles.modalTitle}>
+                    Secure Verification Vault
+                  </h2>
                   <p className={styles.modalSubtitle}>
-                    Update your institutional identity assets
+                    Upload compliant regulatory identity documentation
                   </p>
                 </div>
                 <button
@@ -125,7 +129,7 @@ export default function KycAlert({ user }: { user: any }) {
                 {/* ID Document Slot */}
                 <div className={styles.fileSlot}>
                   <label className={styles.inputLabel}>
-                    1. Government ID (Passport/National ID)
+                    1. Government ID (Passport / National ID)
                   </label>
                   <div className={styles.dropzone}>
                     <input
@@ -140,14 +144,14 @@ export default function KycAlert({ user }: { user: any }) {
                     />
                     <div className={styles.dropzoneContent}>
                       {files.idDocument ? (
-                        <CheckCircle2 className="text-emerald-500" />
+                        <CheckCircle2 className="text-emerald-400" size={24} />
                       ) : (
-                        <CloudUpload className="text-slate-300" />
+                        <CloudUpload className="text-slate-400" size={24} />
                       )}
                       <span>
                         {files.idDocument
                           ? files.idDocument.name
-                          : "Select ID File"}
+                          : "Drop or select government credential file"}
                       </span>
                     </div>
                   </div>
@@ -156,7 +160,8 @@ export default function KycAlert({ user }: { user: any }) {
                 {/* Address Slot */}
                 <div className={styles.fileSlot}>
                   <label className={styles.inputLabel}>
-                    2. Proof of Residence (Utility Bill)
+                    2. Proof of Residence (Official Utility Bill / Bank
+                    Statement)
                   </label>
                   <div className={styles.dropzone}>
                     <input
@@ -171,14 +176,14 @@ export default function KycAlert({ user }: { user: any }) {
                     />
                     <div className={styles.dropzoneContent}>
                       {files.addressProof ? (
-                        <CheckCircle2 className="text-emerald-500" />
+                        <CheckCircle2 className="text-emerald-400" size={24} />
                       ) : (
-                        <CloudUpload className="text-slate-300" />
+                        <CloudUpload className="text-slate-400" size={24} />
                       )}
                       <span>
                         {files.addressProof
                           ? files.addressProof.name
-                          : "Select Address Proof"}
+                          : "Drop or select proof of residence document"}
                       </span>
                     </div>
                   </div>
@@ -192,12 +197,12 @@ export default function KycAlert({ user }: { user: any }) {
                   }
                 >
                   {isUploading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Loader2 className="animate-spin" size={18} />
-                      Syncing with Vault...
+                      <span>Syncing with Cryptographic Vault...</span>
                     </div>
                   ) : (
-                    "Finalize & Re-submit"
+                    "Finalize & Submit Credentials"
                   )}
                 </button>
               </div>

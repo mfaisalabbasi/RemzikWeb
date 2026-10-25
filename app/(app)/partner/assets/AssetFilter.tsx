@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./styles/AssetFilter.module.css";
+import { Search, Filter } from "lucide-react";
 
 interface Props {
   search: string;
@@ -19,9 +20,10 @@ export default function AssetsFilter({
     <div className={styles.filterWrapper}>
       {/* Search */}
       <div className={styles.searchWrapper}>
+        <Search size={16} className={styles.searchIcon} />
         <input
           type="text"
-          placeholder="Search assets..."
+          placeholder="Search assets by title or location..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className={styles.searchInput}
@@ -35,8 +37,8 @@ export default function AssetsFilter({
           onChange={(e) => onStageChange(e.target.value)}
           className={styles.stageSelect}
         >
-          <option value="">All Stages</option>
-          <option value="Funding">Funding</option>
+          <option value="">All Lifecycle Stages</option>
+          <option value="Funding">Funding Active</option>
           <option value="Approved">Approved</option>
           <option value="Completed">Completed</option>
         </select>

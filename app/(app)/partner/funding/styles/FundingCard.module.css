@@ -1,115 +1,134 @@
 .card {
   background: #ffffff;
-  border-radius: 18px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: all 0.3s ease;
-  cursor: default;
+  gap: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
-  border-color: #16a34a;
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
+  border-color: #059669;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .asset {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #111827;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .stage {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 800;
   padding: 4px 10px;
-  border-radius: 14px;
+  border-radius: 6px;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  letter-spacing: 0.04em;
 }
 
 .stage.funding {
-  color: #047857;
   background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
 }
 .stage.approved {
-  color: #0284c7;
-  background: #e0f2fe;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 .stage.completed {
+  background: #fef3c7;
   color: #b45309;
-  background: #fef9c3;
+  border: 1px solid #fde68a;
 }
 
 .progressWrapper {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  font-size: 0.725rem;
+  font-weight: 700;
+}
+
+.progressLabel {
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.percent {
+  color: #059669;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 800;
 }
 
 .progressBar {
-  flex: 1;
-  height: 10px;
-  background: #f3f4f6;
-  border-radius: 10px;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 9999px;
   overflow: hidden;
 }
 
 .progress {
   height: 100%;
-  background: linear-gradient(90deg, #16a34a, #22c55e);
-  border-radius: 10px;
-  transition: width 0.4s ease;
-}
-
-.percent {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #16a34a;
-  min-width: 50px;
-  text-align: right;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 9999px;
 }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  font-size: 0.75rem;
-  color: #6b7280;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .label {
-  font-weight: 500;
-  color: #9ca3af;
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .card {
-    padding: 16px;
-  }
-  .asset {
-    font-size: 1rem;
-  }
-  .stage {
-    font-size: 0.65rem;
-    padding: 3px 8px;
-  }
-  .percent {
-    font-size: 0.7rem;
-  }
-  .stats {
-    gap: 8px;
-    font-size: 0.7rem;
-    grid-template-columns: 1fr;
+    padding: 1.25rem;
   }
 }

@@ -9,8 +9,6 @@ interface SidebarProps {
   activeInvestments: number;
   riskLevel: string;
   kycStatus: string;
-
-  // ✅ ADD THIS
   onEditProfile: () => void;
 }
 
@@ -51,17 +49,17 @@ export default function Sidebar({
         <div className={styles.divider} />
 
         <div className={styles.metaRow}>
-          <span>Active</span>
-          <span>{activeInvestments}</span>
+          <span>Active Assets</span>
+          <strong>{activeInvestments}</strong>
         </div>
 
         <div className={styles.metaRow}>
-          <span>Risk</span>
-          <span>{riskLevel}</span>
+          <span>Risk Tolerance</span>
+          <strong>{riskLevel}</strong>
         </div>
 
         <div className={styles.metaRow}>
-          <span>KYC</span>
+          <span>KYC Status</span>
           <span className={styles.kycBadge}>{kycStatus}</span>
         </div>
       </div>
@@ -70,7 +68,6 @@ export default function Sidebar({
       <div className={styles.sidebarCard}>
         <h3 className={styles.sidebarTitle}>Actions</h3>
 
-        {/* ✅ ADD INVESTMENT */}
         <button
           className={styles.ctaPrimary}
           onClick={() => router.push("/investor/assets")}
@@ -78,7 +75,6 @@ export default function Sidebar({
           + Add Investment
         </button>
 
-        {/* ✅ WITHDRAW */}
         <button
           className={styles.ctaSecondary}
           onClick={() => router.push("/investor/wallet")}
@@ -86,7 +82,6 @@ export default function Sidebar({
           Withdraw Funds
         </button>
 
-        {/* ✅ EDIT PROFILE */}
         <button className={styles.ctaGhost} onClick={onEditProfile}>
           Update Profile
         </button>

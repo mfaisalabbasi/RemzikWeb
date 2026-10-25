@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./Portfolio.module.css";
+import { ShieldCheck, ArrowUpRight } from "lucide-react";
 
 export enum InvestmentStatus {
   PENDING = "PENDING",
@@ -14,6 +16,7 @@ export enum InvestmentStatus {
 interface InvestmentCardProps {
   investment: {
     id: string;
+    assetId?: string;
     assetTitle?: string;
     amountInvested: number | string;
     roi?: number;
@@ -23,6 +26,8 @@ interface InvestmentCardProps {
 }
 
 export default function InvestmentCard({ investment }: InvestmentCardProps) {
+  const router = useRouter();
+
   if (!investment) return null;
 
   const [liveDbStatus, setLiveDbStatus] = useState<string | null>(null);
@@ -72,16 +77,34 @@ export default function InvestmentCard({ investment }: InvestmentCardProps) {
 
   const { assetTitle = "Asset", amountInvested, roi, image } = investment;
 
+  // 🚀 Resolve target asset ID for navigation
+  const targetAssetId = investment.assetId || investment.id;
+
+  const handleNavigateToAsset = () => {
+    if (targetAssetId) {
+      router.push(`/investor/assets/${targetAssetId}`);
+    }
+  };
+
   return (
     <div className={styles.assetCard}>
-      <div className={styles.cardVisual}>
+      <div
+        className={styles.cardVisual}
+        onClick={handleNavigateToAsset}
+        style={{ cursor: "pointer" }}
+      >
         <img src={image || "/slider/real-estate.jpg"} alt={assetTitle} />
         {roi !== undefined && <div className={styles.roiTag}>{roi}% APY</div>}
+        <div className={styles.verifiedOverlay}>
+          <ShieldCheck size={12} /> Verified Vault
+        </div>
       </div>
 
       <div className={styles.cardDetails}>
         <div className={styles.cardHeader}>
-          <h4>{assetTitle}</h4>
+          <h4 onClick={handleNavigateToAsset} style={{ cursor: "pointer" }}>
+            {assetTitle}
+          </h4>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <span
               className={`${styles.statusDot} ${styles[statusKey] || styles.pending}`}
@@ -107,8 +130,20 @@ export default function InvestmentCard({ investment }: InvestmentCardProps) {
         </div>
 
         <div className={styles.cardActions}>
-          <button className={styles.secondaryBtn}>View Performance</button>
-          <button className={styles.textLink}>Manage Asset →</button>
+          <button
+            className={styles.secondaryBtn}
+            onClick={handleNavigateToAsset}
+          >
+            View Performance
+          </button>
+
+          <button className={styles.textLink} onClick={handleNavigateToAsset}>
+            Manage Asset{" "}
+            <ArrowUpRight
+              size={13}
+              style={{ display: "inline", verticalAlign: "middle" }}
+            />
+          </button>
         </div>
       </div>
     </div>
