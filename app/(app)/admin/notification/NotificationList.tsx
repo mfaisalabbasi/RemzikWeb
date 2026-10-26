@@ -15,8 +15,29 @@ export default function NotificationList({ notifications, onMarkRead }: Props) {
   const list = Array.isArray(notifications) ? notifications : [];
 
   const handleClick = async (n: NotificationItem) => {
-    if (!n.read) onMarkRead(n.id);
-    if (n.actionUrl) router.push(n.actionUrl);
+    const isBroadcast = n.isBroadcast || n.id.toString().startsWith("bcast-");
+
+    if (!n.read) {
+      if (!isBroadcast) {
+        try {
+          // 🛡️ Synchronize database "read" status with NestJS backend
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/notifications/${n.id}/read`,
+            {
+              method: "PATCH",
+              credentials: "include",
+            },
+          );
+        } catch (e) {
+          console.error("Failed to mark notification as read on backend:", e);
+        }
+      }
+      onMarkRead(n.id);
+    }
+
+    if (n.actionUrl) {
+      router.push(n.actionUrl);
+    }
   };
 
   return (
@@ -32,7 +53,9 @@ export default function NotificationList({ notifications, onMarkRead }: Props) {
             <p>{n.message}</p>
           </div>
           <span className={styles.date}>
-            {new Date(n.createdAt).toLocaleDateString()}
+            {n.createdAt
+              ? new Date(n.createdAt).toLocaleDateString()
+              : "Just now"}
           </span>
         </div>
       ))}

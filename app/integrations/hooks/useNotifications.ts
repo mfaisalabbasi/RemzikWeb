@@ -46,7 +46,6 @@ export const useNotifications = (userId: string | undefined, role?: string) => {
 
     const load = async () => {
       try {
-        // FIXED: Pointing to /notifications (the unified endpoint) instead of /admin/notifications
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/notifications?role=${role || ""}`,
           { credentials: "include" },

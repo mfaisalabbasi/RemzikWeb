@@ -17,20 +17,30 @@ export default function NotificationList({
   const list = Array.isArray(notifications) ? notifications : [];
 
   const handleAction = async (n: NotificationItem) => {
+    // Check if unread (handles both regular notifications and broadcasts)
+    const isBroadcast = n.isBroadcast || n.id.toString().startsWith("bcast-");
+
     if (!n.read) {
-      if (!n.isBroadcast) {
+      if (!isBroadcast) {
         try {
+          // 🛡️ FIXED: Added credentials: "include" so authentication cookies are sent to NestJS
           await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/notifications/${n.id}/read`,
-            { method: "PATCH" },
+            {
+              method: "PATCH",
+              credentials: "include",
+            },
           );
         } catch (e) {
-          console.error(e);
+          console.error("Failed to mark notification as read:", e);
         }
       }
       onMarkRead(n.id);
     }
-    if (n.actionUrl) router.push(n.actionUrl);
+
+    if (n.actionUrl) {
+      router.push(n.actionUrl);
+    }
   };
 
   return (

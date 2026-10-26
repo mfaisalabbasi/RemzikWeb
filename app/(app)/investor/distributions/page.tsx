@@ -564,7 +564,7 @@ export default function DistributionsPage() {
                     >
                       {isReady ? (
                         <>
-                          Claim Yield <ArrowUpRight size={14} />
+                          Check Yield <ArrowUpRight size={14} />
                         </>
                       ) : (
                         "View Proof"

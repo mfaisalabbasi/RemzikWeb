@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TradeInput, MarketPosition } from "./types";
 import styles from "./secondary.module.css";
 import { ethers } from "ethers";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ShieldCheck } from "lucide-react";
 import api from "@/app/integrations/lib/axios";
 import { useAppWallet } from "@/app/integrations/context/WalletContext";
 
@@ -131,7 +131,7 @@ export default function SellPositionModal({
       }
       setActiveListingId(listingId);
 
-      // 2. FETCH PRIVY CUSTOM TOKEN (Exact same endpoint as investment modal)
+      // 2. FETCH PRIVY CUSTOM TOKEN
       const tokenRes = await api.get("/auth/privy-token", {
         withCredentials: true,
       });
@@ -241,7 +241,14 @@ export default function SellPositionModal({
           </div>
 
           {errorMsg && (
-            <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "8px" }}>
+            <p
+              style={{
+                color: "#ef4444",
+                fontSize: "12px",
+                marginTop: "8px",
+                fontWeight: "600",
+              }}
+            >
               {errorMsg}
             </p>
           )}
@@ -272,15 +279,16 @@ export default function SellPositionModal({
         </div>
       </div>
 
-      {/* Shared Secure Enclave Iframe Overlay */}
+      {/* Shared Institutional White/Emerald Secure Enclave Iframe Overlay */}
       {signUrl && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
             backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -292,24 +300,26 @@ export default function SellPositionModal({
               width: "100%",
               maxWidth: "460px",
               height: "640px",
-              backgroundColor: "#080C0A",
+              backgroundColor: "#ffffff",
               borderRadius: "24px",
-              border: "1px solid rgba(52, 211, 153, 0.2)",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
               position: "relative",
+              fontFamily: "Plus Jakarta Sans, sans-serif",
             }}
           >
+            {/* Modal Header Bar */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 20px",
-                borderBottom: "1px solid #111816",
-                backgroundColor: "#080C0A",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#f8fafc",
               }}
             >
               <div
@@ -320,28 +330,31 @@ export default function SellPositionModal({
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    backgroundColor: "#34D399",
-                    boxShadow: "0 0 10px #34D399",
+                    backgroundColor: "#059669",
+                    boxShadow: "0 0 8px rgba(5, 150, 105, 0.5)",
                   }}
                 />
+                <ShieldCheck size={14} color="#059669" />
                 <span
                   style={{
-                    color: "#34D399",
+                    color: "#0f172a",
                     fontSize: "11px",
                     fontWeight: "800",
                     letterSpacing: "0.5px",
+                    textTransform: "uppercase",
                   }}
                 >
-                  SECURE ENCLAVE SIGNER
+                  Secure Enclave Signer
                 </span>
               </div>
+
               <button
                 onClick={() => setSignUrl(null)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#94A3B8",
-                  padding: "6px 10px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  padding: "5px 10px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   display: "flex",
@@ -349,6 +362,7 @@ export default function SellPositionModal({
                   gap: "4px",
                   fontSize: "12px",
                   fontWeight: "700",
+                  transition: "all 0.2s ease",
                 }}
               >
                 <X size={14} /> Close
@@ -362,7 +376,7 @@ export default function SellPositionModal({
                 border: "none",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#080C0A",
+                backgroundColor: "#ffffff",
               }}
               title="Secondary Listing Signer"
             />

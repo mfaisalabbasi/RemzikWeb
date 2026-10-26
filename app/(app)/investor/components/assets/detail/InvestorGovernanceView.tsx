@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
-import { X, Loader2 } from "lucide-react";
+import {
+  X,
+  Loader2,
+  ShieldCheck,
+  Scale,
+  ExternalLink,
+  AlertTriangle,
+} from "lucide-react";
 import api from "@/app/integrations/lib/axios";
 import { useAppWallet } from "@/app/integrations/context/WalletContext";
 import styles from "./Invest.module.css";
@@ -163,7 +170,7 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
 
       const encodedPayload = encodeURIComponent(JSON.stringify({ txPayload }));
 
-      // 3. Construct URL matching the mobile enclave parameters
+      // 3. Construct URL matching the enclave parameters
       let url =
         `/auth/sign` +
         `?proposalId=${onChainProposalId}` +
@@ -193,7 +200,27 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h3 className={styles.title}>Asset DAO Governance</h3>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                borderRadius: "9999px",
+                background: "#ecfdf5",
+                border: "1px solid #a7f3d0",
+                color: "#059669",
+                fontSize: "0.7rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                marginBottom: "8px",
+              }}
+            >
+              <Scale size={12} color="#059669" />
+              <span>DAO Module</span>
+            </div>
+            <h3 className={styles.title}>Asset Governance</h3>
             <p className={styles.subtitle}>
               Participate in operational and emergency decisions for this vault.
             </p>
@@ -205,10 +232,10 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
 
         {!govAddress && (
           <div className={styles.warningBox}>
-            <span>⚠️</span>
+            <AlertTriangle size={16} color="#d97706" />
             <span>
-              <strong>Warning:</strong> Governance contract address is not
-              linked to this asset object.
+              <strong>Notice:</strong> Governance contract address is not linked
+              to this asset object.
             </span>
           </div>
         )}
@@ -219,7 +246,7 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
               Synchronizing on-chain proposals...
             </div>
           ) : errorMsg ? (
-            <div className={styles.loadingState} style={{ color: "#DC2626" }}>
+            <div className={styles.loadingState} style={{ color: "#ef4444" }}>
               Error loading proposals: {errorMsg}
             </div>
           ) : proposals.length > 0 ? (
@@ -239,14 +266,20 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
                   <p className={styles.proposalDesc}>{p.description}</p>
 
                   {p.txHash && (
-                    <div>
+                    <div style={{ marginTop: "8px" }}>
                       <a
                         href={`https://etherscan.io/tx/${p.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.txLink}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
                       >
-                        View Genesis TX ↗
+                        <span>View Genesis TX</span>
+                        <ExternalLink size={12} />
                       </a>
                     </div>
                   )}
@@ -313,15 +346,16 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
         </div>
       </div>
 
-      {/* 🚀 Shared Secure Enclave Iframe Overlay for Governance Voting */}
+      {/* 🚀 Shared Institutional White/Emerald Secure Enclave Iframe Overlay */}
       {signUrl && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
             backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -333,24 +367,26 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
               width: "100%",
               maxWidth: "460px",
               height: "640px",
-              backgroundColor: "#080C0A",
+              backgroundColor: "#ffffff",
               borderRadius: "24px",
-              border: "1px solid rgba(52, 211, 153, 0.2)",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
               position: "relative",
+              fontFamily: "Plus Jakarta Sans, sans-serif",
             }}
           >
+            {/* Modal Header Bar */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 20px",
-                borderBottom: "1px solid #111816",
-                backgroundColor: "#080C0A",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#f8fafc",
               }}
             >
               <div
@@ -361,21 +397,24 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    backgroundColor: "#34D399",
-                    boxShadow: "0 0 10px #34D399",
+                    backgroundColor: "#059669",
+                    boxShadow: "0 0 8px rgba(5, 150, 105, 0.5)",
                   }}
                 />
+                <ShieldCheck size={14} color="#059669" />
                 <span
                   style={{
-                    color: "#34D399",
+                    color: "#0f172a",
                     fontSize: "11px",
                     fontWeight: "800",
                     letterSpacing: "0.5px",
+                    textTransform: "uppercase",
                   }}
                 >
-                  SECURE DAO SIGNER
+                  Secure DAO Signer
                 </span>
               </div>
+
               <button
                 onClick={() => {
                   setSignUrl(null);
@@ -383,10 +422,10 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
                   setActiveProposalId(null);
                 }}
                 style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#94A3B8",
-                  padding: "6px 10px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  padding: "5px 10px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   display: "flex",
@@ -394,6 +433,7 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
                   gap: "4px",
                   fontSize: "12px",
                   fontWeight: "700",
+                  transition: "all 0.2s ease",
                 }}
               >
                 <X size={14} /> Close
@@ -407,7 +447,7 @@ export const InvestorGovernanceView = ({ asset }: InvestorGovernanceProps) => {
                 border: "none",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#080C0A",
+                backgroundColor: "#ffffff",
               }}
               title="DAO Governance Signer"
             />

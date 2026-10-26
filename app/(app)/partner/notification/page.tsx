@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import NotificationList from "./NotificationList";
 import { useNotifications } from "@/app/integrations/hooks/useNotifications";
 import { getCurrentUser } from "@/app/integrations/api/auth";
-import { Building2, ShieldCheck } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export default function PartnerNotificationPage() {
   const [userId, setUserId] = useState<string>();
@@ -17,10 +17,8 @@ export default function PartnerNotificationPage() {
     });
   }, []);
 
-  const { notifications, markAsReadLocal, loading } = useNotifications(
-    userId,
-    "PARTNERS",
-  );
+  const { notifications, unreadCount, markAsReadLocal, loading } =
+    useNotifications(userId, "PARTNERS");
 
   if (!ready) {
     return (
@@ -109,6 +107,35 @@ export default function PartnerNotificationPage() {
         >
           Partner Notifications
         </h1>
+
+        {/* Live Unread Badge */}
+        {unreadCount > 0 ? (
+          <span
+            style={{
+              background: "#ef4444",
+              color: "#ffffff",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              padding: "4px 12px",
+              borderRadius: "9999px",
+            }}
+          >
+            {unreadCount} Unread
+          </span>
+        ) : (
+          <span
+            style={{
+              background: "#f1f5f9",
+              color: "#64748b",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              padding: "4px 12px",
+              borderRadius: "9999px",
+            }}
+          >
+            All Read
+          </span>
+        )}
       </div>
 
       <NotificationList

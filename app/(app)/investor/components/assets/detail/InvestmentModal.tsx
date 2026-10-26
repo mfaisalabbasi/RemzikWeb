@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppWallet } from "@/app/integrations/context/WalletContext";
 import api from "@/app/integrations/lib/axios";
 import styles from "./Invest.module.css";
-import { Wallet, Cpu, Loader2, X } from "lucide-react";
+import { Wallet, Cpu, Loader2, X, ShieldCheck } from "lucide-react";
 
 interface ModalProps {
   assetId: string;
@@ -64,7 +64,7 @@ export default function InvestmentModal({
           const invId = activeInvestmentId || data.investmentId;
           const txHash = data.txHash;
 
-          // Verify transaction with backend (identical to mobile flow)
+          // Verify transaction with backend
           if (invId) {
             try {
               await fetch(
@@ -232,30 +232,36 @@ export default function InvestmentModal({
                 onClick={() => setSettlementMode("OFF_CHAIN")}
                 style={{
                   background:
-                    settlementMode === "OFF_CHAIN" ? "#e8f5e9" : "#f8fafc",
+                    settlementMode === "OFF_CHAIN" ? "#ecfdf5" : "#f8fafc",
                   border: `2px solid ${
-                    settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#e2e8f0"
+                    settlementMode === "OFF_CHAIN" ? "#059669" : "#e2e8f0"
                   }`,
-                  borderRadius: "10px",
-                  padding: "10px",
+                  borderRadius: "12px",
+                  padding: "12px",
                   cursor: "pointer",
                 }}
               >
                 <Wallet
                   size={16}
-                  color={settlementMode === "OFF_CHAIN" ? "#0f5f3a" : "#64748b"}
+                  color={settlementMode === "OFF_CHAIN" ? "#059669" : "#64748b"}
                   style={{ marginBottom: "4px" }}
                 />
                 <div
                   style={{
                     fontSize: "12px",
-                    fontWeight: "700",
+                    fontWeight: "800",
                     color: "#0f172a",
                   }}
                 >
                   Internal Wallet
                 </div>
-                <div style={{ fontSize: "10px", color: "#64748b" }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: "#64748b",
+                    fontWeight: 500,
+                  }}
+                >
                   Instant off-chain escrow
                 </div>
               </div>
@@ -264,30 +270,36 @@ export default function InvestmentModal({
                 onClick={() => setSettlementMode("ON_CHAIN")}
                 style={{
                   background:
-                    settlementMode === "ON_CHAIN" ? "#e0f2fe" : "#f8fafc",
+                    settlementMode === "ON_CHAIN" ? "#ecfdf5" : "#f8fafc",
                   border: `2px solid ${
-                    settlementMode === "ON_CHAIN" ? "#0284c7" : "#e2e8f0"
+                    settlementMode === "ON_CHAIN" ? "#059669" : "#e2e8f0"
                   }`,
-                  borderRadius: "10px",
-                  padding: "10px",
+                  borderRadius: "12px",
+                  padding: "12px",
                   cursor: "pointer",
                 }}
               >
                 <Cpu
                   size={16}
-                  color={settlementMode === "ON_CHAIN" ? "#0284c7" : "#64748b"}
+                  color={settlementMode === "ON_CHAIN" ? "#059669" : "#64748b"}
                   style={{ marginBottom: "4px" }}
                 />
                 <div
                   style={{
                     fontSize: "12px",
-                    fontWeight: "700",
+                    fontWeight: "800",
                     color: "#0f172a",
                   }}
                 >
                   Web3 On-Chain
                 </div>
-                <div style={{ fontSize: "10px", color: "#64748b" }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: "#64748b",
+                    fontWeight: 500,
+                  }}
+                >
                   Privy Vault Settlement
                 </div>
               </div>
@@ -300,18 +312,28 @@ export default function InvestmentModal({
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              style={{ borderColor: isInvalid ? "#dc2626" : "#0f5f3a" }}
+              style={{ borderColor: isInvalid ? "#ef4444" : "#059669" }}
             />
             {settlementMode === "OFF_CHAIN" && amount > max && (
               <p
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
+                style={{
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  marginTop: "4px",
+                  fontWeight: 600,
+                }}
               >
                 Exceeds available balance
               </p>
             )}
             {errorMsg && (
               <p
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
+                style={{
+                  color: "#ef4444",
+                  fontSize: "12px",
+                  marginTop: "4px",
+                  fontWeight: 600,
+                }}
               >
                 {errorMsg}
               </p>
@@ -348,15 +370,16 @@ export default function InvestmentModal({
         </div>
       </div>
 
-      {/* Embedded Secure Enclave Signer Overlay */}
+      {/* Shared Institutional White/Emerald Secure Enclave Signer Overlay */}
       {signUrl && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
             backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -368,24 +391,26 @@ export default function InvestmentModal({
               width: "100%",
               maxWidth: "460px",
               height: "640px",
-              backgroundColor: "#080C0A",
+              backgroundColor: "#ffffff",
               borderRadius: "24px",
-              border: "1px solid rgba(52, 211, 153, 0.2)",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
               position: "relative",
+              fontFamily: "Plus Jakarta Sans, sans-serif",
             }}
           >
+            {/* Modal Header Bar */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "16px 20px",
-                borderBottom: "1px solid #111816",
-                backgroundColor: "#080C0A",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#f8fafc",
               }}
             >
               <div
@@ -396,28 +421,31 @@ export default function InvestmentModal({
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    backgroundColor: "#34D399",
-                    boxShadow: "0 0 10px #34D399",
+                    backgroundColor: "#059669",
+                    boxShadow: "0 0 8px rgba(5, 150, 105, 0.5)",
                   }}
                 />
+                <ShieldCheck size={14} color="#059669" />
                 <span
                   style={{
-                    color: "#34D399",
+                    color: "#0f172a",
                     fontSize: "11px",
                     fontWeight: "800",
                     letterSpacing: "0.5px",
+                    textTransform: "uppercase",
                   }}
                 >
-                  SECURE ENCLAVE SIGNER
+                  Secure Enclave Signer
                 </span>
               </div>
+
               <button
                 onClick={() => setSignUrl(null)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#94A3B8",
-                  padding: "6px 10px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  color: "#475569",
+                  padding: "5px 10px",
                   borderRadius: "8px",
                   cursor: "pointer",
                   display: "flex",
@@ -425,6 +453,7 @@ export default function InvestmentModal({
                   gap: "4px",
                   fontSize: "12px",
                   fontWeight: "700",
+                  transition: "all 0.2s ease",
                 }}
               >
                 <X size={14} /> Close
@@ -438,7 +467,7 @@ export default function InvestmentModal({
                 border: "none",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#080C0A",
+                backgroundColor: "#ffffff",
               }}
               title="Secure Transaction Signer"
             />

@@ -16,17 +16,30 @@ export default function NotificationPage() {
     });
   }, []);
 
-  const { notifications, loading, markAsReadLocal } = useNotifications(userId);
+  const { notifications, unreadCount, loading, markAsReadLocal } =
+    useNotifications(userId);
 
   if (!ready) return <div className="p-10 text-center">Authenticating...</div>;
   if (loading)
     return <div className="p-10 text-center">Loading notifications...</div>;
 
   return (
-    // Add key={userId || 'loading'} here.
-    // This forces a complete DOM re-render when the account switches.
     <div key={userId || "loading"} className="container py-6">
-      <h1 className="mb-4 text-xl font-bold">Notifications</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold">Notifications</h1>
+
+        {/* Live Unread Badge */}
+        {unreadCount > 0 ? (
+          <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+            {unreadCount} Unread
+          </span>
+        ) : (
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
+            All Read
+          </span>
+        )}
+      </div>
+
       {notifications.length === 0 ? (
         <p className="text-gray-500">No notifications found.</p>
       ) : (

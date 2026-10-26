@@ -17,10 +17,8 @@ export default function NotificationPage() {
     });
   }, []);
 
-  const { notifications, loading, markAsReadLocal } = useNotifications(
-    userId,
-    "INVESTORS",
-  );
+  const { notifications, unreadCount, loading, markAsReadLocal } =
+    useNotifications(userId, "INVESTORS");
 
   if (!ready) {
     return (
@@ -109,6 +107,35 @@ export default function NotificationPage() {
         >
           Notifications
         </h1>
+
+        {/* Live Unread Badge */}
+        {unreadCount > 0 ? (
+          <span
+            style={{
+              background: "#ef4444",
+              color: "#ffffff",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              padding: "4px 12px",
+              borderRadius: "9999px",
+            }}
+          >
+            {unreadCount} Unread
+          </span>
+        ) : (
+          <span
+            style={{
+              background: "#f1f5f9",
+              color: "#64748b",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              padding: "4px 12px",
+              borderRadius: "9999px",
+            }}
+          >
+            All Read
+          </span>
+        )}
       </div>
 
       <NotificationList

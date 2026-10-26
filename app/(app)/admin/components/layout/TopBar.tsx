@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "@/app/(app)/investor/styles/Topbar.module.css";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
 import Image from "next/image";
 import Logo from "@/public/finalrem.png";
 import Link from "next/link";
@@ -21,43 +21,55 @@ export default function Topbar({
 }: TopbarProps) {
   return (
     <header className={styles.topbar}>
-      <button
-        className={styles.menu}
-        onClick={onMenuClick}
-        aria-label="Open menu"
-      >
-        ☰
-      </button>
+      <div className={styles.leftSection}>
+        <button
+          className={styles.menuBtn}
+          onClick={onMenuClick}
+          aria-label="Open menu"
+        >
+          <FiMenu size={20} />
+        </button>
 
-      <div className={styles.brand}>
-        <Image
-          src={Logo}
-          alt="Remzik"
-          width={120}
-          height={24}
-          priority // ✅ Fix for LCP warning
-          loading="eager" // ✅ Fix for LCP warning
-        />
+        <div className={styles.brand}>
+          <Image
+            src={Logo}
+            alt="Remzik Protocol"
+            width={118}
+            height={24}
+            priority
+            loading="eager"
+            className={styles.logoImg}
+          />
+        </div>
       </div>
 
       <div className={styles.rightSection}>
         <Link
           href="/admin/notification"
-          className={styles.notification}
+          className={styles.notificationBtn}
           title="Notifications"
         >
-          <FiBell size={20} />
+          <FiBell size={18} />
           {notificationsCount > 0 && (
-            <span className={styles.notificationDot}>{notificationsCount}</span>
+            <span className={styles.notificationBadge}>
+              {notificationsCount > 9 ? "9+" : notificationsCount}
+            </span>
           )}
         </Link>
 
         {username && (
-          <div className={styles.user}>
-            <span className={styles.username}>{username}</span>
+          <div className={styles.userProfile}>
+            <div className={styles.avatarPill}>
+              <FiUser size={14} className={styles.userIcon} />
+              <span className={styles.username}>{username}</span>
+            </div>
             {onLogout && (
-              <button className={styles.logout} onClick={onLogout}>
-                Logout
+              <button
+                className={styles.logoutBtn}
+                onClick={onLogout}
+                title="Sign Out"
+              >
+                <FiLogOut size={15} />
               </button>
             )}
           </div>
