@@ -16,6 +16,8 @@ import { ShieldCheck, ArrowRight } from "lucide-react";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+const API_HOST = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 const getFriendlyErrorMessage = (rawMessage: string): string => {
   const msg = rawMessage.toLowerCase();
 
@@ -39,7 +41,7 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
 
-  return "An unexpected error occurred during login. Please try again.";
+  return rawMessage || "An unexpected error occurred. Please try again.";
 };
 
 const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
@@ -86,6 +88,16 @@ function LoginFormContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- Forgot Password Modal States ---
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState<"REQUEST" | "RESET">("REQUEST");
+  const [resetEmail, setResetEmail] = useState("");
+  const [otpToken, setOtpToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isForgotLoading, setIsForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
 
   const getCallbackUrl = (): string | null => {
     if (typeof window === "undefined") return null;
@@ -147,6 +159,7 @@ function LoginFormContent() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -205,6 +218,94 @@ function LoginFormContent() {
     }
   };
 
+  // --- Forgot Password Handlers ---
+  const handleOpenForgotModal = () => {
+    const currentEmail = getValues("email");
+    if (currentEmail) {
+      setResetEmail(currentEmail);
+    }
+    setForgotStep("REQUEST");
+    setOtpToken("");
+    setNewPassword("");
+    setForgotError("");
+    setForgotSuccess("");
+    setIsForgotModalOpen(true);
+  };
+
+  const handleRequestResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+
+    if (!resetEmail || !resetEmail.includes("@")) {
+      setForgotError("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      setIsForgotLoading(true);
+      const res = await fetch(`${API_HOST}/users/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail.trim().toLowerCase() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send reset code.");
+      }
+
+      setForgotSuccess("Verification code sent to your email.");
+      setForgotStep("RESET");
+    } catch (err: any) {
+      setForgotError(getFriendlyErrorMessage(err?.message || ""));
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
+
+  const handleSubmitNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+
+    if (!otpToken || otpToken.trim().length < 4) {
+      setForgotError("Please enter a valid verification code.");
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setForgotError("New password must be at least 6 characters long.");
+      return;
+    }
+
+    try {
+      setIsForgotLoading(true);
+      const res = await fetch(`${API_HOST}/users/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: resetEmail.trim().toLowerCase(),
+          token: otpToken.trim(),
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to reset password.");
+      }
+
+      setForgotSuccess("Password reset successfully! You can now log in.");
+      setTimeout(() => {
+        setIsForgotModalOpen(false);
+      }, 2000);
+    } catch (err: any) {
+      setForgotError(getFriendlyErrorMessage(err?.message || ""));
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
+
   return (
     <section className={styles.authCard}>
       <div className={styles.badge}>
@@ -245,8 +346,18 @@ function LoginFormContent() {
             )}
           </label>
 
-          <label className={styles.field}>
-            Password
+          <div className={styles.field}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "#374151",
+                marginBottom: "6px",
+              }}
+            >
+              Password
+            </span>
             <input
               {...register("password")}
               type="password"
@@ -258,7 +369,31 @@ function LoginFormContent() {
             {errors.password && (
               <span className={styles.error}>{errors.password.message}</span>
             )}
-          </label>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginTop: "-4px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleOpenForgotModal}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#059669",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Forgot Password?
+            </button>
+          </div>
 
           <button
             className={styles.primary}
@@ -283,6 +418,210 @@ function LoginFormContent() {
           </p>
         </form>
       </div>
+
+      {/* --- Forgot Password Modal --- */}
+      {isForgotModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(2, 11, 7, 0.85)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "400px",
+              backgroundColor: "#051610",
+              borderRadius: "20px",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              padding: "24px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+            }}
+          >
+            <h2
+              style={{
+                color: "#F0FDF4",
+                fontSize: "18px",
+                fontWeight: "700",
+                marginBottom: "6px",
+              }}
+            >
+              {forgotStep === "REQUEST"
+                ? "Reset Password"
+                : "Enter Verification Code"}
+            </h2>
+            <p
+              style={{
+                color: "#94A3B8",
+                fontSize: "12px",
+                marginBottom: "20px",
+                lineHeight: "18px",
+              }}
+            >
+              {forgotStep === "REQUEST"
+                ? "Enter your registered email address to receive a password reset verification code."
+                : `Enter the 6-digit code sent to ${resetEmail} and choose a new password.`}
+            </p>
+
+            {forgotError && (
+              <div style={{ marginBottom: "12px" }}>
+                <Alert
+                  type="error"
+                  message={forgotError}
+                  onClose={() => setForgotError("")}
+                />
+              </div>
+            )}
+            {forgotSuccess && (
+              <div style={{ marginBottom: "12px" }}>
+                <Alert
+                  type="success"
+                  message={forgotSuccess}
+                  onClose={() => setForgotSuccess("")}
+                />
+              </div>
+            )}
+
+            {forgotStep === "REQUEST" ? (
+              <form onSubmit={handleRequestResetCode}>
+                <label
+                  className={styles.field}
+                  style={{ marginBottom: "16px", color: "#F0FDF4" }}
+                >
+                  Email Address
+                  <input
+                    type="email"
+                    placeholder="name@email.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className={styles.fieldInput}
+                    autoComplete="email"
+                    disabled={isForgotLoading}
+                    required
+                  />
+                </label>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(false)}
+                    disabled={isForgotLoading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#082017",
+                      borderRadius: "12px",
+                      padding: "12px",
+                      border: "1px solid rgba(16, 185, 129, 0.2)",
+                      color: "#94A3B8",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isForgotLoading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#34D399",
+                      borderRadius: "12px",
+                      padding: "12px",
+                      border: "none",
+                      color: "#020B07",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {isForgotLoading ? "Sending..." : "Send Code"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmitNewPassword}>
+                <label
+                  className={styles.field}
+                  style={{ marginBottom: "12px", color: "#F0FDF4" }}
+                >
+                  Verification Code / Token
+                  <input
+                    type="text"
+                    placeholder="123456"
+                    value={otpToken}
+                    onChange={(e) => setOtpToken(e.target.value)}
+                    className={styles.fieldInput}
+                    autoComplete="one-time-code"
+                    disabled={isForgotLoading}
+                    required
+                  />
+                </label>
+
+                <label
+                  className={styles.field}
+                  style={{ marginBottom: "16px", color: "#F0FDF4" }}
+                >
+                  New Password (Min 6 chars)
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={styles.fieldInput}
+                    autoComplete="new-password"
+                    disabled={isForgotLoading}
+                    required
+                  />
+                </label>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(false)}
+                    disabled={isForgotLoading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#082017",
+                      borderRadius: "12px",
+                      padding: "12px",
+                      border: "1px solid rgba(16, 185, 129, 0.2)",
+                      color: "#94A3B8",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isForgotLoading}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#34D399",
+                      borderRadius: "12px",
+                      padding: "12px",
+                      border: "none",
+                      color: "#020B07",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {isForgotLoading ? "Updating..." : "Reset Password"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
