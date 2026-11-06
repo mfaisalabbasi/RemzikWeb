@@ -1,1 +1,15 @@
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Remzik mark</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#082f25"/><stop offset="1" stop-color="#041b16"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7d889"/><stop offset=".52" stop-color="#d99a45"/><stop offset="1" stop-color="#a96522"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M142 376V136h130c68 0 108 36 108 96 0 45-23 77-63 91l77 53h-91l-65-48h-19v48h-77zm77-116h48c25 0 39-11 39-30s-14-30-39-30h-48v60z" fill="url(#gold)"/>
+  <path d="M142 376V136h77v240z" fill="#f2c66d" opacity=".16"/>
+  <circle cx="370" cy="124" r="17" fill="#39b98a"/>
+</svg>

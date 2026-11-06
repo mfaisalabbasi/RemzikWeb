@@ -20,11 +20,12 @@ interface WalletData {
 
 export default function PartnerWalletPage() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]); // ✅ Fixed type definition here
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = useCallback(async (isBackground = false) => {
+    // Only show full loader state on initial load, not background syncs
+    if (!isBackground) setLoading(true);
     try {
       const [walletRes, transRes] = await Promise.all([
         getWalletData(),
@@ -45,23 +46,24 @@ export default function PartnerWalletPage() {
       setTransactions(Array.isArray(transRes) ? transRes : []);
     } catch (err) {
       console.error("Ledger synchronization error:", err);
-      setWallet({
-        availableBalance: 0,
-        lockedBalance: 0,
-        pendingPayout: 0,
-        totalEarned: 0,
-        balance: 0,
-      });
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadData();
+    // Initial data fetch on mount
+    loadData(false);
+
+    // 🚀 Background synchronization poll every 10 seconds to catch multi-point revenue updates live
+    const intervalId = setInterval(() => {
+      loadData(true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [loadData]);
 
-  if (loading) {
+  if (loading && !wallet) {
     return (
       <main className={styles.pageWrapper}>
         <div className={styles.syncState}>
@@ -89,7 +91,7 @@ export default function PartnerWalletPage() {
 
       {wallet && <WalletSummary data={wallet} role="PARTNER" />}
 
-      <WalletActions onRefresh={loadData} role="PARTNER" />
+      <WalletActions onRefresh={() => loadData(false)} role="PARTNER" />
 
       <TransactionHistory data={transactions} role="PARTNER" />
     </main>

@@ -23,20 +23,38 @@ export type SignupData = {
   password: string;
 };
 
-// ... (types stay the same)
-
-// SIGNUP
+// SIGNUP (Basic)
 export const signup = async (data: SignupData) => {
-  // Now uses: /api + /auth/signup = /api/auth/signup (CORRECT)
   const res = await api.post("/auth/signup", data, {
     withCredentials: true,
   });
   return res.data;
 };
 
+// SIGNUP WITH KYC (Multi-part FormData support)
+export const registerWithKyc = async (formData: FormData) => {
+  // ⚠️ CRITICAL FIX: Do NOT manually set Content-Type for FormData.
+  // Axios will automatically attach the multipart boundary parameters.
+  const res = await api.post("/users/register-with-kyc", formData, {
+    withCredentials: true,
+  });
+  return res.data;
+};
+
+// PROVISION WALLET
+export const provisionWallet = async () => {
+  const res = await api.post(
+    "/auth/provision-wallet",
+    {},
+    {
+      withCredentials: true,
+    },
+  );
+  return res.data;
+};
+
 // LOGIN
 export const login = async (data: { email: string; password: string }) => {
-  // Now uses: /api + /auth/login = /api/auth/login (CORRECT)
   const res = await api.post<AuthLoginResponse>("/auth/login", data, {
     withCredentials: true,
   });
@@ -54,5 +72,29 @@ export const getCurrentUser = async () => {
 // LOGOUT
 export const logout = async () => {
   const res = await api.post("/auth/logout", {}, { withCredentials: true });
+  return res.data;
+};
+
+// FORGOT PASSWORD REQUEST
+export const requestPasswordReset = async (email: string) => {
+  const res = await api.post(
+    "/users/forgot-password",
+    { email },
+    {
+      withCredentials: true,
+    },
+  );
+  return res.data;
+};
+
+// RESET PASSWORD SUBMISSION
+export const resetPasswordWithToken = async (data: {
+  email: string;
+  token: string;
+  newPassword: string;
+}) => {
+  const res = await api.post("/users/reset-password", data, {
+    withCredentials: true,
+  });
   return res.data;
 };

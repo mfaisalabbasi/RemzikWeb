@@ -1,11 +1,15 @@
 "use client";
 import { useState } from "react";
 import styles from "./partner.module.css";
+import {
+  updatePartnerStatusApi,
+  updateKycStatusApi,
+  togglePartnerFreezeApi,
+} from "../../../../integrations/api/admin";
 
 export const PartnerGovernance = ({ partner, onAction }: any) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Data mapping from the separate table via the User->Kyc relation
   const kyc = partner?.user?.kyc;
   const user = partner?.user;
 
@@ -13,12 +17,10 @@ export const PartnerGovernance = ({ partner, onAction }: any) => {
     type: "partner" | "kyc" | "account",
     newStatus: string,
   ) => {
-    // If account toggle, we use partner.id for the toggle-freeze endpoint
     const targetId = type === "kyc" ? kyc?.id : partner.id;
     if (!targetId) return alert(`Error: ${type} record ID not found.`);
 
     let reason = "";
-    // Handle Rejection Reason or Freeze Reason
     if (newStatus === "REJECTED" || newStatus === "FREEZE") {
       const promptText =
         newStatus === "FREEZE"
@@ -33,38 +35,23 @@ export const PartnerGovernance = ({ partner, onAction }: any) => {
 
     setIsUpdating(true);
 
-    // Endpoint mapping
-    let endpoint = "";
-    let method = "PATCH";
-
-    if (type === "partner") {
-      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/admin/partners/${targetId}/status`;
-    } else if (type === "kyc") {
-      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/admin/kyc/${targetId}/status`;
-    } else if (type === "account") {
-      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/admin/partners/${targetId}/toggle-freeze`;
-    }
-
     try {
-      const res = await fetch(endpoint, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: newStatus,
-          reason: reason,
-        }),
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        alert(`✅ ${type.toUpperCase()} action successful: ${newStatus}`);
-        onAction();
-      } else {
-        const error = await res.json();
-        alert(`❌ Error: ${error.message || "Update failed"}`);
+      if (type === "partner") {
+        await updatePartnerStatusApi(targetId, newStatus, reason);
+      } else if (type === "kyc") {
+        await updateKycStatusApi(targetId, newStatus, reason);
+      } else if (type === "account") {
+        await togglePartnerFreezeApi(
+          targetId,
+          reason || "Account status update",
+        );
       }
-    } catch (err) {
-      alert("❌ Network Error: Could not reach the server.");
+
+      alert(`✅ ${type.toUpperCase()} action successful: ${newStatus}`);
+      onAction();
+    } catch (err: any) {
+      console.error("Partner Governance Error:", err); // 👈 Added for debugging consistency
+      alert(`❌ Error: ${err.message || "Update failed"}`);
     } finally {
       setIsUpdating(false);
     }

@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
 import styles from "./Investor.module.css";
+import {
+  approveInvestorKyc,
+  rejectInvestorKyc,
+  toggleInvestorFreeze,
+} from "../../../../integrations/api/admin"; // Adjust path to your admin.ts file location
 
 export const InvestorGovernance = ({
   id,
@@ -10,26 +15,23 @@ export const InvestorGovernance = ({
   const [isActive, setIsActive] = useState(initialActive ?? true);
   const [loading, setLoading] = useState(false);
 
-  const handleAction = async (endpoint: string, body?: any) => {
+  const handleAction = async (
+    actionType: "APPROVE" | "REJECT" | "FREEZE",
+    body?: any,
+  ) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/investors/${id}/${endpoint}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: body ? JSON.stringify(body) : null,
-          credentials: "include",
-        },
-      );
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        const err = await res.json();
-        alert(err.message || "Action failed");
+      if (actionType === "APPROVE") {
+        await approveInvestorKyc(id);
+      } else if (actionType === "REJECT") {
+        await rejectInvestorKyc(id, body.reason);
+      } else if (actionType === "FREEZE") {
+        await toggleInvestorFreeze(id, body.reason);
       }
-    } catch (error) {
+      window.location.reload();
+    } catch (error: any) {
       console.error("Governance Action Error:", error);
+      alert(error.message || "Action failed");
     } finally {
       setLoading(false);
     }
@@ -48,12 +50,19 @@ export const InvestorGovernance = ({
             cursor: status === "APPROVED" ? "not-allowed" : "pointer",
           }}
           disabled={status === "APPROVED" || loading}
-          onClick={() => handleAction("approve-kyc")}
+          onClick={() => {
+            const confirmed = window.confirm(
+              "Are you sure you want to approve this user's KYC verification and register their identity on-chain?",
+            );
+            if (confirmed) {
+              handleAction("APPROVE");
+            }
+          }}
         >
           {status === "APPROVED" ? "✓ KYC Verified" : "Approve KYC"}
         </button>
 
-        {/* REJECT BUTTON - New logic */}
+        {/* REJECT BUTTON */}
         {status !== "APPROVED" && status !== "REJECTED" && (
           <button
             className={styles.btnAction}
@@ -67,7 +76,14 @@ export const InvestorGovernance = ({
               const reason = prompt(
                 "Enter rejection reason (e.g., 'ID photo blurry'):",
               );
-              if (reason) handleAction("reject-kyc", { reason });
+              if (reason) {
+                const confirmed = window.confirm(
+                  `Are you sure you want to reject this KYC application?\nReason: ${reason}`,
+                );
+                if (confirmed) {
+                  handleAction("REJECT", { reason });
+                }
+              }
             }}
           >
             Reject KYC
@@ -108,10 +124,24 @@ export const InvestorGovernance = ({
           }}
           disabled={loading}
           onClick={() => {
-            const reason = isActive
-              ? prompt("Reason for freezing this account?")
-              : "Unfreezing";
-            if (reason) handleAction("toggle-freeze", { reason });
+            if (isActive) {
+              const reason = prompt("Reason for freezing this account?");
+              if (reason) {
+                const confirmed = window.confirm(
+                  `⚠️ WARNING: Are you sure you want to FREEZE this account?\nReason: ${reason}\n\nThis will restrict on-chain trading and platform access immediately.`,
+                );
+                if (confirmed) {
+                  handleAction("FREEZE", { reason });
+                }
+              }
+            } else {
+              const confirmed = window.confirm(
+                "Are you sure you want to UNFREEZE this account and restore full access?",
+              );
+              if (confirmed) {
+                handleAction("FREEZE", { reason: "Unfreezing" });
+              }
+            }
           }}
         >
           {isActive ? "Freeze Account" : "Unfreeze Account"}

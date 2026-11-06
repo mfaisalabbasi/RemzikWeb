@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import InvestmentModal from "./InvestmentModal";
 import ModalSuccess from "./ModalSucces";
 import { useAlert } from "@/app/integrations/Alert/AlertContext";
+import { investApi } from "../../../../../integrations/api/invest";
 import { ShieldCheck, TrendingUp, Wallet } from "lucide-react";
 
 interface InvestmentPanelProps {
@@ -35,42 +36,29 @@ export default function InvestmentPanel({
   const projectedProfit = (min * (roi / 100) * (tenure / 12)).toFixed(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBalance = async () => {
       try {
-        const balanceRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/wallet/me`,
-          {
-            credentials: "include",
-          },
-        );
-        const balanceData = await balanceRes.json();
+        const balanceData = await investApi.getWalletBalance();
         setUserBalance(balanceData.availableBalance);
       } catch (err) {
         console.error("Data fetch error:", err);
       }
     };
-    fetchData();
+    fetchBalance();
   }, [assetId]);
 
-  // Poll for status using the specific investment ID
+  // Unified Polling mechanism for on-chain status verification using investApi
   useEffect(() => {
     if (!isProcessing || !lastInvestmentId) return;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/investments/${lastInvestmentId}`,
-          { credentials: "include" },
-        );
-        const data = await res.json();
+        const data = await investApi.checkInvestmentStatus(lastInvestmentId);
 
         if (data.status === "CONFIRMED") {
           setIsProcessing(false);
           clearInterval(interval);
           setShowSuccess(true);
-          setTimeout(() => {
-            router.push("/investor/portfolio");
-          }, 2000);
         } else if (data.status === "FAILED") {
           setIsProcessing(false);
           showAlert(
@@ -85,7 +73,7 @@ export default function InvestmentPanel({
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, lastInvestmentId, showAlert, router]);
+  }, [isProcessing, lastInvestmentId, showAlert]);
 
   const handleInvestSubmit = async (
     amount: number,
@@ -93,25 +81,15 @@ export default function InvestmentPanel({
     investmentId?: string,
   ) => {
     setAmountInvested(amount);
-    if (investmentId) {
-      setLastInvestmentId(investmentId);
-      setIsProcessing(true);
-    }
     setShowModal(false);
 
     if (settlementMode === "OFF_CHAIN") {
       setShowSuccess(true);
-      setTimeout(() => {
-        router.push("/investor/portfolio");
-      }, 1500);
+    } else if (investmentId) {
+      setLastInvestmentId(investmentId);
+      setIsProcessing(true);
+      showAlert("info", "On-chain transaction submitted. Verifying hash...");
     }
-
-    showAlert(
-      "info",
-      settlementMode === "ON_CHAIN"
-        ? "On-chain transaction submitted. Verifying hash..."
-        : "Investment submitted. Redirecting to portfolio...",
-    );
   };
 
   const isBalanceLow = userBalance !== null && userBalance < min;

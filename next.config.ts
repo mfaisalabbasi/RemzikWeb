@@ -1,14 +1,39 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  env: {
-    NEXT_PUBLIC_MARKETPLACE_ADDRESS:
-      process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  // Disables the Next.js dev indicator badge completely
+  devIndicators: false,
+
+  allowedDevOrigins: [
+    "localhost:3000",
+    "localhost",
+    "127.0.0.1:3000",
+    "127.0.0.1",
+    "10.0.2.2:3000",
+    "10.0.2.2",
+    "192.168.1.224:3000",
+    "192.168.1.224",
+    "192.168.1.239:3000",
+    "192.168.1.239",
+  ],
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+        ],
+      },
+    ];
   },
-  // 👇 Only include hostnames without ports or protocols
-  allowedDevOrigins: ["192.168.1.239", "localhost"],
 };
 
 export default nextConfig;

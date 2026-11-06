@@ -4,6 +4,21 @@
  */
 import api from "../lib/axios";
 
+// --- ASSET SUBMISSION & CREATION ---
+
+/**
+ * Submits a new asset vault along with its verification and supporting documents via multipart/form-data.
+ */
+export const submitAsset = async (formData: FormData) => {
+  const res = await api.post("/assets", formData, {
+    withCredentials: true,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+};
+
 // --- INCOME & DISTRIBUTION ACTIONS ---
 
 /**

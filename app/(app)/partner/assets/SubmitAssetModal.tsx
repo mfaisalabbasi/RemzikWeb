@@ -7,7 +7,8 @@ import { assetSchema } from "@/app/integrations/validation/asset-schema";
 import { z } from "zod";
 import styles from "./styles/SubmitAssetModal.module.css";
 import Alert from "@/app/integrations/Alert/Alert";
-import { X, UploadCloud, CheckCircle2 } from "lucide-react";
+import { X } from "lucide-react";
+import { submitAsset } from "@/app/integrations/api/asset"; // 👈 Centralized API helper
 
 type AssetFormData = z.infer<typeof assetSchema>;
 
@@ -43,7 +44,10 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
   if (msg.includes("network") || msg.includes("failed to fetch")) {
     return "Connection error. Please check your internet connection and try again.";
   }
-  return "Asset submission failed. Please check your details and try again.";
+  return (
+    rawMessage ||
+    "Asset submission failed. Please check your details and try again."
+  );
 };
 
 export default function SubmitAssetModal({ onClose }: Props) {
@@ -64,7 +68,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
     key: string,
     fileList?: FileList | null,
   ) => {
-    if (!fileList) return;
+    if (!fileList || fileList.length === 0) return;
     Array.from(fileList).forEach((file) => {
       formData.append(key, file);
     });
@@ -74,6 +78,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
     setError("");
     setSuccess("");
 
+    // Explicit client-side file guardrails
     if (!data.galleryImages || data.galleryImages.length === 0) {
       setError("Please upload at least one gallery image.");
       return;
@@ -101,39 +106,25 @@ export default function SubmitAssetModal({ onClose }: Props) {
       formData.append("assetSize", data.assetSize);
       formData.append("tokenSupply", data.tokenSupply);
 
+      // Append multi-file elements securely
       appendFiles(formData, "galleryImages", data.galleryImages);
       appendFiles(formData, "legalDocuments", data.legalDocuments);
       appendFiles(formData, "financialDocuments", data.financialDocuments);
       appendFiles(formData, "otherDocuments", data.otherDocuments);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/assets`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      const text = await res.text();
-      let message = "Asset submission failed";
-
-      try {
-        const json = JSON.parse(text);
-        message = json.message || message;
-      } catch {
-        message = text;
-      }
-
-      if (!res.ok) {
-        setError(getFriendlyErrorMessage(message));
-        return;
-      }
+      // Call centralized Axios helper
+      await submitAsset(formData);
 
       setSuccess("Asset submitted successfully to institutional queue.");
       setTimeout(() => {
         onClose();
       }, 1200);
     } catch (err: any) {
-      console.error(err);
-      setError(getFriendlyErrorMessage(err.message || ""));
+      console.error("Asset Submission Error:", err);
+      // Extract backend error message cleanly through Axios response error structure
+      const serverMsg =
+        err.response?.data?.message || err.message || "Submission error";
+      setError(getFriendlyErrorMessage(serverMsg));
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +141,7 @@ export default function SubmitAssetModal({ onClose }: Props) {
               Configure tokenized real-world asset parameters
             </span>
           </div>
-          <button className={styles.closeBtn} onClick={onClose}>
+          <button className={styles.closeBtn} onClick={onClose} type="button">
             <X size={18} />
           </button>
         </div>

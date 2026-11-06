@@ -6,7 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../../integrations/validation/auth.schema";
 import { kycSchema } from "@/app/integrations/validation/kyc.schema";
-import { login } from "../../../integrations/api/auth";
+import {
+  login,
+  registerWithKyc,
+  provisionWallet,
+} from "../../../integrations/api/auth";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import styles from "../styles/Auth.module.css";
@@ -24,8 +28,12 @@ type KYCFormData = z.infer<typeof kycSchema>;
 type Role = "INVESTOR" | "PARTNER" | null;
 
 // 🛡️ Human-friendly error message translator for registration and KYC
-const getFriendlyErrorMessage = (rawMessage: string): string => {
-  const msg = rawMessage.toLowerCase();
+const getFriendlyErrorMessage = (rawMessage: unknown): string => {
+  const msg = Array.isArray(rawMessage)
+    ? rawMessage.join(" ").toLowerCase()
+    : typeof rawMessage === "string"
+      ? rawMessage.toLowerCase()
+      : "";
 
   if (
     msg.includes("email") &&
@@ -53,7 +61,9 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
 
-  return "Registration or verification failed. Please check your details and try again.";
+  return typeof rawMessage === "string" && rawMessage.trim() !== ""
+    ? rawMessage
+    : "Registration or verification failed. Please check your details and try again.";
 };
 
 export default function SignupForm() {
@@ -121,35 +131,18 @@ export default function SignupForm() {
       if (kycData.addressProof?.[0])
         formData.append("addressProof", kycData.addressProof[0]);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/register-with-kyc`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
+      // 1. Submit Registration via integration service
+      await registerWithKyc(formData);
 
       setSuccess("Account created! Provisioning secure vault wallet...");
 
+      // 2. Authenticate session and provision embedded vault wallet
       try {
         await login({ email: authData.email, password: authData.password });
-        await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/provision-wallet`,
-          {
-            method: "POST",
-            credentials: "include",
-          },
-        );
+        await provisionWallet();
       } catch (provisionErr) {
-        console.warn(
-          "Wallet will auto-provision on session initialization:",
-          provisionErr,
-        );
+        // Safe fallback if wallet provisioning happens lazily on backend session initialization
+        // Intentionally silent for end-users to prevent confusion
       }
 
       setSuccess("Account and secure wallet initialized successfully!");
@@ -167,8 +160,8 @@ export default function SignupForm() {
         }
       }, 1500);
     } catch (err: any) {
-      console.error("Signup/KYC Error:", err);
-      setError(getFriendlyErrorMessage(err.message || ""));
+      const serverMessage = err?.response?.data?.message || err.message;
+      setError(getFriendlyErrorMessage(serverMessage));
       setIsSubmitting(false);
     }
   };

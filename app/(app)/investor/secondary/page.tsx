@@ -54,6 +54,23 @@ export default function SecondaryMarketPage() {
   const { showAlert } = useAlert();
   const { wallets } = useWallets();
 
+  // 🚀 Rollback helper to prevent ghost/stuck PENDING listings on failure/cancellation
+  const rollbackTradeIntent = useCallback(async (tradeId: string) => {
+    if (!tradeId) return;
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/secondary-market/trade/${tradeId}/cancel-intent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        },
+      );
+    } catch (err) {
+      console.warn("⚠️ Failed to rollback pending trade intent:", err);
+    }
+  }, []);
+
   const fetchMarketData = useCallback(async () => {
     try {
       const timestamp = Date.now();
@@ -174,6 +191,11 @@ export default function SecondaryMarketPage() {
           setLoadingIds({});
           await fetchMarketData();
         } else if (data.type === "TX_FAILED" || data.type === "TRADE_FAILED") {
+          // 🚀 Automatically rollback intent status back to ACTIVE on failure
+          if (activeTradeId) {
+            await rollbackTradeIntent(activeTradeId);
+          }
+
           setSignUrl(null);
           setActiveListingId(null);
           setActiveTradeId(null);
@@ -183,6 +205,7 @@ export default function SecondaryMarketPage() {
             "error",
             data.error || "Transaction failed or was rejected.",
           );
+          await fetchMarketData();
         }
       } catch (err) {
         // Ignore non-JSON messages
@@ -197,6 +220,7 @@ export default function SecondaryMarketPage() {
     isCancellationFlow,
     fetchMarketData,
     showAlert,
+    rollbackTradeIntent,
   ]);
 
   const visibleActiveTrades = useMemo(
@@ -394,7 +418,12 @@ export default function SecondaryMarketPage() {
           credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Trade intent failed");
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        // 🛡️ Extracts the exact error message thrown by NestJS (e.g., price band failure)
+        throw new Error(errorData.message || "Trade intent failed");
+      }
 
       setSuccessMessage("Intent created! Funds locked in Remzik Escrow.");
       await fetchMarketData();
@@ -756,7 +785,18 @@ export default function SecondaryMarketPage() {
                 </span>
               </div>
               <button
-                onClick={() => setSignUrl(null)}
+                onClick={async () => {
+                  // 🚀 Rollback trade intent if user closes modal prematurely
+                  if (activeTradeId) {
+                    await rollbackTradeIntent(activeTradeId);
+                  }
+                  setSignUrl(null);
+                  setActiveTradeId(null);
+                  setActiveListingId(null);
+                  setIsCancellationFlow(false);
+                  setLoadingIds({});
+                  await fetchMarketData();
+                }}
                 style={{
                   background: "#ffffff",
                   border: "1px solid #cbd5e1",

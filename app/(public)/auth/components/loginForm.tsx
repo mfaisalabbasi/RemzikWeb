@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { login, AuthLoginResponse } from "../../../integrations/api/auth";
+import {
+  login,
+  requestPasswordReset,
+  resetPasswordWithToken,
+  AuthLoginResponse,
+} from "../../../integrations/api/auth";
 import { loginSchema } from "../../../integrations/validation/auth.schema";
 
 import { z } from "zod";
@@ -16,10 +21,12 @@ import { ShieldCheck, ArrowRight } from "lucide-react";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const API_HOST = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-const getFriendlyErrorMessage = (rawMessage: string): string => {
-  const msg = rawMessage.toLowerCase();
+const getFriendlyErrorMessage = (rawMessage: unknown): string => {
+  const msg = Array.isArray(rawMessage)
+    ? rawMessage.join(" ").toLowerCase()
+    : typeof rawMessage === "string"
+      ? rawMessage.toLowerCase()
+      : "";
 
   if (
     msg.includes("unauthorized") ||
@@ -41,7 +48,9 @@ const getFriendlyErrorMessage = (rawMessage: string): string => {
     return "Our servers are experiencing a brief hiccup. Please try again shortly.";
   }
 
-  return rawMessage || "An unexpected error occurred. Please try again.";
+  return typeof rawMessage === "string" && rawMessage.trim() !== ""
+    ? rawMessage
+    : "An unexpected error occurred. Please try again.";
 };
 
 const getSafeCallbackUrl = (rawCallbackUrl: string | null): string | null => {
@@ -151,8 +160,8 @@ function LoginFormContent() {
           }
         }
       }
-    } catch (err) {
-      console.error("Failed to parse callback context:", err);
+    } catch {
+      // Intentionally suppressed for clean production logs
     }
   }, [searchParams]);
 
@@ -212,8 +221,8 @@ function LoginFormContent() {
           setIsSubmitting(false);
       }
     } catch (err: any) {
-      console.error("Login error:", err?.message || err);
-      setError(getFriendlyErrorMessage(err?.message || ""));
+      const serverMessage = err?.response?.data?.message || err?.message;
+      setError(getFriendlyErrorMessage(serverMessage));
       setIsSubmitting(false);
     }
   };
@@ -244,21 +253,13 @@ function LoginFormContent() {
 
     try {
       setIsForgotLoading(true);
-      const res = await fetch(`${API_HOST}/users/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail.trim().toLowerCase() }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to send reset code.");
-      }
+      await requestPasswordReset(resetEmail.trim().toLowerCase());
 
       setForgotSuccess("Verification code sent to your email.");
       setForgotStep("RESET");
     } catch (err: any) {
-      setForgotError(getFriendlyErrorMessage(err?.message || ""));
+      const serverMessage = err?.response?.data?.message || err?.message;
+      setForgotError(getFriendlyErrorMessage(serverMessage));
     } finally {
       setIsForgotLoading(false);
     }
@@ -280,27 +281,19 @@ function LoginFormContent() {
 
     try {
       setIsForgotLoading(true);
-      const res = await fetch(`${API_HOST}/users/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: resetEmail.trim().toLowerCase(),
-          token: otpToken.trim(),
-          newPassword,
-        }),
+      await resetPasswordWithToken({
+        email: resetEmail.trim().toLowerCase(),
+        token: otpToken.trim(),
+        newPassword,
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to reset password.");
-      }
 
       setForgotSuccess("Password reset successfully! You can now log in.");
       setTimeout(() => {
         setIsForgotModalOpen(false);
       }, 2000);
     } catch (err: any) {
-      setForgotError(getFriendlyErrorMessage(err?.message || ""));
+      const serverMessage = err?.response?.data?.message || err?.message;
+      setForgotError(getFriendlyErrorMessage(serverMessage));
     } finally {
       setIsForgotLoading(false);
     }
@@ -627,5 +620,23 @@ function LoginFormContent() {
 }
 
 export default function LoginForm() {
-  return <LoginFormContent />;
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            color: "#F0FDF4",
+            padding: "40px",
+            textAlign: "center",
+            backgroundColor: "#020B07",
+            minHeight: "100vh",
+          }}
+        >
+          Loading authentication portal...
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
+  );
 }

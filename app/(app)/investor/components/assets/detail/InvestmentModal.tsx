@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppWallet } from "@/app/integrations/context/WalletContext";
 import api from "@/app/integrations/lib/axios";
+import { investApi } from "../../../../../integrations/api/invest";
 import styles from "./Invest.module.css";
 import { Wallet, Cpu, Loader2, X, ShieldCheck } from "lucide-react";
 
@@ -42,8 +43,8 @@ export default function InvestmentModal({
 
   const { userWalletAddress } = useAppWallet();
 
-  const isInvalid =
-    amount < min || (settlementMode === "OFF_CHAIN" && amount > max);
+  // 🛡️ SECURITY FIX: Enforce balance max check across BOTH Off-Chain and On-Chain modes
+  const isInvalid = amount < min || amount > max || isNaN(amount);
 
   // Listen for message from /auth/sign iframe
   useEffect(() => {
@@ -64,18 +65,10 @@ export default function InvestmentModal({
           const invId = activeInvestmentId || data.investmentId;
           const txHash = data.txHash;
 
-          // Verify transaction with backend
+          // Verify transaction with backend via investApi
           if (invId) {
             try {
-              await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/investments/${invId}/submit-tx`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ txHash }),
-                  credentials: "include",
-                },
-              );
+              await investApi.submitOnChainTxHash(invId, txHash);
             } catch (err) {
               console.warn("⚠️ Tx verification notice:", err);
             }
@@ -107,26 +100,12 @@ export default function InvestmentModal({
 
     try {
       if (settlementMode === "ON_CHAIN") {
-        // 1. Create Investment Intent on backend
-        const intentRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/investments/intent`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              assetId,
-              amount,
-              settlementMode: "ON_CHAIN",
-            }),
-            credentials: "include",
-          },
+        // 1. Create Investment Intent on backend via investApi
+        const intentData = await investApi.createInvestmentIntent(
+          assetId,
+          amount,
+          "ON_CHAIN",
         );
-
-        const intentData = await intentRes.json();
-        if (!intentRes.ok)
-          throw new Error(
-            intentData.message || "Failed to create investment intent",
-          );
 
         const investmentId = intentData.investmentId || intentData.id;
         setActiveInvestmentId(investmentId);
@@ -168,23 +147,8 @@ export default function InvestmentModal({
         setSignUrl(url);
         setIsProcessing(false);
       } else {
-        // OFF_CHAIN Route
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/investments`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              assetId,
-              amount,
-              settlementMode: "OFF_CHAIN",
-            }),
-            credentials: "include",
-          },
-        );
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Investment failed");
+        // OFF_CHAIN Route via investApi
+        const data = await investApi.submitOffChainInvestment(assetId, amount);
 
         setIsProcessing(false);
         onConfirm(amount, "OFF_CHAIN", data.id);
@@ -195,7 +159,7 @@ export default function InvestmentModal({
     } catch (err: any) {
       setIsProcessing(false);
       setErrorMsg(
-        err?.reason ||
+        err?.response?.data?.message ||
           err?.message ||
           "Transaction execution failed or was rejected.",
       );
@@ -314,7 +278,7 @@ export default function InvestmentModal({
               onChange={(e) => setAmount(Number(e.target.value))}
               style={{ borderColor: isInvalid ? "#ef4444" : "#059669" }}
             />
-            {settlementMode === "OFF_CHAIN" && amount > max && (
+            {amount > max && (
               <p
                 style={{
                   color: "#ef4444",
